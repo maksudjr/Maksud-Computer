@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&family=Oswald:wght@400;700&family=Raleway:wght@400;700&family=Poppins:wght@400;700&family=Ubuntu:wght@400;700&family=Lora:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-inter: "Inter", sans-serif;
+  --font-roboto: "Roboto", sans-serif;
+  --font-opensans: "Open Sans", sans-serif;
+  --font-lato: "Lato", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-playfair: "Playfair Display", serif;
+  --font-merriweather: "Merriweather", serif;
+  --font-oswald: "Oswald", sans-serif;
+  --font-raleway: "Raleway", sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+  --font-ubuntu: "Ubuntu", sans-serif;
+  --font-lora: "Lora", serif;
+}
