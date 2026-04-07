@@ -18,6 +18,7 @@ export interface Education {
   passingYear: string;
   board: string;
   gpa: string;
+  gpaType: string;
   instituteName: string;
   subject: string;
 }
@@ -44,12 +45,15 @@ export interface ComputerSkill {
   skills: string[];
 }
 
+export type TemplateId = 'classic' | 'modern';
+
 export interface CVData {
   theme: {
     primaryColor: string;
     fontStyle: string;
     darkMode: boolean;
     pageCount: number;
+    templateId: TemplateId;
   };
   selectedSections: SectionId[];
   personalInfo: {
@@ -63,13 +67,20 @@ export interface CVData {
     gender: string;
     phone: string;
     email: string;
-    presentAddress: string;
-    permanentAddress: string;
+    presentVillage: string;
+    presentPostOffice: string;
+    presentUpazila: string;
+    presentDistrict: string;
+    permanentVillage: string;
+    permanentPostOffice: string;
+    permanentUpazila: string;
+    permanentDistrict: string;
     photo: string;
     nid: string;
     birthRegNo: string;
     bloodGroup: string;
-    height: string;
+    heightFeet: string;
+    heightInches: string;
     weight: string;
   };
   careerObjective: string;
@@ -90,10 +101,11 @@ export interface CVData {
 
 export const DEFAULT_CV_DATA: CVData = {
   theme: {
-    primaryColor: '#2563eb', // Default blue
+    primaryColor: '#4f46e5', // Default indigo
     fontStyle: 'font-sans',
     darkMode: false,
     pageCount: 1,
+    templateId: 'classic',
   },
   selectedSections: [
     'careerObjective',
@@ -117,13 +129,20 @@ export const DEFAULT_CV_DATA: CVData = {
     gender: 'Male',
     phone: '',
     email: '',
-    presentAddress: '',
-    permanentAddress: '',
+    presentVillage: '',
+    presentPostOffice: '',
+    presentUpazila: '',
+    presentDistrict: '',
+    permanentVillage: '',
+    permanentPostOffice: '',
+    permanentUpazila: '',
+    permanentDistrict: '',
     photo: '',
     nid: '',
     birthRegNo: '',
     bloodGroup: '',
-    height: '',
+    heightFeet: '',
+    heightInches: '',
     weight: '',
   },
   careerObjective: 'To build up myself as a challenging and responsible person to utilize my educational and other experiences, to show my creativity and integrity, at the same time to full the desire to work in a competitive, dynamic and disciplined job environment to enrich professional skills, competency and level of expertise knowledge.',

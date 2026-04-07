@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, 
@@ -10,12 +10,18 @@ import {
   Check, 
   ChevronRight,
   Palette,
-  Layout
+  Layout,
+  FileDown,
+  FileCode
 } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { generateDocx } from './lib/docx-generator';
 import { CVData, DEFAULT_CV_DATA, SectionId } from './types';
 import { CVForm } from './components/CVForm';
 import { CVPreview } from './components/CVPreview';
+import { TemplateSelector } from './components/TemplateSelector';
 import { cn } from './lib/utils';
 
 const SECTIONS: { id: SectionId; label: string }[] = [
@@ -56,15 +62,58 @@ const FONTS = [
 ];
 
 export default function App() {
-  const [step, setStep] = useState<'setup' | 'builder'>('setup');
+  const [step, setStep] = useState<'template' | 'setup' | 'builder'>('template');
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [cvData, setCvData] = useState<CVData>(DEFAULT_CV_DATA);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const welcomeMessage = useMemo(() => {
+    const messages = [
+      "Welcome! Let's build your professional CV today.",
+      "Ready to land your dream job? Start with a great CV!",
+      "Welcome to Maksud Computer CV Builder - Your career starts here.",
+      "Create a standout CV in minutes. Let's get started!",
+      "Hello! Ready to showcase your professional journey?",
+      "Welcome! A professional CV is just a few clicks away."
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  }, []);
 
   const handlePrint = useReactToPrint({
     contentRef: previewRef,
     documentTitle: `${cvData.personalInfo.name || 'CV'}_Curriculum_Vitae`,
   });
+
+  const handleSaveAsPDF = async () => {
+    if (!previewRef.current) return;
+    setIsGeneratingPDF(true);
+    try {
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: 210 * 3.78, // 210mm in pixels
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${cvData.personalInfo.name || 'CV'}_Curriculum_Vitae.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleSaveAsWord = async () => {
+    await generateDocx(cvData);
+  };
 
   const toggleSection = (id: SectionId) => {
     setCvData(prev => ({
@@ -74,6 +123,18 @@ export default function App() {
         : [...prev.selectedSections, id]
     }));
   };
+
+  if (step === 'template') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <TemplateSelector 
+          selectedId={cvData.theme.templateId}
+          onSelect={(id) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, templateId: id } }))}
+          onNext={() => setStep('setup')}
+        />
+      </div>
+    );
+  }
 
   if (step === 'setup') {
     return (
@@ -87,6 +148,9 @@ export default function App() {
             <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
               Maksud Computer CV Builder
             </h1>
+            <p className="text-xl font-medium text-indigo-600 mb-2">
+              {welcomeMessage}
+            </p>
             <p className="text-lg text-gray-600">
               Configure your CV structure and theme to get started.
             </p>
@@ -96,7 +160,7 @@ export default function App() {
             {/* Section Selection */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Layout className="text-blue-600" />
+                <Layout className="text-indigo-600" />
                 Select Sections
               </h2>
               <div className="grid grid-cols-1 gap-3">
@@ -107,13 +171,13 @@ export default function App() {
                     className={cn(
                       "flex items-center justify-between p-4 rounded-xl border transition-all text-left",
                       cvData.selectedSections.includes(section.id)
-                        ? "border-blue-600 bg-blue-50 text-blue-700"
+                        ? "border-indigo-600 bg-indigo-50 text-indigo-700"
                         : "border-gray-200 hover:border-gray-300 text-gray-600"
                     )}
                   >
                     <span className="font-medium">{section.label}</span>
                     {cvData.selectedSections.includes(section.id) && (
-                      <Check size={18} className="text-blue-600" />
+                      <Check size={18} className="text-indigo-600" />
                     )}
                   </button>
                 ))}
@@ -124,11 +188,25 @@ export default function App() {
             <div className="space-y-8">
               <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <Palette className="text-blue-600" />
+                  <Palette className="text-indigo-600" />
                   Theme & Style
                 </h2>
                 
                 <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Selected Template</label>
+                    <button
+                      onClick={() => setStep('template')}
+                      className="w-full flex items-center justify-between p-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Layout size={20} />
+                        <span className="font-bold">{cvData.theme.templateId === 'classic' ? 'Classic Professional' : 'Modern Sidebar'}</span>
+                      </div>
+                      <span className="text-xs font-medium uppercase tracking-wider">Change</span>
+                    </button>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">Primary Color</label>
                     <div className="flex flex-wrap gap-3">
@@ -155,7 +233,7 @@ export default function App() {
                           />
                           <input 
                             type="text"
-                            className="w-20 px-2 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono uppercase"
+                            className="w-20 px-2 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono uppercase"
                             value={cvData.theme.primaryColor}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -181,7 +259,7 @@ export default function App() {
                           className={cn(
                             "px-4 py-3 rounded-xl border text-left transition-all",
                             cvData.theme.fontStyle === font.value 
-                              ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-100" 
+                              ? "border-indigo-600 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-100" 
                               : "border-gray-200 text-gray-600 hover:border-gray-300"
                           )}
                         >
@@ -202,7 +280,7 @@ export default function App() {
                           className={cn(
                             "flex-1 py-3 rounded-xl border font-bold transition-all",
                             cvData.theme.pageCount === num 
-                              ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-100" 
+                              ? "border-indigo-600 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-100" 
                               : "border-gray-200 text-gray-600 hover:border-gray-300"
                           )}
                         >
@@ -219,7 +297,7 @@ export default function App() {
 
               <button
                 onClick={() => setStep('builder')}
-                className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group"
+                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 group"
               >
                 Continue to Builder
                 <ChevronRight className="group-hover:translate-x-1 transition-transform" />
@@ -237,7 +315,7 @@ export default function App() {
       <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
               <FileText size={24} />
             </div>
             <div>
@@ -252,7 +330,7 @@ export default function App() {
                 onClick={() => setActiveTab('edit')}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                  activeTab === 'edit' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  activeTab === 'edit' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
                 )}
               >
                 <Edit3 size={16} />
@@ -262,7 +340,7 @@ export default function App() {
                 onClick={() => setActiveTab('preview')}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                  activeTab === 'preview' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  activeTab === 'preview' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
                 )}
               >
                 <Eye size={16} />
@@ -272,20 +350,44 @@ export default function App() {
 
             <div className="h-8 w-[1px] bg-gray-200 mx-2" />
 
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveAsPDF}
+                disabled={isGeneratingPDF}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-bold hover:bg-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                  isGeneratingPDF && "animate-pulse"
+                )}
+                title="Save as PDF"
+              >
+                <FileDown size={16} />
+                {isGeneratingPDF ? 'Wait...' : 'PDF'}
+              </button>
+              
+              <button
+                onClick={handleSaveAsWord}
+                className="flex items-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all"
+                title="Save as Word (.docx)"
+              >
+                <FileCode size={16} />
+                Word
+              </button>
+
+              <button
+                onClick={() => handlePrint()}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+              >
+                <Printer size={16} />
+                Print
+              </button>
+            </div>
+
             <button
               onClick={() => setStep('setup')}
               className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-all"
               title="Settings"
             >
               <Settings size={20} />
-            </button>
-
-            <button
-              onClick={() => handlePrint()}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-            >
-              <Printer size={16} />
-              Print / PDF
             </button>
           </div>
         </div>
