@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { CVData, SectionId, Education, WorkExperience, CustomField, ComputerSkill } from '../types';
-import { Plus, Trash2, Upload, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Upload, ChevronDown, ChevronUp, Edit2 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { PhotoEditor } from './PhotoEditor';
 
 interface CVFormProps {
   data: CVData;
@@ -171,7 +172,20 @@ const MultiSelect = ({
   );
 };
 
+const DISTRICT_UPAZILA_MAP: Record<string, string[]> = {
+  'Jamalpur': ['Jamalpur Sadar', 'Bakshiganj', 'Dewanganj', 'Islampur', 'Madarganj', 'Melandaha', 'Sarishabari'],
+  'Sherpur': ['Sherpur Sadar', 'Jhenaigati', 'Nakla', 'Nalitabari', 'Sreebardi'],
+  'Mymensingh': ['Mymensingh Sadar', 'Bhaluka', 'Dhobaura', 'Fulbaria', 'Gaffargaon', 'Gauripur', 'Haluaghat', 'Ishwarganj', 'Muktagacha', 'Nandail', 'Phulpur', 'Trishal'],
+  'Tangail': ['Tangail Sadar', 'Basail', 'Bhuapur', 'Delduar', 'Ghatail', 'Gopalpur', 'Kalihati', 'Madhupur', 'Mirzapur', 'Nagarpur', 'Sakhipur'],
+  'Dhaka': ['Dhaka Sadar', 'Dhamrai', 'Dohar', 'Keraniganj', 'Nawabganj', 'Savar'],
+  'Gazipur': ['Gazipur Sadar', 'Kaliakair', 'Kaliganj', 'Kapasia', 'Sreepur'],
+  'Narayanganj': ['Narayanganj Sadar', 'Araihazar', 'Bandar', 'Rupganj', 'Sonargaon'],
+};
+
 export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
+  const [editingPhoto, setEditingPhoto] = useState<string | null>(null);
+  const [editingSignature, setEditingSignature] = useState<string | null>(null);
+
   const updatePersonalInfo = (field: keyof typeof data.personalInfo, value: string) => {
     onChange({
       ...data,
@@ -184,7 +198,20 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        updatePersonalInfo('photo', reader.result as string);
+        const result = reader.result as string;
+        updatePersonalInfo('photo', result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        updatePersonalInfo('signature', result);
       };
       reader.readAsDataURL(file);
     }
@@ -314,15 +341,97 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
               <label className="block text-sm font-medium text-gray-700">Profile Photo</label>
               <div className="flex items-center gap-4">
                 {data.personalInfo.photo && (
-                  <img src={data.personalInfo.photo} alt="Preview" className="w-12 h-12 rounded-md object-cover border" />
+                  <div className="relative group">
+                    <img 
+                      src={data.personalInfo.photo} 
+                      alt="Preview" 
+                      className="w-12 h-16 rounded-md object-cover border" 
+                      style={{ aspectRatio: '1.5/2' }}
+                    />
+                  </div>
                 )}
-                <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm hover:bg-gray-100">
-                  <Upload size={16} />
-                  Upload
-                  <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
-                </label>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                      <Upload size={16} />
+                      Upload
+                      <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+                    </label>
+                    {data.personalInfo.photo && (
+                      <button 
+                        type="button"
+                        onClick={() => setEditingPhoto(data.personalInfo.photo)}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 text-indigo-600 rounded-md text-sm hover:bg-indigo-100 transition-colors"
+                      >
+                        <Edit2 size={16} />
+                        Edit Photo
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-gray-400 italic">Recommended size: 1.5 x 2 inches</p>
+                </div>
               </div>
             </div>
+
+            {editingPhoto && (
+              <PhotoEditor 
+                image={editingPhoto}
+                onSave={(edited) => {
+                  updatePersonalInfo('photo', edited);
+                  setEditingPhoto(null);
+                }}
+                onCancel={() => setEditingPhoto(null)}
+                aspect={1.5 / 2}
+              />
+            )}
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Signature</label>
+              <div className="flex items-center gap-4">
+                {data.personalInfo.signature && (
+                  <div className="relative group">
+                    <img 
+                      src={data.personalInfo.signature} 
+                      alt="Signature" 
+                      className="w-24 h-8 rounded-md object-contain border bg-gray-50" 
+                      style={{ aspectRatio: '300/80' }}
+                    />
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                      <Upload size={16} />
+                      Upload
+                      <input type="file" className="hidden" accept="image/*" onChange={handleSignatureUpload} />
+                    </label>
+                    {data.personalInfo.signature && (
+                      <button 
+                        type="button"
+                        onClick={() => setEditingSignature(data.personalInfo.signature)}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 text-indigo-600 rounded-md text-sm hover:bg-indigo-100 transition-colors"
+                      >
+                        <Edit2 size={16} />
+                        Edit Signature
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-gray-400 italic">Recommended size: 300 x 80 pixels</p>
+                </div>
+              </div>
+            </div>
+
+            {editingSignature && (
+              <PhotoEditor 
+                image={editingSignature}
+                onSave={(edited) => {
+                  updatePersonalInfo('signature', edited);
+                  setEditingSignature(null);
+                }}
+                onCancel={() => setEditingSignature(null)}
+                aspect={300 / 80}
+              />
+            )}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Father's Name</label>
               <input 
@@ -414,24 +523,18 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
                     onChange={(e) => updatePersonalInfo('presentPostOffice', e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Upazila</label>
-                  <input 
-                    type="text" 
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    value={data.personalInfo.presentUpazila}
-                    onChange={(e) => updatePersonalInfo('presentUpazila', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">District</label>
-                  <input 
-                    type="text" 
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    value={data.personalInfo.presentDistrict}
-                    onChange={(e) => updatePersonalInfo('presentDistrict', e.target.value)}
-                  />
-                </div>
+                <CustomSelect 
+                  label="District" 
+                  value={data.personalInfo.presentDistrict} 
+                  options={Object.keys(DISTRICT_UPAZILA_MAP)} 
+                  onChange={(val) => updatePersonalInfo('presentDistrict', val)}
+                />
+                <CustomSelect 
+                  label="Upazila" 
+                  value={data.personalInfo.presentUpazila} 
+                  options={DISTRICT_UPAZILA_MAP[data.personalInfo.presentDistrict] || []} 
+                  onChange={(val) => updatePersonalInfo('presentUpazila', val)}
+                />
               </div>
             </div>
 
@@ -480,24 +583,18 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
                     onChange={(e) => updatePersonalInfo('permanentPostOffice', e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Upazila</label>
-                  <input 
-                    type="text" 
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    value={data.personalInfo.permanentUpazila}
-                    onChange={(e) => updatePersonalInfo('permanentUpazila', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">District</label>
-                  <input 
-                    type="text" 
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    value={data.personalInfo.permanentDistrict}
-                    onChange={(e) => updatePersonalInfo('permanentDistrict', e.target.value)}
-                  />
-                </div>
+                <CustomSelect 
+                  label="District" 
+                  value={data.personalInfo.permanentDistrict} 
+                  options={Object.keys(DISTRICT_UPAZILA_MAP)} 
+                  onChange={(val) => updatePersonalInfo('permanentDistrict', val)}
+                />
+                <CustomSelect 
+                  label="Upazila" 
+                  value={data.personalInfo.permanentUpazila} 
+                  options={DISTRICT_UPAZILA_MAP[data.personalInfo.permanentDistrict] || []} 
+                  onChange={(val) => updatePersonalInfo('permanentUpazila', val)}
+                />
               </div>
             </div>
             <div className="space-y-2">

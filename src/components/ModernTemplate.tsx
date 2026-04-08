@@ -45,7 +45,7 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
     >
       {/* Header */}
       <div className="h-24 flex items-center px-12" style={{ backgroundColor: '#1e293b' }}>
-        <h1 className="text-white text-[22pt] font-bold uppercase tracking-wider">
+        <h1 className="text-white font-bold uppercase tracking-wider" style={{ fontSize: `${theme.fontSize + 11}pt` }}>
           {personalInfo.name || 'YOUR NAME'}
         </h1>
       </div>
@@ -68,8 +68,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
 
           {/* Contact */}
           <div>
-            <h3 className="text-[12pt] font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide">Contact</h3>
-            <div className="space-y-3 text-[10pt]">
+            <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Contact</h3>
+            <div className="space-y-3" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
               {personalInfo.phone && (
                 <div className="flex items-start gap-2">
                   <Phone size={14} className="mt-1 flex-shrink-0" />
@@ -94,10 +94,10 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
           {/* Computer Skills */}
           {selectedSections.includes('computerSkills') && computerSkills.length > 0 && (
             <div>
-              <h3 className="text-[12pt] font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide">Computer Skills</h3>
+              <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Computer Skills</h3>
               <div className="space-y-4">
                 {computerSkills.map((skill, idx) => (
-                  <div key={idx} className="text-[10pt]">
+                  <div key={idx} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                     <ul className="list-disc list-inside space-y-1">
                       {skill.skills.map((s, sIdx) => (
                         <li key={sIdx} className="leading-tight">{s}</li>
@@ -112,8 +112,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
           {/* Languages */}
           {selectedSections.includes('languageProficiency') && languageProficiency.length > 0 && (
             <div>
-              <h3 className="text-[12pt] font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide">Languages</h3>
-              <ul className="list-disc list-inside space-y-1 text-[10pt]">
+              <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Languages</h3>
+              <ul className="list-disc list-inside space-y-1" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                 {languageProficiency.map((lang, idx) => (
                   <li key={idx} className="leading-tight">{lang}</li>
                 ))}
@@ -124,8 +124,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
           {/* Hobbies */}
           {selectedSections.includes('hobbies') && hobbies.length > 0 && (
             <div>
-              <h3 className="text-[12pt] font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide">Hobbies</h3>
-              <ul className="list-disc list-inside space-y-1 text-[10pt]">
+              <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Hobbies</h3>
+              <ul className="list-disc list-inside space-y-1" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                 {hobbies.map((hobby, idx) => (
                   <li key={idx} className="leading-tight">{hobby}</li>
                 ))}
@@ -143,8 +143,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
                 <User size={12} style={{ color: theme.primaryColor }} />
               </div>
-              <h3 className="text-[14pt] font-bold uppercase mb-3 tracking-wide" style={{ color: theme.primaryColor }}>Profile</h3>
-              <p className="text-[10.5pt] leading-relaxed text-justify text-gray-700">
+              <h3 className="font-bold uppercase mb-3 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Profile</h3>
+              <p className="leading-relaxed text-justify text-gray-700" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
                 {careerObjective}
               </p>
             </div>
@@ -157,8 +157,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
                 <Info size={12} style={{ color: theme.primaryColor }} />
               </div>
-              <h3 className="text-[14pt] font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor }}>Self Assessment</h3>
-              <ul className="list-disc list-inside space-y-1 text-[10pt] text-gray-700">
+              <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Self Assessment</h3>
+              <ul className="list-disc list-inside space-y-1 text-gray-700" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
                 {selfAssessment.map((item, idx) => (
                   <li key={idx} className="leading-tight">{item}</li>
                 ))}
@@ -173,16 +173,16 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
                 <Briefcase size={12} style={{ color: theme.primaryColor }} />
               </div>
-              <h3 className="text-[14pt] font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor }}>Work Experience</h3>
+              <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Work Experience</h3>
               <div className="space-y-6">
                 {workExperience.map((work, idx) => (
                   <div key={idx}>
                     <div className="flex justify-between items-start mb-1">
-                      <h4 className="font-bold text-[11pt] uppercase">{work.companyName}</h4>
-                      <span className="text-[9pt] font-bold text-gray-500 uppercase">{work.duration}</span>
+                      <h4 className="font-bold uppercase" style={{ fontSize: `${theme.fontSize}pt` }}>{work.companyName}</h4>
+                      <span className="font-bold text-gray-500 uppercase" style={{ fontSize: `${theme.fontSize - 2}pt` }}>{work.duration}</span>
                     </div>
-                    <p className="text-[10pt] font-medium text-gray-600 mb-2 italic">{work.position}</p>
-                    <div className="text-[10pt] text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    <p className="font-medium text-gray-600 mb-2 italic" style={{ fontSize: `${theme.fontSize - 1}pt` }}>{work.position}</p>
+                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                       {work.description}
                     </div>
                   </div>
@@ -198,16 +198,16 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
                 <GraduationCap size={12} style={{ color: theme.primaryColor }} />
               </div>
-              <h3 className="text-[14pt] font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor }}>Education</h3>
+              <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Education</h3>
               <div className="space-y-6">
                 {education.map((edu, idx) => (
                   <div key={idx}>
                     <div className="flex justify-between items-start mb-1">
-                      <h4 className="font-bold text-[11pt] uppercase">{edu.instituteName}</h4>
-                      <span className="text-[9pt] font-bold text-gray-500 uppercase">{edu.passingYear}</span>
+                      <h4 className="font-bold uppercase" style={{ fontSize: `${theme.fontSize}pt` }}>{edu.instituteName}</h4>
+                      <span className="font-bold text-gray-500 uppercase" style={{ fontSize: `${theme.fontSize - 2}pt` }}>{edu.passingYear}</span>
                     </div>
-                    <p className="text-[10pt] font-medium text-gray-600 mb-1">{edu.examName}</p>
-                    <p className="text-[10pt] text-gray-700">
+                    <p className="font-medium text-gray-600 mb-1" style={{ fontSize: `${theme.fontSize - 1}pt` }}>{edu.examName}</p>
+                    <p className="text-gray-700" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                       Group: {edu.subject}, GPA: {edu.gpa} / {edu.gpaType.replace('Out Of ', '')}
                     </p>
                   </div>
@@ -223,8 +223,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
                 <Info size={12} style={{ color: theme.primaryColor }} />
               </div>
-              <h3 className="text-[14pt] font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor }}>Personal Informations</h3>
-              <div className="space-y-2 text-[10pt]">
+              <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Personal Informations</h3>
+              <div className="space-y-2" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                 <div className="grid grid-cols-[140px_10px_1fr] border-b border-gray-100 pb-1">
                   <span className="font-medium text-gray-600">Father's Name</span>
                   <span>:</span>
@@ -281,8 +281,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
                 <Info size={12} style={{ color: theme.primaryColor }} />
               </div>
-              <h3 className="text-[14pt] font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor }}>{customSection.title}</h3>
-              <div className="space-y-2 text-[10pt]">
+              <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>{customSection.title}</h3>
+              <div className="space-y-2" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                 {customSection.fields.map((field) => (
                   <div key={field.id} className="grid grid-cols-[140px_10px_1fr] border-b border-gray-100 pb-1">
                     <span className="font-medium text-gray-600">{field.label}</span>
@@ -301,8 +301,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
                 <Check size={12} style={{ color: theme.primaryColor }} />
               </div>
-              <h3 className="text-[14pt] font-bold uppercase mb-3 tracking-wide" style={{ color: theme.primaryColor }}>Certification</h3>
-              <p className="text-[10.5pt] leading-relaxed text-justify text-gray-700">
+              <h3 className="font-bold uppercase mb-3 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Declaration</h3>
+              <p className="leading-relaxed text-justify text-gray-700" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
                 {declaration}
               </p>
             </div>
@@ -310,14 +310,28 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
 
           {/* Signature */}
           <div className="mt-12 flex flex-col items-end">
-            <div className="w-48 border-t border-dotted border-black pt-1 text-center">
-              <p className="text-[10pt] font-medium">Applicant Signature and Date</p>
+            <div className="w-48 flex flex-col items-center">
+              {personalInfo.signature ? (
+                <div className="mb-1">
+                  <img 
+                    src={personalInfo.signature} 
+                    alt="Signature" 
+                    className="h-8 object-contain" 
+                    style={{ maxWidth: '150px' }}
+                  />
+                </div>
+              ) : (
+                <div className="h-8" />
+              )}
+              <div className="w-full border-t border-dotted border-black pt-1 text-center">
+                <p className="font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>Applicant Signature and Date</p>
+              </div>
             </div>
           </div>
 
           {/* Watermark */}
           <div className="mt-auto pt-8 flex justify-center">
-            <p className="text-[8pt] text-gray-300 italic font-medium">
+            <p className="text-gray-300 italic font-medium" style={{ fontSize: `${theme.fontSize - 3}pt` }}>
               This Cv Was Build from Maksud Computer
             </p>
           </div>

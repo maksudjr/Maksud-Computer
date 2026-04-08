@@ -54,6 +54,7 @@ export interface CVData {
     darkMode: boolean;
     pageCount: number;
     templateId: TemplateId;
+    fontSize: number;
   };
   selectedSections: SectionId[];
   personalInfo: {
@@ -76,6 +77,7 @@ export interface CVData {
     permanentUpazila: string;
     permanentDistrict: string;
     photo: string;
+    signature: string;
     nid: string;
     birthRegNo: string;
     bloodGroup: string;
@@ -106,6 +108,7 @@ export const DEFAULT_CV_DATA: CVData = {
     darkMode: false,
     pageCount: 1,
     templateId: 'classic',
+    fontSize: 11,
   },
   selectedSections: [
     'careerObjective',
@@ -138,6 +141,7 @@ export const DEFAULT_CV_DATA: CVData = {
     permanentUpazila: '',
     permanentDistrict: '',
     photo: '',
+    signature: '',
     nid: '',
     birthRegNo: '',
     bloodGroup: '',

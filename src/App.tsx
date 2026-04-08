@@ -12,7 +12,10 @@ import {
   Palette,
   Layout,
   FileDown,
-  FileCode
+  FileCode,
+  Type,
+  Minus,
+  Plus
 } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import jsPDF from 'jspdf';
@@ -156,28 +159,28 @@ export default function App() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Section Selection */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Layout className="text-indigo-600" />
+            <div className="lg:col-span-5 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+              <h2 className="text-base font-bold mb-3 flex items-center gap-2">
+                <Layout className="text-indigo-600" size={18} />
                 Select Sections
               </h2>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-1.5">
                 {SECTIONS.map((section) => (
                   <button
                     key={section.id}
                     onClick={() => toggleSection(section.id)}
                     className={cn(
-                      "flex items-center justify-between p-4 rounded-xl border transition-all text-left",
+                      "flex items-center justify-between p-2.5 rounded-xl border transition-all text-left",
                       cvData.selectedSections.includes(section.id)
                         ? "border-indigo-600 bg-indigo-50 text-indigo-700"
                         : "border-gray-200 hover:border-gray-300 text-gray-600"
                     )}
                   >
-                    <span className="font-medium">{section.label}</span>
+                    <span className="text-xs font-medium">{section.label}</span>
                     {cvData.selectedSections.includes(section.id) && (
-                      <Check size={18} className="text-indigo-600" />
+                      <Check size={14} className="text-indigo-600" />
                     )}
                   </button>
                 ))}
@@ -185,122 +188,112 @@ export default function App() {
             </div>
 
             {/* Theme Selection */}
-            <div className="space-y-8">
-              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <Palette className="text-indigo-600" />
+            <div className="lg:col-span-7 space-y-5">
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <h2 className="text-base font-bold mb-3 flex items-center gap-2">
+                  <Palette className="text-indigo-600" size={18} />
                   Theme & Style
                 </h2>
                 
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Selected Template</label>
-                    <button
-                      onClick={() => setStep('template')}
-                      className="w-full flex items-center justify-between p-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Layout size={20} />
-                        <span className="font-bold">{cvData.theme.templateId === 'classic' ? 'Classic Professional' : 'Modern Sidebar'}</span>
-                      </div>
-                      <span className="text-xs font-medium uppercase tracking-wider">Change</span>
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Primary Color</label>
-                    <div className="flex flex-wrap gap-3">
-                      {COLORS.map((color) => (
-                        <button
-                          key={color.value}
-                          onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: color.value } }))}
-                          className={cn(
-                            "w-10 h-10 rounded-full border-2 transition-all",
-                            cvData.theme.primaryColor === color.value ? "border-gray-900 scale-110" : "border-transparent"
-                          )}
-                          style={{ backgroundColor: color.value }}
-                          title={color.name}
-                        />
-                      ))}
-                      <div className="flex flex-col items-center gap-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Template</label>
+                      <button
+                        onClick={() => setStep('template')}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all"
+                      >
                         <div className="flex items-center gap-2">
-                          <input 
-                            type="color" 
-                            className="w-10 h-10 rounded-full border-2 border-gray-200 p-0.5 cursor-pointer overflow-hidden"
-                            value={cvData.theme.primaryColor}
-                            onChange={(e) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))}
-                            title="Choose custom color"
-                          />
-                          <input 
-                            type="text"
-                            className="w-20 px-2 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono uppercase"
-                            value={cvData.theme.primaryColor}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (/^#[0-9A-F]{0,6}$/i.test(val)) {
-                                setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: val } }));
-                              }
-                            }}
-                            placeholder="#000000"
-                          />
+                          <Layout size={14} />
+                          <span className="text-xs font-bold">{cvData.theme.templateId === 'classic' ? 'Classic' : 'Modern'}</span>
                         </div>
-                        <span className="text-[10px] text-gray-500 font-medium">Custom Color</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Change</span>
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Primary Color</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {COLORS.map((color) => (
+                          <button
+                            key={color.value}
+                            onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: color.value } }))}
+                            className={cn(
+                              "w-7 h-7 rounded-full border-2 transition-all",
+                              cvData.theme.primaryColor === color.value ? "border-gray-900 scale-110" : "border-transparent"
+                            )}
+                            style={{ backgroundColor: color.value }}
+                            title={color.name}
+                          />
+                        ))}
+                        <input 
+                          type="color" 
+                          className="w-7 h-7 rounded-full border-2 border-gray-200 p-0.5 cursor-pointer overflow-hidden"
+                          value={cvData.theme.primaryColor}
+                          onChange={(e) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))}
+                          title="Custom"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Font Size ({cvData.theme.fontSize}pt)</label>
+                      <div className="flex items-center gap-2.5 bg-gray-50 p-1.5 rounded-xl border border-gray-200">
+                        <button 
+                          onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, fontSize: Math.max(8, prev.theme.fontSize - 1) } }))}
+                          className="p-1 hover:bg-white rounded-lg transition-all text-gray-600 shadow-sm"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <input 
+                          type="range"
+                          min="8"
+                          max="16"
+                          step="0.5"
+                          value={cvData.theme.fontSize}
+                          onChange={(e) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, fontSize: parseFloat(e.target.value) } }))}
+                          className="flex-1 accent-indigo-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <button 
+                          onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, fontSize: Math.min(16, prev.theme.fontSize + 1) } }))}
+                          className="p-1 hover:bg-white rounded-lg transition-all text-gray-600 shadow-sm"
+                        >
+                          <Plus size={12} />
+                        </button>
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Font Style</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {FONTS.map((font) => (
-                        <button
-                          key={font.value}
-                          onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, fontStyle: font.value } }))}
-                          className={cn(
-                            "px-4 py-3 rounded-xl border text-left transition-all",
-                            cvData.theme.fontStyle === font.value 
-                              ? "border-indigo-600 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-100" 
-                              : "border-gray-200 text-gray-600 hover:border-gray-300"
-                          )}
-                        >
-                          <div className={cn("text-lg mb-1", font.value)}>Aa</div>
-                          <div className="text-xs font-medium truncate">{font.name}</div>
-                        </button>
-                      ))}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Font Style</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {FONTS.slice(0, 6).map((font) => (
+                          <button
+                            key={font.value}
+                            onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, fontStyle: font.value } }))}
+                            className={cn(
+                              "px-2.5 py-1.5 rounded-xl border text-left transition-all",
+                              cvData.theme.fontStyle === font.value 
+                                ? "border-indigo-600 bg-indigo-50 text-indigo-700" 
+                                : "border-gray-200 text-gray-600 hover:border-gray-300"
+                            )}
+                          >
+                            <div className={cn("text-xs font-medium truncate", font.value)}>{font.name}</div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">CV Length (Pages)</label>
-                    <div className="flex gap-3">
-                      {[1, 2, 3].map((num) => (
-                        <button
-                          key={num}
-                          onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, pageCount: num } }))}
-                          className={cn(
-                            "flex-1 py-3 rounded-xl border font-bold transition-all",
-                            cvData.theme.pageCount === num 
-                              ? "border-indigo-600 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-100" 
-                              : "border-gray-200 text-gray-600 hover:border-gray-300"
-                          )}
-                        >
-                          {num} {num === 1 ? 'Page' : 'Pages'}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="mt-2 text-[10px] text-gray-500 italic">
-                      Note: Content will naturally flow across pages. Selecting more pages adds extra space.
-                    </p>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => setStep('builder')}
-                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 group"
+                className="w-full py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 group"
               >
                 Continue to Builder
-                <ChevronRight className="group-hover:translate-x-1 transition-transform" />
+                <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>
