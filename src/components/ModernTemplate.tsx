@@ -1,7 +1,7 @@
 import React from 'react';
 import { CVData } from '../types';
 import { cn } from '../lib/utils';
-import { Phone, Mail, MapPin, User, Briefcase, GraduationCap, Info, Check } from 'lucide-react';
+import { Phone, Mail, MapPin, User, Briefcase, GraduationCap, Info, Check, Award } from 'lucide-react';
 
 interface ModernTemplateProps {
   data: CVData;
@@ -98,6 +98,11 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <div className="space-y-4">
                 {computerSkills.map((skill, idx) => (
                   <div key={idx} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                    {skill.hasTraining && (
+                      <p className="mb-2 text-gray-700 leading-tight">
+                        Completed a {skill.duration} computer training program from {skill.instituteName}.
+                      </p>
+                    )}
                     <ul className="list-disc list-inside space-y-1">
                       {skill.skills.map((s, sIdx) => (
                         <li key={sIdx} className="leading-tight">{s}</li>
@@ -208,7 +213,7 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
                     </div>
                     <p className="font-medium text-gray-600 mb-1" style={{ fontSize: `${theme.fontSize - 1}pt` }}>{edu.examName}</p>
                     <p className="text-gray-700" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
-                      Group: {edu.subject}, GPA: {edu.gpa} / {edu.gpaType.replace('Out Of ', '')}
+                      Board: {edu.board}, Group: {edu.subject}, GPA: {edu.gpa} ({edu.gpaType})
                     </p>
                   </div>
                 ))}
@@ -270,6 +275,47 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
                   <span>:</span>
                   <span>{personalInfo.religion}</span>
                 </div>
+                <div className="grid grid-cols-[140px_10px_1fr] border-b border-gray-100 pb-1">
+                  <span className="font-medium text-gray-600">Birth Reg No</span>
+                  <span>:</span>
+                  <span>{personalInfo.birthRegNo}</span>
+                </div>
+                <div className="grid grid-cols-[140px_10px_1fr] border-b border-gray-100 pb-1">
+                  <span className="font-medium text-gray-600">Blood Group</span>
+                  <span>:</span>
+                  <span>{personalInfo.bloodGroup}</span>
+                </div>
+                <div className="grid grid-cols-[140px_10px_1fr] border-b border-gray-100 pb-1">
+                  <span className="font-medium text-gray-600">Height</span>
+                  <span>:</span>
+                  <span>{personalInfo.heightFeet || personalInfo.heightInches ? `${personalInfo.heightFeet || '0'}' ${personalInfo.heightInches || '0'}"` : ''}</span>
+                </div>
+                <div className="grid grid-cols-[140px_10px_1fr] border-b border-gray-100 pb-1">
+                  <span className="font-medium text-gray-600">Weight</span>
+                  <span>:</span>
+                  <span>{personalInfo.weight ? `${personalInfo.weight} Kg` : ''}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* References */}
+          {selectedSections.includes('references') && data.references && data.references.length > 0 && (
+            <div className="mb-8 relative pl-8">
+              <div className="absolute left-0 top-0 bottom-0 w-[1px]" style={{ backgroundColor: `${theme.primaryColor}33` }} />
+              <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
+                <Award size={12} style={{ color: theme.primaryColor }} />
+              </div>
+              <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>References</h3>
+              <div className="grid grid-cols-2 gap-6">
+                {data.references.map((ref, idx) => (
+                  <div key={idx} className="text-gray-700" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                    <p className="font-bold text-gray-900">{ref.name}</p>
+                    <p>{ref.position}</p>
+                    <p>{ref.organization}</p>
+                    <p>Phone: {ref.phone}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}

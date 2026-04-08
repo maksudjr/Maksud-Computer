@@ -4,12 +4,7 @@ import { ClassicTemplate } from './ClassicTemplate';
 import { ModernTemplate } from './ModernTemplate';
 import { SmartClassicTemplate, SmartModernTemplate } from './SmartTemplates';
 import { 
-  ClassicMinimalTemplate, 
-  ClassicElegantTemplate, 
-  ClassicBoldTemplate,
-  ModernCreativeTemplate,
-  ModernCompactTemplate,
-  ModernSplitTemplate
+  ClassicElegantTemplate
 } from './ExtraTemplates';
 
 interface CVPreviewProps {
@@ -24,18 +19,8 @@ export const CVPreview = React.forwardRef<HTMLDivElement, CVPreviewProps>(({ dat
       return <SmartClassicTemplate ref={ref} data={data} />;
     case 'smart-modern':
       return <SmartModernTemplate ref={ref} data={data} />;
-    case 'classic-minimal':
-      return <ClassicMinimalTemplate ref={ref} data={data} />;
     case 'classic-elegant':
       return <ClassicElegantTemplate ref={ref} data={data} />;
-    case 'classic-bold':
-      return <ClassicBoldTemplate ref={ref} data={data} />;
-    case 'modern-creative':
-      return <ModernCreativeTemplate ref={ref} data={data} />;
-    case 'modern-compact':
-      return <ModernCompactTemplate ref={ref} data={data} />;
-    case 'modern-split':
-      return <ModernSplitTemplate ref={ref} data={data} />;
     default:
       return <ClassicTemplate ref={ref} data={data} />;
   }

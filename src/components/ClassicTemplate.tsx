@@ -256,6 +256,23 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
         </section>
       )}
 
+      {/* References */}
+      {selectedSections.includes('references') && data.references && data.references.length > 0 && (
+        <section>
+          <SectionHeader title="References" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <div className="grid grid-cols-2 gap-4">
+            {data.references.map((ref, idx) => (
+              <div key={idx} style={{ fontSize: `${theme.fontSize}pt` }} className="leading-tight">
+                <p className="font-bold">{ref.name}</p>
+                <p>{ref.position}</p>
+                <p>{ref.organization}</p>
+                <p>Phone: {ref.phone}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Certification / Declaration */}
       {selectedSections.includes('declaration') && declaration && (
         <section className="mt-4">

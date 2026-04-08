@@ -7,12 +7,7 @@ import { ClassicTemplate } from './ClassicTemplate';
 import { ModernTemplate } from './ModernTemplate';
 import { SmartClassicTemplate, SmartModernTemplate } from './SmartTemplates';
 import { 
-  ClassicMinimalTemplate, 
-  ClassicElegantTemplate, 
-  ClassicBoldTemplate,
-  ModernCreativeTemplate,
-  ModernCompactTemplate,
-  ModernSplitTemplate
+  ClassicElegantTemplate
 } from './ExtraTemplates';
 import { CVHistory } from './CVHistory';
 
@@ -74,34 +69,9 @@ const TEMPLATES: { id: TemplateId; name: string; description: string }[] = [
     description: 'A premium sidebar layout with timeline indicators and modern accents.',
   },
   {
-    id: 'classic-minimal',
-    name: 'Classic Minimal',
-    description: 'Ultra-clean design focusing purely on your content and typography.',
-  },
-  {
     id: 'classic-elegant',
     name: 'Classic Elegant',
     description: 'A sophisticated serif-based layout for a distinguished professional look.',
-  },
-  {
-    id: 'classic-bold',
-    name: 'Classic Bold',
-    description: 'High-impact design with strong headers and bold color accents.',
-  },
-  {
-    id: 'modern-creative',
-    name: 'Modern Creative',
-    description: 'Asymmetric layout with artistic elements for creative professionals.',
-  },
-  {
-    id: 'modern-compact',
-    name: 'Modern Compact',
-    description: 'Efficient use of space, perfect for detailed CVs that need to stay concise.',
-  },
-  {
-    id: 'modern-split',
-    name: 'Modern Split',
-    description: 'A balanced split-header design that separates contact info from profile.',
   }
 ];
 
@@ -126,7 +96,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {TEMPLATES.map((template) => (
           <motion.div
             key={template.id}
@@ -142,11 +112,11 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           >
             <div className="aspect-[3/4.2] bg-gray-50 relative overflow-hidden flex justify-center">
               <div 
-                className="absolute top-0 origin-top transition-transform duration-500 group-hover:scale-[0.18]"
+                className="absolute top-0 origin-top transition-transform duration-500 group-hover:scale-[0.22]"
                 style={{ 
                   width: '794px', 
                   height: '1123px', 
-                  transform: 'scale(0.16)',
+                  transform: 'scale(0.2)',
                   backgroundColor: 'white',
                   boxShadow: '0 0 30px rgba(0,0,0,0.1)',
                   pointerEvents: 'none'
@@ -156,12 +126,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                 {template.id === 'modern' && <ModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern' } }} />}
                 {template.id === 'smart-classic' && <SmartClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-classic' } }} />}
                 {template.id === 'smart-modern' && <SmartModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-modern' } }} />}
-                {template.id === 'classic-minimal' && <ClassicMinimalTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-minimal' } }} />}
                 {template.id === 'classic-elegant' && <ClassicElegantTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-elegant' } }} />}
-                {template.id === 'classic-bold' && <ClassicBoldTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-bold' } }} />}
-                {template.id === 'modern-creative' && <ModernCreativeTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern-creative' } }} />}
-                {template.id === 'modern-compact' && <ModernCompactTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern-compact' } }} />}
-                {template.id === 'modern-split' && <ModernSplitTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern-split' } }} />}
               </div>
               
               {selectedId === template.id && (

@@ -47,8 +47,15 @@ export interface ComputerSkill {
 
 export type TemplateId = 
   | 'classic' | 'modern' | 'smart-classic' | 'smart-modern'
-  | 'classic-minimal' | 'classic-elegant' | 'classic-bold'
-  | 'modern-creative' | 'modern-compact' | 'modern-split';
+  | 'classic-elegant';
+
+export interface Reference {
+  id: string;
+  name: string;
+  position: string;
+  organization: string;
+  phone: string;
+}
 
 export interface CVData {
   id: string;
@@ -99,7 +106,7 @@ export interface CVData {
   languageProficiency: string[];
   selfAssessment: string[];
   declaration: string;
-  references: string;
+  references: Reference[];
   customSection: {
     title: string;
     fields: CustomField[];
@@ -167,7 +174,7 @@ export const DEFAULT_CV_DATA: CVData = {
   languageProficiency: [],
   selfAssessment: [],
   declaration: 'I the undersigned, hereby declare that I will the responsible for any wrong Information Provided here and any misstatement described herein may lead to my Disqualification for dismissal, if employed.',
-  references: '',
+  references: [],
   customSection: {
     title: 'Custom Section',
     fields: [],

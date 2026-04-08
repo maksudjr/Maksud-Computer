@@ -1,7 +1,7 @@
 import React from 'react';
 import { CVData } from '../types';
 import { cn } from '../lib/utils';
-import { Mail, Phone, MapPin, Globe, Award, BookOpen, Briefcase, User, CheckSquare, Heart, FileText } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Award, BookOpen, Briefcase, User, CheckSquare, Heart, FileText, Info, Check } from 'lucide-react';
 
 interface TemplateProps {
   data: CVData;
@@ -17,7 +17,7 @@ const formatDate = (dateStr: string) => {
 };
 
 export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
-  const { theme, personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections } = data;
+  const { theme, personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections, references } = data;
 
   const formatAddress = (village: string, po: string, upazila: string, district: string) => {
     const parts = [];
@@ -29,6 +29,7 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
   };
 
   const presentAddressLine = formatAddress(personalInfo.presentVillage, personalInfo.presentPostOffice, personalInfo.presentUpazila, personalInfo.presentDistrict);
+  const permanentAddressLine = formatAddress(personalInfo.permanentVillage, personalInfo.permanentPostOffice, personalInfo.permanentUpazila, personalInfo.permanentDistrict);
 
   return (
     <div 
@@ -140,10 +141,68 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
             <h2 className="text-lg font-bold uppercase border-b-2 mb-3 pb-1" style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}33` }}>
               Computer Skills
             </h2>
+            <div className="space-y-2">
+              {computerSkills.map((skill, idx) => (
+                <div key={idx}>
+                  {skill.hasTraining && (
+                    <p className="mb-1 text-gray-700 font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                      Completed a {skill.duration} computer training program from {skill.instituteName}.
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {skill.skills.map((s, sIdx) => (
+                      <span key={sIdx} className="px-3 py-1 bg-gray-100 rounded-full font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Language Proficiency */}
+        {selectedSections.includes('languageProficiency') && languageProficiency.length > 0 && (
+          <section>
+            <h2 className="text-lg font-bold uppercase border-b-2 mb-3 pb-1" style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}33` }}>
+              Language Proficiency
+            </h2>
+            <div className="flex flex-wrap gap-4">
+              {languageProficiency.map((lang, idx) => (
+                <div key={idx} className="flex items-center gap-2" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: theme.primaryColor }} />
+                  <span>{lang}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Self Assessment */}
+        {selectedSections.includes('selfAssessment') && selfAssessment.length > 0 && (
+          <section>
+            <h2 className="text-lg font-bold uppercase border-b-2 mb-3 pb-1" style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}33` }}>
+              Self Assessment
+            </h2>
+            <ul className="list-disc list-inside space-y-1" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+              {selfAssessment.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Hobbies */}
+        {selectedSections.includes('hobbies') && hobbies.length > 0 && (
+          <section>
+            <h2 className="text-lg font-bold uppercase border-b-2 mb-3 pb-1" style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}33` }}>
+              Hobbies & Interests
+            </h2>
             <div className="flex flex-wrap gap-2">
-              {computerSkills.flatMap(cs => cs.skills).map((skill, idx) => (
-                <span key={idx} className="px-3 py-1 bg-gray-100 rounded-full font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
-                  {skill}
+              {hobbies.map((hobby, idx) => (
+                <span key={idx} className="px-3 py-1 border rounded-lg" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                  {hobby}
                 </span>
               ))}
             </div>
@@ -181,6 +240,70 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
                 <span className="font-bold text-gray-600">Religion</span>
                 <span>{personalInfo.religion}</span>
               </div>
+              <div className="flex justify-between border-b border-gray-100 pb-1">
+                <span className="font-bold text-gray-600">Marital Status</span>
+                <span>{personalInfo.maritalStatus}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-100 pb-1">
+                <span className="font-bold text-gray-600">NID No</span>
+                <span>{personalInfo.nid}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-100 pb-1">
+                <span className="font-bold text-gray-600">Birth Reg No</span>
+                <span>{personalInfo.birthRegNo}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-100 pb-1">
+                <span className="font-bold text-gray-600">Blood Group</span>
+                <span>{personalInfo.bloodGroup}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-100 pb-1">
+                <span className="font-bold text-gray-600">Height</span>
+                <span>{personalInfo.heightFeet || personalInfo.heightInches ? `${personalInfo.heightFeet || '0'}' ${personalInfo.heightInches || '0'}"` : ''}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-100 pb-1">
+                <span className="font-bold text-gray-600">Weight</span>
+                <span>{personalInfo.weight ? `${personalInfo.weight} Kg` : ''}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-100 pb-1 col-span-2">
+                <span className="font-bold text-gray-600">Permanent Address</span>
+                <span>{permanentAddressLine}</span>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* References */}
+        {selectedSections.includes('references') && references && references.length > 0 && (
+          <section>
+            <h2 className="text-lg font-bold uppercase border-b-2 mb-3 pb-1" style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}33` }}>
+              References
+            </h2>
+            <div className="grid grid-cols-2 gap-8">
+              {references.map((ref, idx) => (
+                <div key={idx} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                  <p className="font-bold">{ref.name}</p>
+                  <p className="text-gray-600">{ref.position}</p>
+                  <p className="text-gray-600">{ref.organization}</p>
+                  <p className="text-gray-600">{ref.phone}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Custom Section */}
+        {selectedSections.includes('custom') && customSection && customSection.fields.length > 0 && (
+          <section>
+            <h2 className="text-lg font-bold uppercase border-b-2 mb-3 pb-1" style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}33` }}>
+              {customSection.title}
+            </h2>
+            <div className="space-y-2" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+              {customSection.fields.map((field, idx) => (
+                <div key={idx} className="flex justify-between border-b border-gray-50 pb-1">
+                  <span className="font-bold text-gray-600">{field.label}</span>
+                  <span>{field.value}</span>
+                </div>
+              ))}
             </div>
           </section>
         )}
@@ -217,7 +340,7 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
 });
 
 export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
-  const { theme, personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections } = data;
+  const { theme, personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections, references } = data;
 
   const formatAddress = (village: string, po: string, upazila: string, district: string) => {
     const parts = [];
@@ -229,6 +352,7 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
   };
 
   const presentAddressLine = formatAddress(personalInfo.presentVillage, personalInfo.presentPostOffice, personalInfo.presentUpazila, personalInfo.presentDistrict);
+  const permanentAddressLine = formatAddress(personalInfo.permanentVillage, personalInfo.permanentPostOffice, personalInfo.permanentUpazila, personalInfo.permanentDistrict);
 
   return (
     <div 
@@ -272,14 +396,25 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
             </div>
           </section>
 
-          {selectedSections.includes('skills') && computerSkills.length > 0 && (
+          {selectedSections.includes('computerSkills') && computerSkills.length > 0 && (
             <section>
               <h3 className="text-sm font-black uppercase tracking-widest mb-4 border-b border-white/20 pb-2">Skills</h3>
-              <div className="flex flex-wrap gap-2">
-                {computerSkills.flatMap(cs => cs.skills).map((skill, idx) => (
-                  <span key={idx} className="px-2 py-1 bg-white/10 rounded text-xs font-medium">
-                    {skill}
-                  </span>
+              <div className="space-y-4">
+                {computerSkills.map((skill, idx) => (
+                  <div key={idx}>
+                    {skill.hasTraining && (
+                      <p className="text-[10px] opacity-60 mb-2">
+                        {skill.duration} training at {skill.instituteName}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {skill.skills.map((s, sIdx) => (
+                        <span key={sIdx} className="px-2 py-1 bg-white/10 rounded text-xs font-medium">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </section>
@@ -294,6 +429,19 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
                     <div className="w-1 h-1 rounded-full bg-white" />
                     <span>{lang}</span>
                   </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {selectedSections.includes('hobbies') && hobbies.length > 0 && (
+            <section>
+              <h3 className="text-sm font-black uppercase tracking-widest mb-4 border-b border-white/20 pb-2">Hobbies</h3>
+              <div className="flex flex-wrap gap-2">
+                {hobbies.map((hobby, idx) => (
+                  <span key={idx} className="px-2 py-1 bg-white/10 rounded text-xs font-medium">
+                    {hobby}
+                  </span>
                 ))}
               </div>
             </section>
@@ -362,12 +510,84 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
                     <div>
                       <h3 className="font-bold uppercase" style={{ fontSize: `${theme.fontSize}pt` }}>{edu.examName}</h3>
                       <p className="text-gray-600 font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>{edu.instituteName}</p>
+                      <p className="text-gray-400 italic" style={{ fontSize: `${theme.fontSize - 2}pt` }}>{edu.board} Board | {edu.subject}</p>
                       <div className="flex gap-4 mt-1 text-gray-400 font-bold" style={{ fontSize: `${theme.fontSize - 2}pt` }}>
                         <span>{edu.passingYear}</span>
-                        <span>GPA: {edu.gpa}</span>
+                        <span>GPA: {edu.gpa} ({edu.gpaType})</span>
                       </div>
                     </div>
                   </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {selectedSections.includes('selfAssessment') && selfAssessment.length > 0 && (
+            <section>
+              <h2 className="text-lg font-black uppercase tracking-wider mb-4 flex items-center gap-3">
+                <CheckSquare size={20} style={{ color: theme.primaryColor }} />
+                <span>Self Assessment</span>
+              </h2>
+              <ul className="list-disc list-inside space-y-1 text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                {selfAssessment.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {selectedSections.includes('personalInfo') && (
+            <section>
+              <h2 className="text-lg font-black uppercase tracking-wider mb-4 flex items-center gap-3">
+                <User size={20} style={{ color: theme.primaryColor }} />
+                <span>Personal Details</span>
+              </h2>
+              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                <p><strong>Father's Name:</strong> {personalInfo.fathersName}</p>
+                <p><strong>Mother's Name:</strong> {personalInfo.mothersName}</p>
+                <p><strong>Date of Birth:</strong> {formatDate(personalInfo.dob)}</p>
+                <p><strong>Gender:</strong> {personalInfo.gender}</p>
+                <p><strong>Nationality:</strong> {personalInfo.nationality}</p>
+                <p><strong>Religion:</strong> {personalInfo.religion}</p>
+                <p><strong>Marital Status:</strong> {personalInfo.maritalStatus}</p>
+                <p><strong>NID No:</strong> {personalInfo.nid}</p>
+                <p><strong>Birth Reg No:</strong> {personalInfo.birthRegNo}</p>
+                <p><strong>Blood Group:</strong> {personalInfo.bloodGroup}</p>
+                <p><strong>Height:</strong> {personalInfo.heightFeet || personalInfo.heightInches ? `${personalInfo.heightFeet || '0'}' ${personalInfo.heightInches || '0'}"` : ''}</p>
+                <p><strong>Weight:</strong> {personalInfo.weight ? `${personalInfo.weight} Kg` : ''}</p>
+                <p className="col-span-2"><strong>Permanent Address:</strong> {permanentAddressLine}</p>
+              </div>
+            </section>
+          )}
+
+          {selectedSections.includes('references') && references && references.length > 0 && (
+            <section>
+              <h2 className="text-lg font-black uppercase tracking-wider mb-4 flex items-center gap-3">
+                <Award size={20} style={{ color: theme.primaryColor }} />
+                <span>References</span>
+              </h2>
+              <div className="grid grid-cols-2 gap-6">
+                {references.map((ref, idx) => (
+                  <div key={idx} className="text-sm text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                    <p className="font-bold text-gray-900">{ref.name}</p>
+                    <p>{ref.position}</p>
+                    <p>{ref.organization}</p>
+                    <p>{ref.phone}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {selectedSections.includes('custom') && customSection && customSection.fields.length > 0 && (
+            <section>
+              <h2 className="text-lg font-black uppercase tracking-wider mb-4 flex items-center gap-3">
+                <Info size={20} style={{ color: theme.primaryColor }} />
+                <span>{customSection.title}</span>
+              </h2>
+              <div className="space-y-2 text-sm text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                {customSection.fields.map((field, idx) => (
+                  <p key={idx}><strong>{field.label}:</strong> {field.value}</p>
                 ))}
               </div>
             </section>

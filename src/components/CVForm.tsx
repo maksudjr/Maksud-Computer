@@ -1,6 +1,25 @@
 import React, { useState } from 'react';
-import { CVData, SectionId, Education, WorkExperience, CustomField, ComputerSkill } from '../types';
-import { Plus, Trash2, Upload, ChevronDown, ChevronUp, Edit2 } from 'lucide-react';
+import { CVData, SectionId, Education, WorkExperience, CustomField, ComputerSkill, Reference } from '../types';
+import { 
+  Plus, 
+  Trash2, 
+  Upload, 
+  ChevronDown, 
+  ChevronUp, 
+  Edit2,
+  User,
+  Target,
+  GraduationCap,
+  Monitor,
+  Briefcase,
+  Languages,
+  ClipboardCheck,
+  Heart,
+  FileCheck,
+  Users,
+  PlusSquare,
+  Sparkles
+} from 'lucide-react';
 import { cn } from '../lib/utils';
 import { PhotoEditor } from './PhotoEditor';
 
@@ -217,9 +236,17 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
     }
   };
 
+  const generateId = () => {
+    try {
+      return crypto.randomUUID();
+    } catch (e) {
+      return Math.random().toString(36).substring(2, 15);
+    }
+  };
+
   const addEducation = () => {
     const newEdu: Education = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       examName: '',
       passingYear: '',
       board: '',
@@ -244,7 +271,7 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
 
   const addWork = () => {
     const newWork: WorkExperience = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       companyName: '',
       position: '',
       duration: '',
@@ -280,7 +307,7 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
 
   const addComputerSkill = () => {
     const newSkill: ComputerSkill = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       hasTraining: true,
       instituteName: '',
       duration: '',
@@ -301,7 +328,7 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
   };
 
   const addCustomField = () => {
-    const newField: CustomField = { id: crypto.randomUUID(), label: '', value: '' };
+    const newField: CustomField = { id: generateId(), label: '', value: '' };
     onChange({
       ...data,
       customSection: { ...data.customSection, fields: [...data.customSection.fields, newField] }
@@ -318,13 +345,37 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
     });
   };
 
+  const addReference = () => {
+    const newRef: Reference = {
+      id: generateId(),
+      name: '',
+      position: '',
+      organization: '',
+      phone: ''
+    };
+    onChange({ ...data, references: [...data.references, newRef] });
+  };
+
+  const updateReference = (id: string, field: keyof Reference, value: string) => {
+    onChange({
+      ...data,
+      references: data.references.map(ref => ref.id === id ? { ...ref, [field]: value } : ref)
+    });
+  };
+
+  const removeReference = (id: string) => {
+    onChange({ ...data, references: data.references.filter(ref => ref.id !== id) });
+  };
+
   return (
     <div className="space-y-8 pb-20">
       {/* Personal Info */}
       {data.selectedSections.includes('personalInfo') && (
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+              <User size={18} />
+            </div>
             Personal Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -667,7 +718,9 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
       {data.selectedSections.includes('careerObjective') && (
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <Target size={18} />
+              </div>
               Career Objective
             </h3>
           <textarea 
@@ -684,7 +737,9 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold flex items-center gap-2">
-              <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <GraduationCap size={18} />
+              </div>
             Academic Qualification
           </h3>
           <button 
@@ -779,7 +834,9 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
           <section key={field} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold capitalize flex items-center gap-2">
-              <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                {field === 'skills' ? <Monitor size={18} /> : <ClipboardCheck size={18} />}
+              </div>
               {field.replace(/([A-Z])/g, ' $1')}
             </h3>
               <button 
@@ -815,7 +872,9 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
       {data.selectedSections.includes('hobbies') && (
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+              <Heart size={18} />
+            </div>
             Hobby and Interest
           </h3>
           <MultiSelect 
@@ -847,7 +906,9 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold flex items-center gap-2">
-              <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <Monitor size={18} />
+              </div>
               Computer Skills
             </h3>
             <button 
@@ -931,7 +992,9 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold flex items-center gap-2">
-              <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <Languages size={18} />
+              </div>
               Language Proficiency
             </h3>
             <button 
@@ -974,7 +1037,9 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold flex items-center gap-2">
-              <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <Briefcase size={18} />
+              </div>
               Work Experience
             </h3>
             <button 
@@ -1034,11 +1099,84 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
         </section>
       )}
 
+      {/* References */}
+      {data.selectedSections.includes('references') && (
+        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <Users size={18} />
+              </div>
+              References
+            </h3>
+            <button 
+              onClick={addReference}
+              className="flex items-center gap-2 px-3 py-1 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700"
+            >
+              <Plus size={16} /> Add
+            </button>
+          </div>
+          <div className="space-y-6">
+            {data.references.map((ref) => (
+              <div key={ref.id} className="p-4 border rounded-lg relative group">
+                <button 
+                  onClick={() => removeReference(ref.id)}
+                  className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Name</label>
+                    <input 
+                      type="text" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={ref.name}
+                      onChange={(e) => updateReference(ref.id, 'name', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Position</label>
+                    <input 
+                      type="text" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={ref.position}
+                      onChange={(e) => updateReference(ref.id, 'position', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Organization</label>
+                    <input 
+                      type="text" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={ref.organization}
+                      onChange={(e) => updateReference(ref.id, 'organization', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Phone</label>
+                    <input 
+                      type="text" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={ref.phone}
+                      onChange={(e) => updateReference(ref.id, 'phone', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Custom Section */}
       {data.selectedSections.includes('custom') && (
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-4">
-            <div className="flex-1 mr-4">
+            <div className="flex-1 mr-4 flex items-center gap-2">
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <PlusSquare size={18} />
+              </div>
               <input 
                 type="text" 
                 className="text-lg font-bold w-full border-b border-gray-200 focus:border-indigo-500 outline-none"
@@ -1093,7 +1231,9 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
       {data.selectedSections.includes('declaration') && (
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+              <FileCheck size={18} />
+            </div>
             Certification / Declaration
           </h3>
           <textarea 
