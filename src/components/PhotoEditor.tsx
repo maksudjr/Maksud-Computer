@@ -16,6 +16,10 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
   const [rotation, setRotation] = useState(0);
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  const [hue, setHue] = useState(0);
+  const [sepia, setSepia] = useState(0);
+  const [grayscale, setGrayscale] = useState(0);
   const [isFreeCrop, setIsFreeCrop] = useState(false);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
@@ -37,7 +41,11 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
     pixelCrop: any,
     rotation = 0,
     brightness = 100,
-    contrast = 100
+    contrast = 100,
+    saturation = 100,
+    hue = 0,
+    sepia = 0,
+    grayscale = 0
   ): Promise<string> => {
     const image = await createImage(imageSrc);
     const canvas = document.createElement('canvas');
@@ -72,14 +80,14 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
       Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
     );
 
-    // Apply brightness and contrast
+    // Apply filters
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = canvas.width;
     finalCanvas.height = canvas.height;
     const finalCtx = finalCanvas.getContext('2d');
     
     if (finalCtx) {
-      finalCtx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+      finalCtx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hue}deg) sepia(${sepia}%) grayscale(${grayscale}%)`;
       finalCtx.drawImage(canvas, 0, 0);
       return finalCanvas.toDataURL('image/jpeg');
     }
@@ -94,7 +102,11 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
         croppedAreaPixels,
         rotation,
         brightness,
-        contrast
+        contrast,
+        saturation,
+        hue,
+        sepia,
+        grayscale
       );
       onSave(croppedImage);
     } catch (e) {
@@ -149,14 +161,14 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
           onZoomChange={setZoom}
           style={{
             containerStyle: {
-              filter: `brightness(${brightness}%) contrast(${contrast}%)`
+              filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hue}deg) sepia(${sepia}%) grayscale(${grayscale}%)`
             }
           }}
         />
       </div>
 
-      <div className="p-6 bg-gray-900 text-white space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div className="p-6 bg-gray-900 text-white space-y-6 overflow-y-auto max-h-[40vh]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <Sun size={20} className="text-gray-400" />
@@ -188,6 +200,80 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
                   max="150" 
                   value={contrast}
                   onChange={(e) => setContrast(parseInt(e.target.value))}
+                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-r from-red-500 via-green-500 to-blue-500" />
+              <div className="flex-1 space-y-1">
+                <div className="flex justify-between text-xs font-medium text-gray-400">
+                  <span>Saturation</span>
+                  <span>{saturation}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="200" 
+                  value={saturation}
+                  onChange={(e) => setSaturation(parseInt(e.target.value))}
+                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-5 h-5 rounded-full bg-indigo-500" />
+              <div className="flex-1 space-y-1">
+                <div className="flex justify-between text-xs font-medium text-gray-400">
+                  <span>Hue</span>
+                  <span>{hue}°</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="360" 
+                  value={hue}
+                  onChange={(e) => setHue(parseInt(e.target.value))}
+                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-5 h-5 rounded-full bg-amber-600" />
+              <div className="flex-1 space-y-1">
+                <div className="flex justify-between text-xs font-medium text-gray-400">
+                  <span>Sepia</span>
+                  <span>{sepia}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={sepia}
+                  onChange={(e) => setSepia(parseInt(e.target.value))}
+                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-5 h-5 rounded-full bg-gray-400" />
+              <div className="flex-1 space-y-1">
+                <div className="flex justify-between text-xs font-medium text-gray-400">
+                  <span>Grayscale</span>
+                  <span>{grayscale}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={grayscale}
+                  onChange={(e) => setGrayscale(parseInt(e.target.value))}
                   className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                 />
               </div>

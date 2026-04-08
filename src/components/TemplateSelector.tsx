@@ -5,11 +5,26 @@ import { TemplateId, CVData, DEFAULT_CV_DATA } from '../types';
 import { cn } from '../lib/utils';
 import { ClassicTemplate } from './ClassicTemplate';
 import { ModernTemplate } from './ModernTemplate';
+import { SmartClassicTemplate, SmartModernTemplate } from './SmartTemplates';
+import { 
+  ClassicMinimalTemplate, 
+  ClassicElegantTemplate, 
+  ClassicBoldTemplate,
+  ModernCreativeTemplate,
+  ModernCompactTemplate,
+  ModernSplitTemplate
+} from './ExtraTemplates';
+import { CVHistory } from './CVHistory';
 
 interface TemplateSelectorProps {
   selectedId: TemplateId;
   onSelect: (id: TemplateId) => void;
   onNext: () => void;
+  history: CVData[];
+  onViewHistory: (cv: CVData) => void;
+  onDeleteHistory: (id: string) => void;
+  onPrintHistory: (cv: CVData) => void;
+  onDownloadHistory: (cv: CVData) => void;
 }
 
 const SAMPLE_DATA: CVData = {
@@ -47,22 +62,71 @@ const TEMPLATES: { id: TemplateId; name: string; description: string }[] = [
     id: 'modern',
     name: 'Modern Sidebar',
     description: 'A stylish two-column layout with a sidebar for skills and contact info.',
+  },
+  {
+    id: 'smart-classic',
+    name: 'Smart Classic',
+    description: 'An enhanced version of classic with better typography and smart spacing.',
+  },
+  {
+    id: 'smart-modern',
+    name: 'Smart Modern',
+    description: 'A premium sidebar layout with timeline indicators and modern accents.',
+  },
+  {
+    id: 'classic-minimal',
+    name: 'Classic Minimal',
+    description: 'Ultra-clean design focusing purely on your content and typography.',
+  },
+  {
+    id: 'classic-elegant',
+    name: 'Classic Elegant',
+    description: 'A sophisticated serif-based layout for a distinguished professional look.',
+  },
+  {
+    id: 'classic-bold',
+    name: 'Classic Bold',
+    description: 'High-impact design with strong headers and bold color accents.',
+  },
+  {
+    id: 'modern-creative',
+    name: 'Modern Creative',
+    description: 'Asymmetric layout with artistic elements for creative professionals.',
+  },
+  {
+    id: 'modern-compact',
+    name: 'Modern Compact',
+    description: 'Efficient use of space, perfect for detailed CVs that need to stay concise.',
+  },
+  {
+    id: 'modern-split',
+    name: 'Modern Split',
+    description: 'A balanced split-header design that separates contact info from profile.',
   }
 ];
 
-export const TemplateSelector: React.FC<TemplateSelectorProps> = ({ selectedId, onSelect, onNext }) => {
+export const TemplateSelector: React.FC<TemplateSelectorProps> = ({ 
+  selectedId, 
+  onSelect, 
+  onNext,
+  history,
+  onViewHistory,
+  onDeleteHistory,
+  onPrintHistory,
+  onDownloadHistory
+}) => {
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
+    <div className="max-w-6xl mx-auto py-8 px-4">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-3">
           Choose Your Template
         </h1>
-        <p className="text-base text-gray-600 max-w-xl mx-auto">
-          Select a layout that best represents your professional brand.
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Select a layout that best represents your professional brand. All templates are fully customizable.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
         {TEMPLATES.map((template) => (
           <motion.div
             key={template.id}
@@ -70,7 +134,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({ selectedId, 
             whileTap={{ scale: 0.98 }}
             onClick={() => onSelect(template.id)}
             className={cn(
-              "relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all group max-w-[340px] mx-auto w-full",
+              "relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all group w-full",
               selectedId === template.id 
                 ? "border-indigo-600 shadow-xl ring-4 ring-indigo-50" 
                 : "border-gray-100 shadow-md hover:shadow-lg"
@@ -78,21 +142,26 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({ selectedId, 
           >
             <div className="aspect-[3/4.2] bg-gray-50 relative overflow-hidden flex justify-center">
               <div 
-                className="absolute top-0 origin-top transition-transform duration-500 group-hover:scale-[0.38]"
+                className="absolute top-0 origin-top transition-transform duration-500 group-hover:scale-[0.18]"
                 style={{ 
                   width: '794px', 
                   height: '1123px', 
-                  transform: 'scale(0.35)',
+                  transform: 'scale(0.16)',
                   backgroundColor: 'white',
                   boxShadow: '0 0 30px rgba(0,0,0,0.1)',
                   pointerEvents: 'none'
                 }}
               >
-                {template.id === 'classic' ? (
-                  <ClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic' } }} />
-                ) : (
-                  <ModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern' } }} />
-                )}
+                {template.id === 'classic' && <ClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic' } }} />}
+                {template.id === 'modern' && <ModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern' } }} />}
+                {template.id === 'smart-classic' && <SmartClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-classic' } }} />}
+                {template.id === 'smart-modern' && <SmartModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-modern' } }} />}
+                {template.id === 'classic-minimal' && <ClassicMinimalTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-minimal' } }} />}
+                {template.id === 'classic-elegant' && <ClassicElegantTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-elegant' } }} />}
+                {template.id === 'classic-bold' && <ClassicBoldTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-bold' } }} />}
+                {template.id === 'modern-creative' && <ModernCreativeTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern-creative' } }} />}
+                {template.id === 'modern-compact' && <ModernCompactTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern-compact' } }} />}
+                {template.id === 'modern-split' && <ModernSplitTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern-split' } }} />}
               </div>
               
               {selectedId === template.id && (
@@ -119,6 +188,60 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({ selectedId, 
           Start Building Now
           <Layout size={24} className="group-hover:rotate-12 transition-transform" />
         </button>
+      </div>
+
+      <CVHistory 
+        history={history}
+        onView={onViewHistory}
+        onDelete={onDeleteHistory}
+        onPrint={onPrintHistory}
+        onDownload={onDownloadHistory}
+      />
+
+      {/* About Us Section */}
+      <div className="mt-20 pt-10 border-t border-gray-200">
+        <div className="max-w-3xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2 justify-center">
+            <span className="w-2 h-8 bg-indigo-600 rounded-full" />
+            About Us
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
+                  MR
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg">Maksudur Rahman</h3>
+                  <p className="text-indigo-600 font-medium text-sm">Director, Maksud Computer</p>
+                </div>
+              </div>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Professional developer and director at Maksud Computer, dedicated to providing high-quality digital solutions and career-building tools.
+              </p>
+            </div>
+            <div className="space-y-3 text-sm text-gray-600">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+                  <Layout size={16} />
+                </div>
+                <span>Narundi Bazar, Jamalpur Sadar, Jamalpur</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+                  <Check size={16} />
+                </div>
+                <span>01622638268</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+                  <Check size={16} />
+                </div>
+                <span>maksudjr2020@gmail.com</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

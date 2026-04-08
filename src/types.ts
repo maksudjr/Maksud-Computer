@@ -45,9 +45,14 @@ export interface ComputerSkill {
   skills: string[];
 }
 
-export type TemplateId = 'classic' | 'modern';
+export type TemplateId = 
+  | 'classic' | 'modern' | 'smart-classic' | 'smart-modern'
+  | 'classic-minimal' | 'classic-elegant' | 'classic-bold'
+  | 'modern-creative' | 'modern-compact' | 'modern-split';
 
 export interface CVData {
+  id: string;
+  lastUpdated: number;
   theme: {
     primaryColor: string;
     fontStyle: string;
@@ -102,6 +107,8 @@ export interface CVData {
 }
 
 export const DEFAULT_CV_DATA: CVData = {
+  id: 'default',
+  lastUpdated: Date.now(),
   theme: {
     primaryColor: '#4f46e5', // Default indigo
     fontStyle: 'font-sans',

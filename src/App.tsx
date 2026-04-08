@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, 
@@ -68,8 +68,58 @@ export default function App() {
   const [step, setStep] = useState<'template' | 'setup' | 'builder'>('template');
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [cvData, setCvData] = useState<CVData>(DEFAULT_CV_DATA);
+  const [history, setHistory] = useState<CVData[]>([]);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  // Load history from localStorage
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('cv_history');
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error('Failed to parse history', e);
+      }
+    }
+  }, []);
+
+  // Save history to localStorage
+  const saveToHistory = (data: CVData) => {
+    const newHistory = [
+      { ...data, lastUpdated: Date.now(), id: data.id === 'default' ? Math.random().toString(36).substr(2, 9) : data.id },
+      ...history.filter(h => h.id !== data.id)
+    ].slice(0, 5);
+    
+    setHistory(newHistory);
+    localStorage.setItem('cv_history', JSON.stringify(newHistory));
+  };
+
+  const deleteFromHistory = (id: string) => {
+    const newHistory = history.filter(h => h.id !== id);
+    setHistory(newHistory);
+    localStorage.setItem('cv_history', JSON.stringify(newHistory));
+  };
+
+  const handleViewHistory = (cv: CVData) => {
+    setCvData(cv);
+    setStep('builder');
+    setActiveTab('preview');
+  };
+
+  const handlePrintHistory = async (cv: CVData) => {
+    setCvData(cv);
+    setTimeout(() => {
+      handlePrint();
+    }, 100);
+  };
+
+  const handleDownloadHistory = async (cv: CVData) => {
+    setCvData(cv);
+    setTimeout(() => {
+      handleSaveAsPDF();
+    }, 100);
+  };
 
   const welcomeMessage = useMemo(() => {
     const messages = [
@@ -86,29 +136,44 @@ export default function App() {
   const handlePrint = useReactToPrint({
     contentRef: previewRef,
     documentTitle: `${cvData.personalInfo.name || 'CV'}_Curriculum_Vitae`,
+    onAfterPrint: () => saveToHistory(cvData),
   });
 
   const handleSaveAsPDF = async () => {
     if (!previewRef.current) return;
     setIsGeneratingPDF(true);
     try {
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
+      const element = previewRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 3, // Higher scale for better quality
         useCORS: true,
         logging: false,
-        windowWidth: 210 * 3.78, // 210mm in pixels
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
       });
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      
+      const finalWidth = imgWidth * ratio;
+      const finalHeight = imgHeight * ratio;
+      
+      const x = (pdfWidth - finalWidth) / 2;
+      const y = 0; // Start from top
+      
+      pdf.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight);
       pdf.save(`${cvData.personalInfo.name || 'CV'}_Curriculum_Vitae.pdf`);
+      saveToHistory(cvData);
     } catch (error) {
       console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try the Print option instead.');
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -133,7 +198,15 @@ export default function App() {
         <TemplateSelector 
           selectedId={cvData.theme.templateId}
           onSelect={(id) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, templateId: id } }))}
-          onNext={() => setStep('setup')}
+          onNext={() => {
+            saveToHistory(cvData);
+            setStep('setup');
+          }}
+          history={history}
+          onViewHistory={handleViewHistory}
+          onDeleteHistory={deleteFromHistory}
+          onPrintHistory={handlePrintHistory}
+          onDownloadHistory={handleDownloadHistory}
         />
       </div>
     );
@@ -289,7 +362,10 @@ export default function App() {
               </div>
 
               <button
-                onClick={() => setStep('builder')}
+                onClick={() => {
+                  saveToHistory(cvData);
+                  setStep('builder');
+                }}
                 className="w-full py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 group"
               >
                 Continue to Builder
