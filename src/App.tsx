@@ -33,7 +33,9 @@ import { PhotoResizer } from './components/PhotoResizer';
 import { PdfEditor } from './components/PdfEditor';
 import { AboutUs } from './components/AboutUs';
 import { PhotoEditor } from './components/PhotoEditor';
+import { PdfTools } from './components/PdfTools';
 import { Logo } from './components/Logo';
+import { SecurityProvider, useSecurity } from './components/SecurityGate';
 import { cn } from './lib/utils';
 
 const SECTIONS: { id: SectionId; label: string }[] = [
@@ -73,9 +75,17 @@ const FONTS = [
   { name: 'Lora', value: 'font-lora' },
 ];
 
-type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover';
+type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf';
 
 export default function App() {
+  return (
+    <SecurityProvider>
+      <MainContent />
+    </SecurityProvider>
+  );
+}
+
+function MainContent() {
   const [step, setStep] = useState<AppStep>('dashboard');
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [cvData, setCvData] = useState<CVData>(DEFAULT_CV_DATA);
@@ -84,6 +94,7 @@ export default function App() {
   const [standalonePhoto, setStandalonePhoto] = useState<string | null>(null);
   const [autoRemoveBg, setAutoRemoveBg] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+  const { requestAccess } = useSecurity();
 
   // Load history from localStorage
   useEffect(() => {
@@ -140,9 +151,12 @@ export default function App() {
 
   const welcomeMessage = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning! Welcome to Maksud Computer.";
-    if (hour < 18) return "Good Afternoon! Welcome to Maksud Computer.";
-    return "Good Evening! Welcome to Maksud Computer.";
+    const auth = JSON.parse(localStorage.getItem('maksud_auth') || '{}');
+    const name = auth.name ? `, ${auth.name}` : '';
+    
+    if (hour < 12) return `Good Morning${name}! Welcome to Maksud Computer.`;
+    if (hour < 18) return `Good Afternoon${name}! Welcome to Maksud Computer.`;
+    return `Good Evening${name}! Welcome to Maksud Computer.`;
   }, []);
 
   const handlePrint = useReactToPrint({
@@ -210,19 +224,30 @@ export default function App() {
 
   if (step === 'dashboard') {
     return <Dashboard onSelectTool={(tool) => {
-      if (tool === 'cv') setStep('template');
-      else if (tool === 'age') setStep('age');
-      else if (tool === 'resizer') setStep('resizer');
-      else if (tool === 'pdf') setStep('pdf');
-      else if (tool === 'about') setStep('about');
-      else if (tool === 'editor') {
-        setStep('photo-editor');
-        setAutoRemoveBg(false);
+      if (tool === 'age') {
+        setStep('age');
+        return;
       }
-      else if (tool === 'bg-remover') {
-        setStep('bg-remover');
-        setAutoRemoveBg(true);
-      }
+      
+      requestAccess(() => {
+        if (tool === 'cv') setStep('template');
+        else if (tool === 'resizer') setStep('resizer');
+        else if (tool === 'pdf') setStep('pdf');
+        else if (tool === 'about') setStep('about');
+        else if (tool === 'editor') {
+          setStep('photo-editor');
+          setAutoRemoveBg(false);
+        }
+        else if (tool === 'bg-remover') {
+          setStep('bg-remover');
+          setAutoRemoveBg(true);
+        }
+        else if (tool === 'pdf-to-img') setStep('pdf-to-img');
+        else if (tool === 'pdf-to-word') setStep('pdf-to-word');
+        else if (tool === 'pdf-compress') setStep('pdf-compress');
+        else if (tool === 'pdf-merge') setStep('pdf-merge');
+        else if (tool === 'img-to-pdf') setStep('img-to-pdf');
+      });
     }} />;
   }
 
@@ -236,6 +261,10 @@ export default function App() {
 
   if (step === 'pdf') {
     return <PdfEditor onBack={() => setStep('dashboard')} />;
+  }
+
+  if (step === 'pdf-to-img' || step === 'pdf-to-word' || step === 'pdf-compress' || step === 'pdf-merge' || step === 'img-to-pdf') {
+    return <PdfTools type={step as any} onBack={() => setStep('dashboard')} />;
   }
 
   if (step === 'about') {

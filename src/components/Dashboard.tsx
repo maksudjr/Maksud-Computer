@@ -12,21 +12,31 @@ import {
   Monitor,
   Image as ImageIcon,
   Sparkles,
-  Facebook
+  Facebook,
+  FileImage,
+  FileType,
+  FileArchive,
+  Files,
+  ImagePlus
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { cn } from '../lib/utils';
+import { useSecurity } from './SecurityGate';
 
 interface DashboardProps {
-  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover') => void;
+  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf') => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
+  const { usageCount, maxUsage, isAuthorized } = useSecurity();
   const welcomeMessage = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning!";
-    if (hour < 18) return "Good Afternoon!";
-    return "Good Evening!";
+    const auth = JSON.parse(localStorage.getItem('maksud_auth') || '{}');
+    const name = auth.name ? `, ${auth.name}` : '';
+    
+    if (hour < 12) return `Good Morning${name}!`;
+    if (hour < 18) return `Good Afternoon${name}!`;
+    return `Good Evening${name}!`;
   }, []);
 
   const tools = [
@@ -78,6 +88,56 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-red-50',
       hoverColor: 'hover:bg-red-100',
       borderColor: 'border-red-100',
+      size: 'small'
+    },
+    {
+      id: 'pdf-to-img',
+      name: 'PDF to Image',
+      description: 'Convert PDF pages to high-quality images.',
+      icon: <FileImage className="text-orange-600" />,
+      color: 'bg-orange-50',
+      hoverColor: 'hover:bg-orange-100',
+      borderColor: 'border-orange-100',
+      size: 'small'
+    },
+    {
+      id: 'pdf-to-word',
+      name: 'PDF to Word',
+      description: 'Extract text from PDF to Word document.',
+      icon: <FileType className="text-blue-600" />,
+      color: 'bg-blue-50',
+      hoverColor: 'hover:bg-blue-100',
+      borderColor: 'border-blue-100',
+      size: 'small'
+    },
+    {
+      id: 'pdf-compress',
+      name: 'PDF Compress',
+      description: 'Reduce PDF file size without losing quality.',
+      icon: <FileArchive className="text-emerald-600" />,
+      color: 'bg-emerald-50',
+      hoverColor: 'hover:bg-emerald-100',
+      borderColor: 'border-emerald-100',
+      size: 'small'
+    },
+    {
+      id: 'pdf-merge',
+      name: 'PDF Merge',
+      description: 'Combine multiple PDF files into one.',
+      icon: <Files className="text-rose-600" />,
+      color: 'bg-rose-50',
+      hoverColor: 'hover:bg-rose-100',
+      borderColor: 'border-rose-100',
+      size: 'small'
+    },
+    {
+      id: 'img-to-pdf',
+      name: 'Image to PDF',
+      description: 'Convert images into a professional PDF.',
+      icon: <ImagePlus className="text-cyan-600" />,
+      color: 'bg-cyan-50',
+      hoverColor: 'hover:bg-cyan-100',
+      borderColor: 'border-cyan-100',
       size: 'small'
     },
     {
@@ -143,15 +203,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
                 Your professional digital workspace. Everything you need to create, edit, and manage your digital assets in one place.
               </p>
             </div>
-            <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-              <div className="px-4 py-2 bg-indigo-50 rounded-xl">
-                <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Active Tools</p>
-                <p className="text-xl font-black text-indigo-900">07</p>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+                <div className="px-4 py-2 bg-indigo-50 rounded-xl">
+                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Active Tools</p>
+                  <p className="text-xl font-black text-indigo-900">12</p>
+                </div>
+                <div className="px-4 py-2 bg-emerald-50 rounded-xl">
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Status</p>
+                  <p className="text-xl font-black text-emerald-900">Online</p>
+                </div>
               </div>
-              <div className="px-4 py-2 bg-emerald-50 rounded-xl">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Status</p>
-                <p className="text-xl font-black text-emerald-900">Online</p>
-              </div>
+              
+              {isAuthorized && (
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 min-w-[180px]">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Usage Limit (Max 50)</p>
+                    <p className="text-[10px] font-bold text-indigo-600">{usageCount}/50</p>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(usageCount / 50) * 100}%` }}
+                      className={cn(
+                        "h-full transition-all duration-1000",
+                        usageCount > 40 ? "bg-red-500" : usageCount > 25 ? "bg-amber-500" : "bg-indigo-600"
+                      )}
+                    />
+                  </div>
+                  <p className="text-[9px] font-medium text-slate-400 mt-2">
+                    {50 - usageCount} uses remaining
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
@@ -193,22 +277,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
           ))}
         </div>
 
-        {/* Quick Stats / Info */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            { icon: <ShieldCheck className="text-emerald-600" />, title: "Secure Processing", desc: "All data stays in your browser. We never upload your sensitive files to any server." },
-            { icon: <Zap className="text-amber-600" />, title: "Instant Results", desc: "Powered by modern web technologies for lightning-fast performance on any device." },
-            { icon: <Monitor className="text-indigo-600" />, title: "Cross-Platform", desc: "Use our tools on your desktop, tablet, or smartphone with a seamless experience." }
-          ].map((feature, i) => (
-            <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mb-6">
-                {feature.icon}
-              </div>
-              <h4 className="text-lg font-black text-slate-900 mb-2">{feature.title}</h4>
-              <p className="text-sm text-slate-500 font-medium leading-relaxed">{feature.desc}</p>
-            </div>
-          ))}
-        </div>
       </main>
 
       {/* Footer */}
