@@ -19,7 +19,7 @@ import {
   LogIn,
   Loader2
 } from 'lucide-react';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { 
   collection, 
   addDoc, 
@@ -31,23 +31,33 @@ import {
   setDoc,
   Timestamp,
   query,
-  orderBy
+  orderBy,
+  increment
 } from 'firebase/firestore';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { useSecurity } from './SecurityGate';
 
 export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const { isAdmin, logout } = useSecurity();
+  const { logout: securityLogout } = useSecurity();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [adminId, setAdminId] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [keys, setKeys] = useState<any[]>([]);
   const [newKeyName, setNewKeyName] = useState('');
   const [newKeyCoins, setNewKeyCoins] = useState(10);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const ADMIN_EMAIL = "maksudjr2020@gmail.com";
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user && user.email === ADMIN_EMAIL && user.emailVerified) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -62,45 +72,56 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setKeys(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const settingsDoc = await getDoc(doc(db, 'settings', 'admin'));
-      const adminData = settingsDoc.data();
-      
-      // Default initial password if not set
-      const currentPassword = adminData?.adminPassword || 'maksudjr24';
-      
-      if (adminId === 'maksud' && password === currentPassword) {
-        setIsLoggedIn(true);
-        setError(null);
-      } else {
-        setError('Invalid Admin ID or Password');
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      if (result.user.email !== ADMIN_EMAIL) {
+        await auth.signOut();
+        setError('Access Denied: You are not authorized as an admin.');
       }
-    } catch (err) {
-      setError('Login failed. Please try again.');
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleLogout = async () => {
+    await auth.signOut();
+    setIsLoggedIn(false);
+  };
+
   const generateKey = async () => {
-    if (!newKeyName || newKeyCoins <= 0) return;
+    if (!newKeyName) {
+      setError('Please enter a user name');
+      return;
+    }
+    if (newKeyCoins <= 0) {
+      setError('Coin amount must be greater than 0');
+      return;
+    }
+    
     setLoading(true);
+    setError(null);
     try {
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
       await addDoc(collection(db, 'keys'), {
         code,
         userName: newKeyName,
         coins: newKeyCoins,
+        freeTrialUsed: false,
         isUsed: false,
         createdAt: Timestamp.now()
       });
       setNewKeyName('');
       fetchKeys();
     } catch (err) {
-      setError('Failed to generate key');
+      console.error("Error generating key", err);
+      setError('Failed to generate key. Check your connection.');
     } finally {
       setLoading(false);
     }
@@ -115,16 +136,18 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
-  const changePassword = async () => {
-    if (!newPassword) return;
+  const addCoinsToKey = async (keyId: string) => {
+    const amount = prompt("Enter amount of coins to add:", "10");
+    if (!amount || isNaN(Number(amount))) return;
+    
     setLoading(true);
     try {
-      await setDoc(doc(db, 'settings', 'admin'), { adminPassword: newPassword }, { merge: true });
-      setIsChangingPassword(false);
-      setNewPassword('');
-      alert('Password changed successfully');
+      await updateDoc(doc(db, 'keys', keyId), {
+        coins: increment(Number(amount))
+      });
+      fetchKeys();
     } catch (err) {
-      setError('Failed to change password');
+      setError('Failed to add coins');
     } finally {
       setLoading(false);
     }
@@ -144,46 +167,9 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             </div>
           </div>
           <h1 className="text-3xl font-black text-slate-900 text-center mb-2">Admin Login</h1>
-          <p className="text-slate-500 text-center mb-8 font-medium">Access Maksud Computers control panel.</p>
+          <p className="text-slate-500 text-center mb-8 font-medium">Sign in with your admin Google account.</p>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">Admin ID</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input 
-                  type="text" 
-                  value={adminId}
-                  onChange={(e) => setAdminId(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
-                  placeholder="Enter ID"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
-                  placeholder="Enter Password"
-                  required
-                />
-                <button 
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
+          <div className="space-y-6">
             {error && (
               <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-700 text-sm font-bold">
                 <AlertCircle size={18} />
@@ -192,14 +178,21 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             )}
 
             <button 
-              type="submit"
+              onClick={handleLogin}
               disabled={loading}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-3"
             >
-              {loading ? <Loader2 className="animate-spin" /> : <LogIn size={20} />}
-              Login to Panel
+              {loading ? <Loader2 className="animate-spin" /> : (
+                <svg className="w-6 h-6" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+              )}
+              Sign in with Google
             </button>
-          </form>
+          </div>
 
           <button 
             onClick={onBack}
@@ -225,14 +218,7 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </div>
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setIsChangingPassword(true)}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm flex items-center gap-2 transition-all"
-            >
-              <Settings size={18} />
-              Settings
-            </button>
-            <button 
-              onClick={() => setIsLoggedIn(false)}
+              onClick={handleLogout}
               className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-sm flex items-center gap-2 transition-all"
             >
               <LogOut size={18} />
@@ -250,6 +236,14 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               <Plus className="text-indigo-600" />
               Generate New Key
             </h2>
+            
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-bold">
+                <AlertCircle size={18} />
+                {error}
+              </div>
+            )}
+
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">User Name</label>
@@ -273,8 +267,8 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               </div>
               <button 
                 onClick={generateKey}
-                disabled={loading || !newKeyName}
-                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+                disabled={loading}
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Key size={20} />
                 Generate Key
@@ -333,12 +327,22 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         )}
                       </td>
                       <td className="px-8 py-4">
-                        <button 
-                          onClick={() => deleteKey(k.id)}
-                          className="p-2 text-slate-400 hover:text-red-600 transition-all"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => addCoinsToKey(k.id)}
+                            className="p-2 text-slate-400 hover:text-amber-600 transition-all"
+                            title="Add Coins"
+                          >
+                            <Plus size={18} />
+                          </button>
+                          <button 
+                            onClick={() => deleteKey(k.id)}
+                            className="p-2 text-slate-400 hover:text-red-600 transition-all"
+                            title="Delete Key"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -355,47 +359,6 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </div>
         </div>
       </main>
-
-      {/* Change Password Modal */}
-      <AnimatePresence>
-        {isChangingPassword && (
-          <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="max-w-md w-full bg-white rounded-[2.5rem] p-10 shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setIsChangingPassword(false)}
-                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600"
-              >
-                <X size={24} />
-              </button>
-              <h2 className="text-2xl font-black text-slate-900 mb-6">Change Admin Password</h2>
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">New Password</label>
-                  <input 
-                    type="password" 
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
-                    placeholder="Enter new password"
-                  />
-                </div>
-                <button 
-                  onClick={changePassword}
-                  disabled={loading || !newPassword}
-                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-lg shadow-indigo-200 transition-all"
-                >
-                  Update Password
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

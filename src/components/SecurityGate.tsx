@@ -1,12 +1,11 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, ShieldAlert, Key, X, LogIn, User, Coins, ShieldCheck } from 'lucide-react';
+import { Lock, ShieldAlert, Key, X, User, Coins, LogOut, ShieldCheck } from 'lucide-react';
 import { Logo } from './Logo';
-import { auth, db, signInWithGoogle } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { 
   doc, 
   getDoc, 
-  setDoc, 
   updateDoc, 
   onSnapshot, 
   collection, 
@@ -15,21 +14,22 @@ import {
   getDocs,
   Timestamp,
   increment,
-  runTransaction
+  runTransaction,
+  addDoc
 } from 'firebase/firestore';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-
-const MAX_USAGE = 50;
 
 interface SecurityContextType {
   isAuthorized: boolean;
   userName: string | null;
   coins: number;
   freeTrialUsed: boolean;
+  isFreeAccess: boolean;
   isAdmin: boolean;
-  requestAccess: (cost: number, onSuccess: () => void) => void;
-  redeemKey: (code: string) => Promise<void>;
+  requestAccess: (cost: number, onSuccess: () => void, toolType?: string) => void;
+  loginWithKey: (code: string) => Promise<void>;
+  activateFreeAccess: () => Promise<void>;
   logout: () => void;
+  error: string | null;
 }
 
 const SecurityContext = createContext<SecurityContextType | undefined>(undefined);
@@ -41,9 +41,12 @@ export const useSecurity = () => {
 };
 
 export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [userData, setUserData] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [coins, setCoins] = useState(0);
+  const [freeTrialUsed, setFreeTrialUsed] = useState(false);
+  const [isFreeAccess, setIsFreeAccess] = useState(false);
   const [showGate, setShowGate] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ cost: number, onSuccess: () => void } | null>(null);
   const [code, setCode] = useState('');
@@ -51,43 +54,96 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      if (firebaseUser) {
-        // Check for admin status
-        setIsAdmin(firebaseUser.email === "maksudjr2020@gmail.com");
-        
-        // Listen to user data
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const unsubDoc = onSnapshot(userDocRef, (docSnap) => {
-          if (docSnap.exists()) {
-            setUserData(docSnap.data());
-          } else {
-            // Initialize user
-            const initialData = {
-              uid: firebaseUser.uid,
-              name: firebaseUser.displayName || 'User',
-              coins: 0,
-              freeTrialUsed: false,
-              createdAt: Timestamp.now()
-            };
-            setDoc(userDocRef, initialData);
-            setUserData(initialData);
-          }
-        });
-        setLoading(false);
-        return () => unsubDoc();
-      } else {
-        setUserData(null);
-        setIsAdmin(false);
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
+    const savedKey = localStorage.getItem('maksud_active_key');
+    if (savedKey) {
+      validateAndListenToKey(savedKey);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  const requestAccess = async (cost: number, onSuccess: () => void) => {
-    if (!user) {
+  const validateAndListenToKey = async (keyCode: string) => {
+    try {
+      const keysRef = collection(db, 'keys');
+      const q = query(keysRef, where("code", "==", keyCode.toUpperCase()));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        localStorage.removeItem('maksud_active_key');
+        setIsAuthorized(false);
+        setLoading(false);
+        return;
+      }
+
+      const keyDoc = querySnapshot.docs[0];
+      const data = keyDoc.data();
+      
+      setUserName(data.userName);
+      setCoins(data.coins || 0);
+      setFreeTrialUsed(data.freeTrialUsed || false);
+      setIsFreeAccess(data.isFreeAccess || false);
+      setActiveKey(keyCode.toUpperCase());
+      setIsAuthorized(true);
+
+      // Listen for real-time updates to this key
+      const unsub = onSnapshot(keyDoc.ref, (docSnap) => {
+        if (docSnap.exists()) {
+          const updatedData = docSnap.data();
+          setCoins(updatedData.coins || 0);
+          setFreeTrialUsed(updatedData.freeTrialUsed || false);
+          setIsFreeAccess(updatedData.isFreeAccess || false);
+        } else {
+          logout();
+        }
+      });
+
+      setLoading(false);
+      return unsub;
+    } catch (e) {
+      console.error("Error validating key", e);
+      setLoading(false);
+    }
+  };
+
+  const loginWithKey = async (inputCode: string) => {
+    setError(null);
+    try {
+      const keysRef = collection(db, 'keys');
+      const q = query(keysRef, where("code", "==", inputCode.toUpperCase()));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setError("Invalid security key.");
+        return;
+      }
+
+      const keyDoc = querySnapshot.docs[0];
+      const data = keyDoc.data();
+
+      localStorage.setItem('maksud_active_key', inputCode.toUpperCase());
+      setUserName(data.userName);
+      setCoins(data.coins || 0);
+      setFreeTrialUsed(data.freeTrialUsed || false);
+      setActiveKey(inputCode.toUpperCase());
+      setIsAuthorized(true);
+      setShowGate(false);
+      setCode('');
+
+      if (pendingAction) {
+        const action = pendingAction;
+        setPendingAction(null);
+        requestAccess(action.cost, action.onSuccess);
+      }
+
+      // Start listening
+      validateAndListenToKey(inputCode.toUpperCase());
+    } catch (e) {
+      setError("Failed to connect. Please try again.");
+    }
+  };
+
+  const requestAccess = async (cost: number, onSuccess: () => void, toolType?: string) => {
+    if (!isAuthorized) {
       setShowGate(true);
       setPendingAction({ cost, onSuccess });
       return;
@@ -98,22 +154,32 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
-    // Check free trial
-    if (!userData?.freeTrialUsed) {
+    // Check free trial (for paid keys)
+    if (!freeTrialUsed && !isFreeAccess) {
       try {
-        await updateDoc(doc(db, 'users', user.uid), { freeTrialUsed: true });
-        onSuccess();
-        return;
+        const keysRef = collection(db, 'keys');
+        const q = query(keysRef, where("code", "==", activeKey));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          await updateDoc(querySnapshot.docs[0].ref, { freeTrialUsed: true });
+          onSuccess();
+          return;
+        }
       } catch (e) {
         console.error("Error using free trial", e);
       }
     }
 
-    // Check coins
-    if ((userData?.coins || 0) >= cost) {
+    // Check coins (handles both paid and free access keys)
+    if (coins >= cost) {
       try {
-        await updateDoc(doc(db, 'users', user.uid), { coins: increment(-cost) });
-        onSuccess();
+        const keysRef = collection(db, 'keys');
+        const q = query(keysRef, where("code", "==", activeKey));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          await updateDoc(querySnapshot.docs[0].ref, { coins: increment(-cost) });
+          onSuccess();
+        }
       } catch (e) {
         console.error("Error deducting coins", e);
         setError("Transaction failed. Please try again.");
@@ -125,51 +191,54 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const redeemKey = async (inputCode: string) => {
-    if (!user) {
-      setError("Please login first to redeem a key.");
+  const activateFreeAccess = async () => {
+    if (localStorage.getItem('maksud_free_claimed')) {
+      setError("You have already claimed your free access on this device.");
+      setShowGate(true);
       return;
     }
 
+    setLoading(true);
     try {
+      const code = "FREE-" + Math.random().toString(36).substring(2, 7).toUpperCase();
       const keysRef = collection(db, 'keys');
-      const q = query(keysRef, where("code", "==", inputCode.toUpperCase()), where("isUsed", "==", false));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        setError("Invalid or already used key.");
-        return;
-      }
-
-      const keyDoc = querySnapshot.docs[0];
-      const keyData = keyDoc.data();
-
-      await runTransaction(db, async (transaction) => {
-        transaction.update(keyDoc.ref, { 
-          isUsed: true, 
-          usedBy: user.uid, 
-          usedAt: Timestamp.now() 
-        });
-        transaction.update(doc(db, 'users', user.uid), { 
-          coins: increment(keyData.coins) 
-        });
-      });
-
-      setError(null);
-      setCode('');
-      if (pendingAction) {
-        const action = pendingAction;
-        setPendingAction(null);
-        setShowGate(false);
-        requestAccess(action.cost, action.onSuccess);
-      }
+      const newKey = {
+        code,
+        userName: "Free Guest",
+        coins: 1,
+        freeTrialUsed: true,
+        isFreeAccess: true,
+        createdAt: Timestamp.now()
+      };
+      
+      await addDoc(keysRef, newKey);
+      localStorage.setItem('maksud_active_key', code);
+      localStorage.setItem('maksud_free_claimed', 'true');
+      
+      setUserName(newKey.userName);
+      setCoins(1);
+      setFreeTrialUsed(true);
+      setIsFreeAccess(true);
+      setActiveKey(code);
+      setIsAuthorized(true);
+      
+      // Start listening
+      validateAndListenToKey(code);
     } catch (e) {
-      console.error("Error redeeming key", e);
-      setError("Failed to redeem key. Please try again.");
+      console.error("Error activating free access", e);
+      setError("Failed to activate free access. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const logout = () => auth.signOut();
+  const logout = () => {
+    localStorage.removeItem('maksud_active_key');
+    setIsAuthorized(false);
+    setActiveKey(null);
+    setUserName(null);
+    setCoins(0);
+  };
 
   if (loading) {
     return (
@@ -181,14 +250,17 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <SecurityContext.Provider value={{ 
-      isAuthorized: !!user, 
-      userName: userData?.name || user?.displayName || null, 
-      coins: userData?.coins || 0,
-      freeTrialUsed: userData?.freeTrialUsed || false,
-      isAdmin,
+      isAuthorized, 
+      userName, 
+      coins,
+      freeTrialUsed,
+      isFreeAccess,
+      isAdmin: false, // Admin is handled separately in AdminPanel
       requestAccess,
-      redeemKey,
-      logout
+      loginWithKey,
+      activateFreeAccess,
+      logout,
+      error
     }}>
       {children}
       <AnimatePresence>
@@ -211,58 +283,42 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 <Logo className="w-20 h-20" />
               </div>
               
-              {!user ? (
-                <>
-                  <h1 className="text-3xl font-black text-slate-900 mb-2">Login Required</h1>
-                  <p className="text-slate-500 font-medium mb-8">Please login with Google to access Maksud Computers tools.</p>
-                  <button
-                    onClick={() => signInWithGoogle()}
-                    className="w-full py-4 bg-white border-2 border-slate-200 hover:border-indigo-600 text-slate-900 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 group"
-                  >
-                    <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
-                    Login with Google
-                  </button>
-                </>
-              ) : (
-                <>
-                  <h1 className="text-3xl font-black text-slate-900 mb-2">Add Coins</h1>
-                  <p className="text-slate-500 font-medium mb-8">
-                    {error ? <span className="text-red-500 font-bold">{error}</span> : "Enter a security key to add coins to your account."}
-                  </p>
+              <h1 className="text-3xl font-black text-slate-900 mb-2">Access Required</h1>
+              <p className="text-slate-500 font-medium mb-8">
+                {error ? <span className="text-red-500 font-bold">{error}</span> : "Please enter your security key to continue."}
+              </p>
 
-                  <form onSubmit={(e) => { e.preventDefault(); redeemKey(code); }} className="space-y-6">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Key size={20} className="text-slate-400" />
-                      </div>
-                      <input
-                        type="text"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        placeholder="Enter Security Key"
-                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-bold text-slate-900 uppercase tracking-widest"
-                        required
-                        autoFocus
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-3 group"
-                    >
-                      Redeem Key
-                      <Coins size={20} className="group-hover:scale-110 transition-transform" />
-                    </button>
-                  </form>
-
-                  <div className="mt-8 p-4 bg-indigo-50 rounded-2xl text-left">
-                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">Need more coins?</p>
-                    <p className="text-sm font-medium text-slate-600">
-                      Contact admin: <span className="font-bold text-slate-900">01622638268</span> or <span className="font-bold text-slate-900">maksudjr2020@gmail.com</span>
-                    </p>
+              <form onSubmit={(e) => { e.preventDefault(); loginWithKey(code); }} className="space-y-6">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Key size={20} className="text-slate-400" />
                   </div>
-                </>
-              )}
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="Enter Security Key"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-bold text-slate-900 uppercase tracking-widest"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-3 group"
+                >
+                  Access Tool
+                  <Lock size={20} className="group-hover:scale-110 transition-transform" />
+                </button>
+              </form>
+
+              <div className="mt-8 p-4 bg-indigo-50 rounded-2xl text-left">
+                <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">Need a key?</p>
+                <p className="text-sm font-medium text-slate-600">
+                  Contact admin: <span className="font-bold text-slate-900">01622638268</span> or <span className="font-bold text-slate-900">maksudjr2020@gmail.com</span>
+                </p>
+              </div>
 
               <div className="mt-10 pt-8 border-t border-slate-100">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">

@@ -14,23 +14,32 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-         request.auth.token.email == "maksudjr2020@gmail.com");
+             request.auth.token.email == "maksudjr2020@gmail.com" && 
+             request.auth.token.email_verified == true;
     }
 
     // ===============================================================
     // Rules
     // ===============================================================
 
-    match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
-      allow update: if isOwner(userId) || isAdmin();
-    }
-
     match /keys/{keyId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
+      // Allow anyone to read a key if they know the code (checked via query)
+      allow read: if true;
+      
+      // Allow anyone to update a key (for coin deduction)
+      allow update: if request.resource.data.code == resource.data.code &&
+                      request.resource.data.userName == resource.data.userName;
+      
+      // Allow admin to create/delete any key
+      // Allow public to create ONLY "Free Access" keys with strict limits
+      allow create: if isAdmin() || (
+        request.resource.data.isFreeAccess == true &&
+        request.resource.data.coins == 1 &&
+        request.resource.data.userName == "Free Guest" &&
+        request.resource.data.freeTrialUsed == true
+      );
+      
+      allow delete: if isAdmin();
     }
 
     match /settings/{settingId} {

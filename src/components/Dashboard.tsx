@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { motion } from 'motion/react';
+import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, 
   Calculator, 
@@ -21,7 +21,12 @@ import {
   Crown,
   Settings,
   Coins as CoinsIcon,
-  LogOut
+  LogOut,
+  Phone,
+  Mail,
+  CheckCircle2,
+  Gift,
+  AlertCircle
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { cn } from '../lib/utils';
@@ -33,7 +38,9 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin }) => {
-  const { coins, userName, isAuthorized, logout, freeTrialUsed } = useSecurity();
+  const { coins, userName, isAuthorized, logout, freeTrialUsed, isFreeAccess, activateFreeAccess, error } = useSecurity();
+  const [showFreeSuccess, setShowFreeSuccess] = useState(false);
+  
   const welcomeMessage = useMemo(() => {
     const hour = new Date().getHours();
     const name = userName ? `, ${userName}` : '';
@@ -212,6 +219,66 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
         </div>
       </div>
 
+      {/* Free Access Section */}
+      {!isAuthorized && (
+        <div className="bg-amber-50 border-b border-amber-100 py-4 px-4">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-100 p-2 rounded-xl text-amber-600">
+                <Gift size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-black text-slate-900">New User? Get Free Access!</p>
+                <p className="text-xs font-medium text-slate-500">Includes 1 CV and 2 uses of all other tools.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={async () => {
+                  await activateFreeAccess();
+                  if (!error) {
+                    setShowFreeSuccess(true);
+                    setTimeout(() => setShowFreeSuccess(false), 5000);
+                  }
+                }}
+                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black text-sm shadow-lg shadow-amber-200 transition-all flex items-center gap-2 group"
+              >
+                Get Free Access
+                <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+          <AnimatePresence>
+            {error && !isAuthorized && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="max-w-7xl mx-auto mt-4"
+              >
+                <div className="bg-red-500 text-white p-3 rounded-xl flex items-center gap-3 font-black text-sm">
+                  <AlertCircle size={18} />
+                  {error}
+                </div>
+              </motion.div>
+            )}
+            {showFreeSuccess && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="max-w-7xl mx-auto mt-4"
+              >
+                <div className="bg-emerald-500 text-white p-3 rounded-xl flex items-center gap-3 font-black text-sm">
+                  <CheckCircle2 size={18} />
+                  Congratulations! You have got free access.
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
       {/* Modern Header */}
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
@@ -268,24 +335,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2">
                       <CoinsIcon size={16} className="text-amber-500" />
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Coin Usages</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        {isFreeAccess ? "Free Access Usage" : "Coin Usages"}
+                      </p>
                     </div>
-                    <p className="text-[10px] font-bold text-indigo-600">{coins.toFixed(2)} Coins</p>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min((coins / 50) * 100, 100)}%` }}
-                      className={cn(
-                        "h-full transition-all duration-1000",
-                        coins < 5 ? "bg-red-500" : coins < 15 ? "bg-amber-500" : "bg-indigo-600"
-                      )}
-                    />
-                  </div>
-                  {!freeTrialUsed && (
-                    <p className="text-[9px] font-black text-emerald-600 mt-2 uppercase tracking-widest">
-                      ✨ 1 Free Use Available
+                    <p className="text-[10px] font-bold text-indigo-600">
+                      {isFreeAccess ? (coins > 0 ? "1 COIN" : "EXPIRED") : `${coins.toFixed(2)} Coins`}
                     </p>
+                  </div>
+                  
+                  {isFreeAccess ? (
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                        You have 1 free coin. Use it for 1 CV or 2 other tools.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min((coins / 50) * 100, 100)}%` }}
+                          className={cn(
+                            "h-full transition-all duration-1000",
+                            coins < 5 ? "bg-red-500" : coins < 15 ? "bg-amber-500" : "bg-indigo-600"
+                          )}
+                        />
+                      </div>
+                      {!freeTrialUsed && (
+                        <p className="text-[9px] font-black text-emerald-600 mt-2 uppercase tracking-widest">
+                          ✨ 1 Free Use Available
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               )}

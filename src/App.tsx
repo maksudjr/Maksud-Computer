@@ -250,7 +250,7 @@ function MainContent() {
         else if (tool === 'pdf-compress') setStep('pdf-compress');
         else if (tool === 'pdf-merge') setStep('pdf-merge');
         else if (tool === 'img-to-pdf') setStep('img-to-pdf');
-      });
+      }, tool);
     }} />;
   }
 
