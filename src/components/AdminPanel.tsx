@@ -31,10 +31,11 @@ import {
   setDoc,
   Timestamp,
   query,
+  where,
   orderBy,
   increment
 } from 'firebase/firestore';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useSecurity } from './SecurityGate';
 
 export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
@@ -45,13 +46,14 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [error, setError] = useState<string | null>(null);
   const [keys, setKeys] = useState<any[]>([]);
   const [newKeyName, setNewKeyName] = useState('');
+  const [newKeyKeyword, setNewKeyKeyword] = useState('');
   const [newKeyCoins, setNewKeyCoins] = useState(10);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    // We use anonymous auth to satisfy Firestore rules requiring authentication
-    signInAnonymously(auth).catch(err => console.error("Anon sign in failed", err));
+    // Auth is handled via local ID/Password for the UI
+    // Firestore rules are updated to allow operations
   }, []);
 
   useEffect(() => {
@@ -97,6 +99,10 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       setError('Please enter a user name');
       return;
     }
+    if (!newKeyKeyword) {
+      setError('Please enter a keyword');
+      return;
+    }
     if (newKeyCoins <= 0) {
       setError('Coin amount must be greater than 0');
       return;
@@ -105,7 +111,19 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setLoading(true);
     setError(null);
     try {
-      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const code = newKeyKeyword.trim().toUpperCase();
+      
+      // Check if key already exists
+      const keysRef = collection(db, 'keys');
+      const q = query(keysRef, where("code", "==", code));
+      const existing = await getDocs(q);
+      
+      if (!existing.empty) {
+        setError('This keyword is already in use');
+        setLoading(false);
+        return;
+      }
+
       await addDoc(collection(db, 'keys'), {
         code,
         userName: newKeyName,
@@ -115,6 +133,7 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         createdAt: Timestamp.now()
       });
       setNewKeyName('');
+      setNewKeyKeyword('');
       fetchKeys();
     } catch (err) {
       console.error("Error generating key", err);
@@ -283,6 +302,16 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">Keyword (Key Code)</label>
+                <input 
+                  type="text" 
+                  value={newKeyKeyword}
+                  onChange={(e) => setNewKeyKeyword(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold uppercase"
+                  placeholder="e.g. VIP2026"
+                />
+              </div>
+              <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">Coin Amount</label>
                 <input 
                   type="number" 
@@ -297,8 +326,8 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 disabled={loading}
                 className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Key size={20} />
-                Generate Key
+                <Plus size={20} />
+                Create Key
               </button>
             </div>
           </div>
@@ -306,7 +335,7 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-200">
             <h3 className="text-lg font-black mb-2">Quick Tip</h3>
             <p className="text-indigo-100 text-sm font-medium leading-relaxed">
-              Keys are unique 8-character codes. Once a user redeems a key, it becomes inactive and the coins are added to their account.
+              Keywords are custom codes you create. Once a user redeems a keyword, it becomes inactive and the coins are added to their account.
             </p>
           </div>
         </div>
@@ -332,8 +361,8 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {keys.map((k) => (
-                    <tr key={k.id} className="hover:bg-slate-50/50 transition-colors">
+                  {keys.map((k, index) => (
+                    <tr key={k.id || `key-${index}`} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-8 py-4">
                         <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">
                           {k.code}
