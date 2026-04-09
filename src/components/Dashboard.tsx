@@ -17,22 +17,26 @@ import {
   FileType,
   FileArchive,
   Files,
-  ImagePlus
+  ImagePlus,
+  Crown,
+  Settings,
+  Coins as CoinsIcon,
+  LogOut
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { cn } from '../lib/utils';
 import { useSecurity } from './SecurityGate';
 
 interface DashboardProps {
-  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf') => void;
+  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf', cost: number) => void;
+  onAdminLogin: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
-  const { usageCount, maxUsage, isAuthorized } = useSecurity();
+export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin }) => {
+  const { coins, userName, isAuthorized, logout, freeTrialUsed } = useSecurity();
   const welcomeMessage = useMemo(() => {
     const hour = new Date().getHours();
-    const auth = JSON.parse(localStorage.getItem('maksud_auth') || '{}');
-    const name = auth.name ? `, ${auth.name}` : '';
+    const name = userName ? `, ${userName}` : '';
     
     if (hour < 12) return `Good Morning${name}!`;
     if (hour < 18) return `Good Afternoon${name}!`;
@@ -48,7 +52,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-blue-50',
       hoverColor: 'hover:bg-blue-100',
       borderColor: 'border-blue-100',
-      size: 'large'
+      size: 'large',
+      cost: 1
     },
     {
       id: 'editor',
@@ -58,7 +63,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-indigo-50',
       hoverColor: 'hover:bg-indigo-100',
       borderColor: 'border-indigo-100',
-      size: 'medium'
+      size: 'medium',
+      cost: 0.5
     },
     {
       id: 'bg-remover',
@@ -68,7 +74,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-amber-50',
       hoverColor: 'hover:bg-amber-100',
       borderColor: 'border-amber-100',
-      size: 'medium'
+      size: 'medium',
+      cost: 0.5
     },
     {
       id: 'resizer',
@@ -78,7 +85,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-purple-50',
       hoverColor: 'hover:bg-purple-100',
       borderColor: 'border-purple-100',
-      size: 'small'
+      size: 'small',
+      cost: 0.5
     },
     {
       id: 'pdf',
@@ -88,7 +96,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-red-50',
       hoverColor: 'hover:bg-red-100',
       borderColor: 'border-red-100',
-      size: 'small'
+      size: 'small',
+      cost: 0.25
     },
     {
       id: 'pdf-to-img',
@@ -98,7 +107,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-orange-50',
       hoverColor: 'hover:bg-orange-100',
       borderColor: 'border-orange-100',
-      size: 'small'
+      size: 'small',
+      cost: 0.25
     },
     {
       id: 'pdf-to-word',
@@ -108,7 +118,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-blue-50',
       hoverColor: 'hover:bg-blue-100',
       borderColor: 'border-blue-100',
-      size: 'small'
+      size: 'small',
+      cost: 0.25
     },
     {
       id: 'pdf-compress',
@@ -118,7 +129,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-emerald-50',
       hoverColor: 'hover:bg-emerald-100',
       borderColor: 'border-emerald-100',
-      size: 'small'
+      size: 'small',
+      cost: 0.25
     },
     {
       id: 'pdf-merge',
@@ -128,7 +140,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-rose-50',
       hoverColor: 'hover:bg-rose-100',
       borderColor: 'border-rose-100',
-      size: 'small'
+      size: 'small',
+      cost: 0.25
     },
     {
       id: 'img-to-pdf',
@@ -138,7 +151,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-cyan-50',
       hoverColor: 'hover:bg-cyan-100',
       borderColor: 'border-cyan-100',
-      size: 'small'
+      size: 'small',
+      cost: 0.25
     },
     {
       id: 'age',
@@ -148,7 +162,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-green-50',
       hoverColor: 'hover:bg-green-100',
       borderColor: 'border-green-100',
-      size: 'small'
+      size: 'small',
+      cost: 0
     },
     {
       id: 'about',
@@ -158,12 +173,45 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
       color: 'bg-gray-50',
       hoverColor: 'hover:bg-gray-100',
       borderColor: 'border-gray-100',
-      size: 'small'
+      size: 'small',
+      cost: 0
     }
   ];
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
+      {/* Premium Banner */}
+      <div className="bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white py-3 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-1.5 rounded-lg">
+              <Crown size={18} className="text-amber-300" />
+            </div>
+            <p className="text-sm font-bold tracking-wide">
+              GET PREMIUM ACCESS: <span className="text-amber-300 ml-2">01622638268</span> | <span className="text-amber-300">maksudjr2020@gmail.com</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={onAdminLogin}
+              className="px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
+            >
+              <Settings size={14} />
+              Admin Login
+            </button>
+            {isAuthorized && (
+              <button 
+                onClick={logout}
+                className="px-4 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
+              >
+                <LogOut size={14} />
+                Logout
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Modern Header */}
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
@@ -216,24 +264,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
               </div>
               
               {isAuthorized && (
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 min-w-[180px]">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 min-w-[240px] w-fit">
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Usage Limit (Max 50)</p>
-                    <p className="text-[10px] font-bold text-indigo-600">{usageCount}/50</p>
+                    <div className="flex items-center gap-2">
+                      <CoinsIcon size={16} className="text-amber-500" />
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Coin Usages</p>
+                    </div>
+                    <p className="text-[10px] font-bold text-indigo-600">{coins.toFixed(2)} Coins</p>
                   </div>
                   <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
-                      animate={{ width: `${(usageCount / 50) * 100}%` }}
+                      animate={{ width: `${Math.min((coins / 50) * 100, 100)}%` }}
                       className={cn(
                         "h-full transition-all duration-1000",
-                        usageCount > 40 ? "bg-red-500" : usageCount > 25 ? "bg-amber-500" : "bg-indigo-600"
+                        coins < 5 ? "bg-red-500" : coins < 15 ? "bg-amber-500" : "bg-indigo-600"
                       )}
                     />
                   </div>
-                  <p className="text-[9px] font-medium text-slate-400 mt-2">
-                    {50 - usageCount} uses remaining
-                  </p>
+                  {!freeTrialUsed && (
+                    <p className="text-[9px] font-black text-emerald-600 mt-2 uppercase tracking-widest">
+                      ✨ 1 Free Use Available
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -248,7 +301,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              onClick={() => onSelectTool(tool.id as any)}
+              onClick={() => onSelectTool(tool.id as any, tool.cost || 0)}
               className={cn(
                 "group relative cursor-pointer bg-white rounded-[2rem] border border-slate-200 p-8 transition-all hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-100 active:scale-[0.98]",
                 tool.size === 'large' ? "md:col-span-2 md:row-span-2" : 
@@ -262,10 +315,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool }) => {
                 {React.cloneElement(tool.icon as React.ReactElement, { size: 28 })}
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                  {tool.name}
-                  {tool.id === 'cv' && <Sparkles size={16} className="text-amber-500 animate-pulse" />}
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    {tool.name}
+                    {tool.id === 'cv' && <Sparkles size={16} className="text-amber-500 animate-pulse" />}
+                  </h3>
+                  {tool.cost > 0 ? (
+                    <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
+                      <CoinsIcon size={12} className="text-amber-500" />
+                      <span className="text-[10px] font-black text-slate-600">{tool.cost}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Free</span>
+                  )}
+                </div>
                 <p className="text-sm text-slate-500 font-medium leading-relaxed">
                   {tool.description}
                 </p>

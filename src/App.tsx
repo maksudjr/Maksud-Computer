@@ -34,6 +34,7 @@ import { PdfEditor } from './components/PdfEditor';
 import { AboutUs } from './components/AboutUs';
 import { PhotoEditor } from './components/PhotoEditor';
 import { PdfTools } from './components/PdfTools';
+import { AdminPanel } from './components/AdminPanel';
 import { Logo } from './components/Logo';
 import { SecurityProvider, useSecurity } from './components/SecurityGate';
 import { cn } from './lib/utils';
@@ -75,7 +76,7 @@ const FONTS = [
   { name: 'Lora', value: 'font-lora' },
 ];
 
-type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf';
+type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin';
 
 export default function App() {
   return (
@@ -223,13 +224,15 @@ function MainContent() {
   };
 
   if (step === 'dashboard') {
-    return <Dashboard onSelectTool={(tool) => {
+    return <Dashboard 
+      onAdminLogin={() => setStep('admin')}
+      onSelectTool={(tool, cost) => {
       if (tool === 'age') {
         setStep('age');
         return;
       }
       
-      requestAccess(() => {
+      requestAccess(cost, () => {
         if (tool === 'cv') setStep('template');
         else if (tool === 'resizer') setStep('resizer');
         else if (tool === 'pdf') setStep('pdf');
@@ -249,6 +252,10 @@ function MainContent() {
         else if (tool === 'img-to-pdf') setStep('img-to-pdf');
       });
     }} />;
+  }
+
+  if (step === 'admin') {
+    return <AdminPanel onBack={() => setStep('dashboard')} />;
   }
 
   if (step === 'age') {
