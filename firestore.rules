@@ -13,9 +13,9 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && 
-             request.auth.token.email == "maksudjr2020@gmail.com" && 
-             request.auth.token.email_verified == true;
+      // Reverted to allow anonymous auth for admin actions as requested.
+      // In a production app, you should use a more secure method like custom claims.
+      return isAuthenticated();
     }
 
     // ===============================================================
