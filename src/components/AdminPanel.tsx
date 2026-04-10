@@ -393,8 +393,8 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {paymentRequests.map((r, index) => (
-                    <tr key={`${r.id}-${index}`} className="hover:bg-slate-50/50 transition-colors">
+                  {paymentRequests.map((r) => (
+                    <tr key={`payment-${r.id}`} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-8 py-4">
                         <p className="font-bold text-slate-900">{r.fullName}</p>
                         <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{r.userKey}</p>
@@ -449,8 +449,8 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {keys.map((k, index) => (
-                    <tr key={`${k.id}-${index}`} className="hover:bg-slate-50/50 transition-colors">
+                  {keys.map((k) => (
+                    <tr key={`key-${k.id}`} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-8 py-4">
                         <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">
                           {k.code}

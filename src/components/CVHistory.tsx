@@ -36,9 +36,9 @@ export const CVHistory: React.FC<CVHistoryProps> = ({ history, onView, onDelete,
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {history.map((cv) => (
+        {history.map((cv, idx) => (
           <div 
-            key={cv.id}
+            key={`${cv.id}-${idx}`}
             className="group bg-white rounded-2xl border border-gray-200 p-5 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/5 transition-all relative overflow-hidden"
           >
             {/* Background Pattern */}

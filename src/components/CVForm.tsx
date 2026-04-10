@@ -848,7 +848,7 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
             </div>
             <div className="space-y-2">
               {data[field].map((item, idx) => (
-                <div key={`${field}-${idx}`} className="flex gap-2">
+                <div key={`${field}-${idx}-${item.substring(0, 10)}`} className="flex gap-2">
                   <input 
                     type="text" 
                     className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -1006,7 +1006,7 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
           </div>
           <div className="space-y-3">
             {data.languageProficiency.map((lang, idx) => (
-              <div key={`lang-prof-${idx}`} className="flex gap-2">
+              <div key={`lang-prof-${idx}-${lang}`} className="flex gap-2">
                 <div className="flex-1">
                   <CustomSelect 
                     label="" 
