@@ -46,5 +46,10 @@ service cloud.firestore {
     match /settings/{settingId} {
       allow read, write: if isAdmin();
     }
+
+    match /paymentRequests/{requestId} {
+      allow create: if true; // Anyone can submit a payment request
+      allow read, delete: if isAdmin();
+    }
   }
 }

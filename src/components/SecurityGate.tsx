@@ -25,6 +25,7 @@ interface SecurityContextType {
   freeTrialUsed: boolean;
   isFreeAccess: boolean;
   isAdmin: boolean;
+  activeKey: string | null;
   requestAccess: (cost: number, onSuccess: () => void, toolType?: string) => void;
   loginWithKey: (code: string) => Promise<void>;
   activateFreeAccess: () => Promise<void>;
@@ -48,6 +49,7 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [freeTrialUsed, setFreeTrialUsed] = useState(false);
   const [isFreeAccess, setIsFreeAccess] = useState(false);
   const [showGate, setShowGate] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ cost: number, onSuccess: () => void } | null>(null);
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -127,6 +129,8 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setActiveKey(inputCode.toUpperCase());
       setIsAuthorized(true);
       setShowGate(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
       setCode('');
 
       if (pendingAction) {
@@ -143,14 +147,14 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const requestAccess = async (cost: number, onSuccess: () => void, toolType?: string) => {
-    if (!isAuthorized) {
-      setShowGate(true);
-      setPendingAction({ cost, onSuccess });
+    if (cost === 0) {
+      onSuccess();
       return;
     }
 
-    if (cost === 0) {
-      onSuccess();
+    if (!isAuthorized) {
+      setShowGate(true);
+      setPendingAction({ cost, onSuccess });
       return;
     }
 
@@ -192,8 +196,11 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const activateFreeAccess = async () => {
-    if (localStorage.getItem('maksud_free_claimed')) {
-      setError("You have already claimed your free access on this device.");
+    const lastClaim = localStorage.getItem('maksud_free_claimed_date');
+    const today = new Date().toDateString();
+    
+    if (lastClaim === today) {
+      setError("You have already claimed your free access today. Please try again tomorrow.");
       setShowGate(true);
       return;
     }
@@ -213,7 +220,7 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       await addDoc(keysRef, newKey);
       localStorage.setItem('maksud_active_key', code);
-      localStorage.setItem('maksud_free_claimed', 'true');
+      localStorage.setItem('maksud_free_claimed_date', today);
       
       setUserName(newKey.userName);
       setCoins(1);
@@ -256,6 +263,7 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       freeTrialUsed,
       isFreeAccess,
       isAdmin: false, // Admin is handled separately in AdminPanel
+      activeKey,
       requestAccess,
       loginWithKey,
       activateFreeAccess,
@@ -264,6 +272,17 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }}>
       {children}
       <AnimatePresence>
+        {showSuccess && (
+          <motion.div 
+            initial={{ opacity: 0, y: -100 }}
+            animate={{ opacity: 1, y: 20 }}
+            exit={{ opacity: 0, y: -100 }}
+            className="fixed top-0 left-1/2 -translate-x-1/2 z-[1000] bg-emerald-500 text-white px-8 py-4 rounded-2xl shadow-2xl font-black flex items-center gap-3"
+          >
+            <ShieldCheck size={24} />
+            Login Successful! Welcome back.
+          </motion.div>
+        )}
         {showGate && (
           <div className="fixed inset-0 z-[999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
             <motion.div 

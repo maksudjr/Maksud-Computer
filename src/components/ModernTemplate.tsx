@@ -96,8 +96,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
             <div>
               <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Computer Skills</h3>
               <div className="space-y-4">
-                {computerSkills.map((skill, idx) => (
-                  <div key={idx} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                {computerSkills.map((skill) => (
+                  <div key={skill.id} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                     {skill.hasTraining && (
                       <p className="mb-2 text-gray-700 leading-tight">
                         Completed a {skill.duration} computer training program from {skill.instituteName}.
@@ -105,7 +105,7 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
                     )}
                     <ul className="list-disc list-inside space-y-1">
                       {skill.skills.map((s, sIdx) => (
-                        <li key={sIdx} className="leading-tight">{s}</li>
+                        <li key={`${skill.id}-skill-${sIdx}`} className="leading-tight">{s}</li>
                       ))}
                     </ul>
                   </div>
@@ -120,7 +120,7 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Languages</h3>
               <ul className="list-disc list-inside space-y-1" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                 {languageProficiency.map((lang, idx) => (
-                  <li key={idx} className="leading-tight">{lang}</li>
+                  <li key={`lang-${idx}-${lang}`} className="leading-tight">{lang}</li>
                 ))}
               </ul>
             </div>
@@ -132,7 +132,7 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Hobbies</h3>
               <ul className="list-disc list-inside space-y-1" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                 {hobbies.map((hobby, idx) => (
-                  <li key={idx} className="leading-tight">{hobby}</li>
+                  <li key={`hobby-${idx}-${hobby}`} className="leading-tight">{hobby}</li>
                 ))}
               </ul>
             </div>
@@ -165,7 +165,7 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Self Assessment</h3>
               <ul className="list-disc list-inside space-y-1 text-gray-700" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
                 {selfAssessment.map((item, idx) => (
-                  <li key={idx} className="leading-tight">{item}</li>
+                  <li key={`self-${idx}-${item}`} className="leading-tight">{item}</li>
                 ))}
               </ul>
             </div>
@@ -180,8 +180,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               </div>
               <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Work Experience</h3>
               <div className="space-y-6">
-                {workExperience.map((work, idx) => (
-                  <div key={idx}>
+                {workExperience.map((work) => (
+                  <div key={work.id}>
                     <div className="flex justify-between items-start mb-1">
                       <h4 className="font-bold uppercase" style={{ fontSize: `${theme.fontSize}pt` }}>{work.companyName}</h4>
                       <span className="font-bold text-gray-500 uppercase" style={{ fontSize: `${theme.fontSize - 2}pt` }}>{work.duration}</span>
@@ -205,8 +205,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               </div>
               <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Education</h3>
               <div className="space-y-6">
-                {education.map((edu, idx) => (
-                  <div key={idx}>
+                {education.map((edu) => (
+                  <div key={edu.id}>
                     <div className="flex justify-between items-start mb-1">
                       <h4 className="font-bold uppercase" style={{ fontSize: `${theme.fontSize}pt` }}>{edu.instituteName}</h4>
                       <span className="font-bold text-gray-500 uppercase" style={{ fontSize: `${theme.fontSize - 2}pt` }}>{edu.passingYear}</span>
@@ -308,8 +308,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
               </div>
               <h3 className="font-bold uppercase mb-4 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>References</h3>
               <div className="grid grid-cols-2 gap-6">
-                {data.references.map((ref, idx) => (
-                  <div key={idx} className="text-gray-700" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                {data.references.map((ref) => (
+                  <div key={ref.id} className="text-gray-700" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                     <p className="font-bold text-gray-900">{ref.name}</p>
                     <p>{ref.position}</p>
                     <p>{ref.organization}</p>

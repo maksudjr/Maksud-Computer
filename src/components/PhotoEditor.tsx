@@ -1,645 +1,414 @@
-import React, { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
-import { X, Check, Sun, Contrast, RotateCw, Crop as CropIcon, Sparkles, Palette, Wand2, Zap, Maximize } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { 
+  X, Check, Sun, Contrast, RotateCw, Crop as CropIcon, Sparkles, 
+  Palette, Wand2, Undo2, Redo2, Save, 
+  FlipHorizontal, FlipVertical, Thermometer, SunMedium, 
+  RefreshCcw, Layers, Sliders
+} from 'lucide-react';
 import { cn } from '../lib/utils';
 import { removeBackground } from '@imgly/background-removal';
+import { motion, AnimatePresence } from 'motion/react';
+import Cropper, { ReactCropperElement } from "react-cropper";
+import "cropperjs/dist/cropper.css";
 
 interface PhotoEditorProps {
   image: string;
   onSave: (editedImage: string) => void;
   onCancel: () => void;
-  aspect?: number;
-  autoRemoveBg?: boolean;
 }
 
-export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCancel, aspect = 1.5 / 2, autoRemoveBg = false }) => {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
+type Tool = 'crop' | 'background' | 'adjust';
+
+interface HistoryState {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  hue: number;
+  exposure: number;
+  temperature: number;
+  rotation: number;
+  flipH: boolean;
+  flipV: boolean;
+  bgColor: string;
+  image: string;
+}
+
+export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCancel }) => {
+  // --- State ---
+  const [activeTool, setActiveTool] = useState<Tool>('crop');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentImage, setCurrentImage] = useState(image);
+  
+  // Adjustments
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
   const [hue, setHue] = useState(0);
-  const [sepia, setSepia] = useState(0);
-  const [grayscale, setGrayscale] = useState(0);
-  const [isFreeCrop, setIsFreeCrop] = useState(false);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
-  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
-  const [backgroundColor, setBackgroundColor] = useState<string>('transparent');
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
-  const [processedImage, setProcessedImage] = useState<string | null>(null);
-  const [sharpness, setSharpness] = useState(0);
-  const [smoothing, setSmoothing] = useState(0);
-  const [upscaleFactor, setUpscaleFactor] = useState(1);
+  const [exposure, setExposure] = useState(0);
+  const [temperature, setTemperature] = useState(0);
+  
+  // Transform
+  const [rotation, setRotation] = useState(0);
+  const [flipH, setFlipH] = useState(false);
+  const [flipV, setFlipV] = useState(false);
+  
+  // Background
+  const [backgroundColor, setBackgroundColor] = useState('transparent');
+  
+  // History
+  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
-  // Auto remove background if requested
-  React.useEffect(() => {
-    if (autoRemoveBg && !processedImage && !isRemovingBackground) {
-      handleRemoveBackground();
-    }
-  }, [autoRemoveBg]);
+  // --- Refs ---
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cropperRef = useRef<ReactCropperElement>(null);
 
-  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+  // --- Initialization ---
+  useEffect(() => {
+    saveToHistory(image);
   }, []);
 
-  const createImage = (url: string): Promise<HTMLImageElement> =>
-    new Promise((resolve, reject) => {
-      const image = new Image();
-      image.addEventListener('load', () => resolve(image));
-      image.addEventListener('error', (error) => reject(error));
-      image.setAttribute('crossOrigin', 'anonymous');
-      image.src = url;
-    });
-
-  const handleRemoveBackground = async () => {
-    if (!removeBackground) {
-      console.error('Background removal library not loaded');
-      return;
-    }
-    setIsRemovingBackground(true);
-    try {
-      const blob = await removeBackground(processedImage || image);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProcessedImage(reader.result as string);
-        setIsRemovingBackground(false);
-      };
-      reader.onerror = () => {
-        console.error('FileReader failed');
-        setIsRemovingBackground(false);
-      };
-      reader.readAsDataURL(blob);
-    } catch (error) {
-      console.error('Background removal failed:', error);
-      setIsRemovingBackground(false);
-    }
-  };
-
-  const handleAutoEnhance = () => {
-    setBrightness(105);
-    setContrast(115);
-    setSaturation(110);
-    setSharpness(25);
-    setSmoothing(15);
-  };
-
-  const applyConvolution = (ctx: CanvasRenderingContext2D, width: number, height: number, weights: number[]) => {
-    const side = Math.round(Math.sqrt(weights.length));
-    const halfSide = Math.floor(side / 2);
-    const src = ctx.getImageData(0, 0, width, height);
-    const sw = src.width;
-    const sh = src.height;
-    const w = sw;
-    const h = sh;
-    const output = ctx.createImageData(w, h);
-    const dst = output.data;
-    const srcData = src.data;
-
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const sy = y;
-        const sx = x;
-        const dstOff = (y * w + x) * 4;
-        let r = 0, g = 0, b = 0;
-        for (let cy = 0; cy < side; cy++) {
-          for (let cx = 0; cx < side; cx++) {
-            const scy = sy + cy - halfSide;
-            const scx = sx + cx - halfSide;
-            if (scy >= 0 && scy < sh && scx >= 0 && scx < sw) {
-              const srcOff = (scy * sw + scx) * 4;
-              const wt = weights[cy * side + cx];
-              r += srcData[srcOff] * wt;
-              g += srcData[srcOff + 1] * wt;
-              b += srcData[srcOff + 2] * wt;
-            }
-          }
-        }
-        dst[dstOff] = r;
-        dst[dstOff + 1] = g;
-        dst[dstOff + 2] = b;
-        dst[dstOff + 3] = srcData[dstOff + 3];
-      }
-    }
-    ctx.putImageData(output, 0, 0);
-  };
-
-  const getCroppedImg = async (
-    imageSrc: string,
-    pixelCrop: any,
-    rotation = 0,
-    brightness = 100,
-    contrast = 100,
-    saturation = 100,
-    hue = 0,
-    sepia = 0,
-    grayscale = 0,
-    bgColor = 'transparent',
-    bgImage = null,
-    sharpnessVal = 0,
-    smoothingVal = 0,
-    scale = 1
-  ): Promise<string> => {
-    const image = await createImage(imageSrc);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-    if (!ctx) return '';
-
-    const maxSize = Math.max(image.width, image.height);
-    const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
-
-    canvas.width = safeArea;
-    canvas.height = safeArea;
-
-    ctx.translate(safeArea / 2, safeArea / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(-safeArea / 2, -safeArea / 2);
-
-    ctx.drawImage(
-      image,
-      safeArea / 2 - image.width * 0.5,
-      safeArea / 2 - image.height * 0.5
-    );
-
-    const data = ctx.getImageData(0, 0, safeArea, safeArea);
-
-    canvas.width = pixelCrop.width * scale;
-    canvas.height = pixelCrop.height * scale;
-
-    // Fill background color or image
-    if (bgImage) {
-      const bgImg = await createImage(bgImage);
-      ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-    } else if (bgColor !== 'transparent') {
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    // Create a temporary canvas to hold the rotated image
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = safeArea;
-    tempCanvas.height = safeArea;
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) return '';
-    tempCtx.putImageData(data, 0, 0);
-
-    // Resize main canvas to the crop size * scale
-    canvas.width = pixelCrop.width * scale;
-    canvas.height = pixelCrop.height * scale;
-
-    // Fill background color or image again for the final canvas
-    if (bgImage) {
-      const bgImg = await createImage(bgImage);
-      ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-    } else if (bgColor !== 'transparent') {
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    const sourceX = safeArea / 2 - image.width * 0.5 + pixelCrop.x;
-    const sourceY = safeArea / 2 - image.height * 0.5 + pixelCrop.y;
-
-    ctx.drawImage(
-      tempCanvas,
-      sourceX,
-      sourceY,
-      pixelCrop.width,
-      pixelCrop.height,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    // Apply filters
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = canvas.width;
-    finalCanvas.height = canvas.height;
-    const finalCtx = finalCanvas.getContext('2d', { willReadFrequently: true });
+  const saveToHistory = useCallback((imgToSave?: string) => {
+    const newState: HistoryState = {
+      brightness, contrast, saturation, hue, exposure, temperature,
+      rotation, flipH, flipV, bgColor: backgroundColor,
+      image: imgToSave || currentImage
+    };
     
-    if (finalCtx) {
-      if (bgImage) {
-        const bgImg = await createImage(bgImage);
-        finalCtx.drawImage(bgImg, 0, 0, finalCanvas.width, finalCanvas.height);
-      } else if (bgColor !== 'transparent') {
-        finalCtx.fillStyle = bgColor;
-        finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-      }
-      
-      let filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hue}deg) sepia(${sepia}%) grayscale(${grayscale}%)`;
-      if (smoothingVal > 0) {
-        filter += ` blur(${smoothingVal / 15}px)`;
-      }
-      finalCtx.filter = filter;
-      finalCtx.drawImage(canvas, 0, 0);
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      if (newHistory.length >= 20) newHistory.shift();
+      return [...newHistory, newState];
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, 19));
+  }, [brightness, contrast, saturation, hue, exposure, temperature, rotation, flipH, flipV, backgroundColor, currentImage, historyIndex]);
 
-      // Apply Sharpening if needed
-      if (sharpnessVal > 0) {
-        const amount = (sharpnessVal / 100) * (scale > 1 ? scale * 0.5 : 1);
-        const weights = [
-          0, -amount, 0,
-          -amount, 1 + (4 * amount), -amount,
-          0, -amount, 0
-        ];
-        applyConvolution(finalCtx, finalCanvas.width, finalCanvas.height, weights);
-      }
-
-      return finalCanvas.toDataURL('image/png');
+  const undo = () => {
+    if (historyIndex > 0) {
+      const prevState = history[historyIndex - 1];
+      applyState(prevState);
+      setHistoryIndex(historyIndex - 1);
     }
-
-    return canvas.toDataURL('image/png');
   };
 
-  const handleSave = async () => {
-    if (!croppedAreaPixels) {
-      console.error('No crop area defined');
-      return;
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1];
+      applyState(nextState);
+      setHistoryIndex(historyIndex + 1);
     }
+  };
+
+  const applyState = (state: HistoryState) => {
+    setBrightness(state.brightness);
+    setContrast(state.contrast);
+    setSaturation(state.saturation);
+    setHue(state.hue);
+    setExposure(state.exposure);
+    setTemperature(state.temperature);
+    setRotation(state.rotation);
+    setFlipH(state.flipH);
+    setFlipV(state.flipV);
+    setBackgroundColor(state.bgColor);
+    setCurrentImage(state.image);
+  };
+
+  // --- Actions ---
+  const handleRemoveBg = async () => {
+    setIsProcessing(true);
     try {
-      const croppedImage = await getCroppedImg(
-        processedImage || image,
-        croppedAreaPixels,
-        rotation,
-        brightness,
-        contrast,
-        saturation,
-        hue,
-        sepia,
-        grayscale,
-        backgroundColor,
-        backgroundImageUrl,
-        sharpness,
-        smoothing,
-        upscaleFactor
-      );
-      if (croppedImage) {
-        onSave(croppedImage);
-      }
-    } catch (e) {
-      console.error('Save failed:', e);
+      const blob = await removeBackground(currentImage);
+      const url = URL.createObjectURL(blob);
+      setCurrentImage(url);
+      setIsProcessing(false);
+      saveToHistory(url);
+    } catch (err) {
+      console.error(err);
+      setIsProcessing(false);
     }
+  };
+
+  const applyCrop = () => {
+    const cropper = cropperRef.current?.cropper;
+    if (!cropper) return;
+    
+    const croppedCanvas = cropper.getCroppedCanvas();
+    if (!croppedCanvas) return;
+
+    const croppedImage = croppedCanvas.toDataURL();
+    setCurrentImage(croppedImage);
+    saveToHistory(croppedImage);
+    setActiveTool('adjust'); // Switch to adjust after crop
+  };
+
+  const handleSave = () => {
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Draw background
+      if (backgroundColor !== 'transparent') {
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Apply filters
+      let filterString = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hue}deg)`;
+      if (exposure !== 0) filterString += ` brightness(${100 + exposure}%)`;
+      if (temperature > 0) filterString += ` sepia(${temperature}%) hue-rotate(-10deg)`;
+      else if (temperature < 0) filterString += ` hue-rotate(${Math.abs(temperature)}deg) saturate(${100 + Math.abs(temperature)}%)`;
+
+      ctx.filter = filterString;
+      ctx.drawImage(img, 0, 0);
+      
+      onSave(canvas.toDataURL('image/png', 1.0));
+    };
+    img.src = currentImage;
+  };
+
+  // --- UI Components ---
+  const SliderControl = ({ label, icon: Icon, value, min, max, step = 1, onChange }: any) => (
+    <div className="space-y-2 px-4 py-3 border-b border-white/5">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2 text-[10px] font-black text-white/40 uppercase tracking-widest">
+          <Icon size={12} />
+          {label}
+        </div>
+        <span className="text-[10px] font-mono text-indigo-400">{value}</span>
+      </div>
+      <input 
+        type="range" 
+        min={min} max={max} step={step} 
+        value={value} 
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        onMouseUp={() => saveToHistory()}
+        className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-indigo-500"
+      />
+    </div>
+  );
+
+  const filterStyle = {
+    filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hue}deg) ${
+      exposure !== 0 ? `brightness(${100 + exposure}%)` : ''
+    } ${
+      temperature > 0 ? `sepia(${temperature}%) hue-rotate(-10deg)` : 
+      temperature < 0 ? `hue-rotate(${Math.abs(temperature)}deg) saturate(${100 + Math.abs(temperature)}%)` : ''
+    }`,
+    backgroundColor: backgroundColor !== 'transparent' ? backgroundColor : 'transparent'
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col">
-      <div className="flex justify-between items-center p-4 bg-gray-900 text-white">
-        <h3 className="text-lg font-bold flex items-center gap-2">
-          <CropIcon size={20} />
-          Maksud Computer Photo Editor
-        </h3>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handleAutoEnhance}
-            className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm font-medium transition-colors"
-            title="Auto Enhance Colors & Clarity"
-          >
-            <Wand2 size={16} />
-            Auto Enhance
-          </button>
-          <button 
-            onClick={handleRemoveBackground}
-            disabled={isRemovingBackground}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-              isRemovingBackground ? "bg-gray-700 text-gray-400" : "bg-indigo-600 text-white hover:bg-indigo-700"
-            )}
-          >
-            <Sparkles size={16} className={cn(isRemovingBackground && "animate-spin")} />
-            {isRemovingBackground ? 'Removing...' : 'Remove BG'}
-          </button>
-          <button 
-            onClick={() => setIsFreeCrop(!isFreeCrop)}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-              isFreeCrop ? "bg-indigo-600 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            )}
-          >
-            <CropIcon size={16} />
-            {isFreeCrop ? 'Free Crop: ON' : 'Lock Aspect'}
-          </button>
-          <button 
-            onClick={onCancel}
-            className="p-2 hover:bg-gray-800 rounded-full transition-colors"
-          >
-            <X size={24} />
+    <div className="fixed inset-0 z-[100] bg-[#050505] flex flex-col font-sans text-white overflow-hidden">
+      {/* Header */}
+      <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0a0a0a]">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <Wand2 size={24} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-sm font-black uppercase tracking-tighter">Photo Editor</h1>
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Simple & Fast</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex bg-white/5 rounded-xl p-1">
+            <button onClick={undo} disabled={historyIndex <= 0} className="p-2 hover:bg-white/10 rounded-lg disabled:opacity-20 transition-all">
+              <Undo2 size={18} />
+            </button>
+            <button onClick={redo} disabled={historyIndex >= history.length - 1} className="p-2 hover:bg-white/10 rounded-lg disabled:opacity-20 transition-all">
+              <Redo2 size={18} />
+            </button>
+          </div>
+          
+          <button onClick={onCancel} className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-all">
+            <X size={20} />
           </button>
           <button 
             onClick={handleSave}
-            className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-full font-bold transition-colors"
+            className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm font-black shadow-lg shadow-indigo-500/20 transition-all"
           >
-            <Check size={20} />
-            Apply
+            <Save size={18} />
+            Save Changes
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 relative bg-gray-800">
-        <Cropper
-          image={processedImage || image}
-          crop={crop}
-          zoom={zoom}
-          rotation={rotation}
-          aspect={isFreeCrop ? undefined : aspect}
-          onCropChange={setCrop}
-          onRotationChange={setRotation}
-          onCropComplete={onCropComplete}
-          onZoomChange={setZoom}
-          style={{
-            containerStyle: {
-              filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hue}deg) sepia(${sepia}%) grayscale(${grayscale}%) blur(${smoothing / 15}px)`,
-              backgroundColor: backgroundColor,
-              backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }
-          }}
-        />
-      </div>
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar Tools */}
+        <aside className="w-20 border-r border-white/10 flex flex-col items-center py-6 gap-6 bg-[#0a0a0a]">
+          {[
+            { id: 'crop', icon: CropIcon, label: 'Crop' },
+            { id: 'background', icon: Layers, label: 'BG' },
+            { id: 'adjust', icon: Sliders, label: 'Adjust' },
+          ].map((tool) => (
+            <button
+              key={tool.id}
+              onClick={() => setActiveTool(tool.id as Tool)}
+              className={cn(
+                "flex flex-col items-center gap-1 transition-all group",
+                activeTool === tool.id ? "text-indigo-500" : "text-white/40 hover:text-white/80"
+              )}
+            >
+              <div className={cn(
+                "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
+                activeTool === tool.id ? "bg-indigo-500/10 shadow-inner" : "group-hover:bg-white/5"
+              )}>
+                <tool.icon size={22} />
+              </div>
+              <span className="text-[9px] font-black uppercase tracking-widest">{tool.label}</span>
+            </button>
+          ))}
+        </aside>
 
-      <div className="p-6 bg-gray-900 text-white space-y-6 overflow-y-auto max-h-[40vh]">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Maximize size={20} className="text-gray-400" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Upscale Factor</span>
-                  <span className="text-indigo-400 font-bold">{upscaleFactor}x</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="1" 
-                  max="5" 
-                  step="1"
-                  value={upscaleFactor}
-                  onChange={(e) => setUpscaleFactor(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Zap size={20} className="text-gray-400" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Sharpness (Enhance)</span>
-                  <span>{sharpness}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={sharpness}
-                  onChange={(e) => setSharpness(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Sparkles size={20} className="text-gray-400" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Smoothing (Retouch)</span>
-                  <span>{smoothing}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={smoothing}
-                  onChange={(e) => setSmoothing(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
+        {/* Controls Panel */}
+        <aside className="w-72 border-r border-white/10 bg-[#080808] overflow-y-auto custom-scrollbar">
+          <div className="p-6 border-b border-white/10 flex items-center justify-between">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+              {activeTool} Settings
+            </h2>
+            <button onClick={() => applyState(history[0])} className="text-white/20 hover:text-indigo-400 transition-colors">
+              <RefreshCcw size={14} />
+            </button>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Sun size={20} className="text-gray-400" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Brightness</span>
-                  <span>{brightness}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="50" 
-                  max="150" 
-                  value={brightness}
-                  onChange={(e) => setBrightness(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Contrast size={20} className="text-gray-400" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Contrast</span>
-                  <span>{contrast}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="50" 
-                  max="150" 
-                  value={contrast}
-                  onChange={(e) => setContrast(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-r from-red-500 via-green-500 to-blue-500" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Saturation</span>
-                  <span>{saturation}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="200" 
-                  value={saturation}
-                  onChange={(e) => setSaturation(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-5 h-5 rounded-full bg-indigo-500" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Hue</span>
-                  <span>{hue}°</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="360" 
-                  value={hue}
-                  onChange={(e) => setHue(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-5 h-5 rounded-full bg-amber-600" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Sepia</span>
-                  <span>{sepia}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={sepia}
-                  onChange={(e) => setSepia(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-5 h-5 rounded-full bg-gray-400" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Grayscale</span>
-                  <span>{grayscale}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={grayscale}
-                  onChange={(e) => setGrayscale(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Sparkles size={20} className="text-indigo-400" />
-              <div className="flex-1 space-y-2">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Smart AI Backgrounds</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setBackgroundImageUrl(null)}
-                    className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-bold border transition-all",
-                      !backgroundImageUrl ? "bg-indigo-600 border-indigo-500 text-white" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
-                    )}
-                  >
-                    None
-                  </button>
-                  {[
-                    { name: 'Office', url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80' },
-                    { name: 'Studio', url: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80' },
-                    { name: 'Nature', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80' },
-                    { name: 'Abstract', url: 'https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=800&q=80' },
-                    { name: 'Luxury', url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80' }
-                  ].map((bg) => (
-                    <button
-                      key={bg.name}
-                      onClick={() => {
-                        setBackgroundImageUrl(bg.url);
-                        setBackgroundColor('transparent');
-                      }}
-                      className={cn(
-                        "px-3 py-1 rounded-full text-[10px] font-bold border transition-all",
-                        backgroundImageUrl === bg.url ? "bg-indigo-600 border-indigo-500 text-white" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
-                      )}
-                    >
-                      {bg.name}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTool}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+              className="p-4"
+            >
+              {activeTool === 'crop' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'Free', ratio: NaN },
+                      { label: '1:1', ratio: 1 },
+                      { label: '4:3', ratio: 4/3 },
+                      { label: '16:9', ratio: 16/9 },
+                      { label: '3:4', ratio: 3/4 },
+                      { label: '2:3', ratio: 2/3 },
+                    ].map((r) => (
+                      <button 
+                        key={r.label}
+                        onClick={() => cropperRef.current?.cropper.setAspectRatio(r.ratio)}
+                        className="py-2 bg-white/5 hover:bg-indigo-600/20 rounded-lg text-[9px] font-bold uppercase border border-white/5"
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => cropperRef.current?.cropper.rotate(-90)} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl flex flex-col items-center gap-2">
+                      <RotateCw size={16} className="scale-x-[-1]" />
+                      <span className="text-[8px] font-black uppercase">Rotate L</span>
                     </button>
-                  ))}
+                    <button onClick={() => cropperRef.current?.cropper.rotate(90)} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl flex flex-col items-center gap-2">
+                      <RotateCw size={16} />
+                      <span className="text-[8px] font-black uppercase">Rotate R</span>
+                    </button>
+                  </div>
+                  <button 
+                    onClick={applyCrop}
+                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                  >
+                    <Check size={18} />
+                    Apply Crop
+                  </button>
                 </div>
-              </div>
+              )}
+
+              {activeTool === 'background' && (
+                <div className="space-y-6">
+                  <button 
+                    onClick={handleRemoveBg}
+                    disabled={isProcessing}
+                    className="w-full p-4 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 rounded-2xl flex items-center gap-4 transition-all group disabled:opacity-50"
+                  >
+                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Sparkles size={20} />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest">Remove BG</h3>
+                      <p className="text-[8px] text-white/40">AI Background Removal</p>
+                    </div>
+                  </button>
+
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Background Color</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['transparent', '#ffffff', '#f3f4f6', '#3b82f6', '#ef4444', '#22c55e', '#000000'].map(c => (
+                        <button 
+                          key={c} 
+                          onClick={() => { setBackgroundColor(c); saveToHistory(); }}
+                          className={cn(
+                            "w-8 h-8 rounded-lg border-2 transition-all", 
+                            backgroundColor === c ? "border-indigo-500 scale-110" : "border-white/10"
+                          )}
+                          style={{ backgroundColor: c === 'transparent' ? 'transparent' : c }}
+                        >
+                          {c === 'transparent' && <X size={12} className="text-white/40 m-auto" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTool === 'adjust' && (
+                <div className="space-y-1">
+                  <SliderControl label="Brightness" icon={Sun} value={brightness} min={0} max={200} onChange={setBrightness} />
+                  <SliderControl label="Contrast" icon={Contrast} value={contrast} min={0} max={200} onChange={setContrast} />
+                  <SliderControl label="Saturation" icon={Palette} value={saturation} min={0} max={200} onChange={setSaturation} />
+                  <SliderControl label="Exposure" icon={SunMedium} value={exposure} min={-100} max={100} onChange={setExposure} />
+                  <SliderControl label="Temperature" icon={Thermometer} value={temperature} min={-100} max={100} onChange={setTemperature} />
+                  <SliderControl label="Hue" icon={Palette} value={hue} min={0} max={360} onChange={setHue} />
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </aside>
+
+        {/* Main Canvas Area */}
+        <main className="flex-1 relative bg-[#050505] flex items-center justify-center p-8 overflow-hidden">
+          {isProcessing && (
+            <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-black uppercase tracking-[0.3em] animate-pulse">Processing AI...</p>
             </div>
-            <div className="flex items-center gap-4">
-              <Palette size={20} className="text-gray-400" />
-              <div className="flex-1 space-y-2">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Background Color</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {['transparent', '#ffffff', '#3b82f6', '#22c55e', '#ef4444', '#f59e0b', '#000000'].map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setBackgroundColor(color)}
-                      className={cn(
-                        "w-6 h-6 rounded-full border-2 transition-all",
-                        backgroundColor === color ? "border-white scale-110" : "border-gray-700"
-                      )}
-                      style={{ 
-                        backgroundColor: color === 'transparent' ? 'transparent' : color,
-                        backgroundImage: color === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)' : 'none',
-                        backgroundSize: color === 'transparent' ? '8px 8px' : 'auto',
-                        backgroundPosition: color === 'transparent' ? '0 0, 4px 4px' : '0 0'
-                      }}
-                      title={color === 'transparent' ? 'Transparent' : color}
-                    />
-                  ))}
-                  <input 
-                    type="color" 
-                    className="w-6 h-6 rounded-full border-2 border-gray-700 p-0.5 cursor-pointer overflow-hidden"
-                    value={backgroundColor === 'transparent' ? '#ffffff' : backgroundColor}
-                    onChange={(e) => setBackgroundColor(e.target.value)}
-                    title="Custom Color"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <RotateCw size={20} className="text-gray-400" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Rotation</span>
-                  <span>{rotation}°</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="360" 
-                  value={rotation}
-                  onChange={(e) => setRotation(parseInt(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <CropIcon size={20} className="text-gray-400" />
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-xs font-medium text-gray-400">
-                  <span>Zoom</span>
-                  <span>{zoom.toFixed(1)}x</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="1" 
-                  max="3" 
-                  step="0.1"
-                  value={zoom}
-                  onChange={(e) => setZoom(parseFloat(e.target.value))}
-                  className="w-full accent-indigo-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-            </div>
+          )}
+
+          <div className="relative max-w-full max-h-full shadow-2xl rounded-lg overflow-hidden" style={activeTool !== 'crop' ? filterStyle : {}}>
+            {activeTool === 'crop' ? (
+              <Cropper
+                src={currentImage}
+                style={{ height: '70vh', width: '100%' }}
+                initialAspectRatio={NaN}
+                guides={true}
+                ref={cropperRef}
+                viewMode={1}
+                background={false}
+                responsive={true}
+                autoCropArea={1}
+                checkOrientation={false}
+              />
+            ) : (
+              <img 
+                src={currentImage} 
+                alt="Preview" 
+                className="max-w-full max-h-[70vh] object-contain"
+                referrerPolicy="no-referrer"
+              />
+            )}
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

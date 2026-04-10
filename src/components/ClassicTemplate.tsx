@@ -195,7 +195,7 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
         <section>
           <SectionHeader title="Language Proficiency" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
           {languageProficiency.map((lang, idx) => (
-            <BulletItem key={idx} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{lang}</BulletItem>
+            <BulletItem key={`lang-${idx}-${lang}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{lang}</BulletItem>
           ))}
         </section>
       )}
@@ -205,7 +205,7 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
         <section>
           <SectionHeader title="Self-Assessment" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
           {selfAssessment.map((item, idx) => (
-            <BulletItem key={idx} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{item}</BulletItem>
+            <BulletItem key={`self-${idx}-${item}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{item}</BulletItem>
           ))}
         </section>
       )}
@@ -215,7 +215,7 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
         <section>
           <SectionHeader title="Hobby and Interest" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
           {hobbies.map((hobby, idx) => (
-            <BulletItem key={idx} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{hobby}</BulletItem>
+            <BulletItem key={`hobby-${idx}-${hobby}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{hobby}</BulletItem>
           ))}
         </section>
       )}
@@ -261,8 +261,8 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
         <section>
           <SectionHeader title="References" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
           <div className="grid grid-cols-2 gap-4">
-            {data.references.map((ref, idx) => (
-              <div key={idx} style={{ fontSize: `${theme.fontSize}pt` }} className="leading-tight">
+            {data.references.map((ref) => (
+              <div key={ref.id} style={{ fontSize: `${theme.fontSize}pt` }} className="leading-tight">
                 <p className="font-bold">{ref.name}</p>
                 <p>{ref.position}</p>
                 <p>{ref.organization}</p>

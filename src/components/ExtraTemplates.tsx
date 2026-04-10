@@ -53,8 +53,8 @@ export const ClassicElegantTemplate = React.forwardRef<HTMLDivElement, TemplateP
           <section>
             <h2 className="text-xl italic border-b mb-3" style={{ color: theme.primaryColor }}>Academic Qualification</h2>
             <div className="space-y-4">
-              {education.map((edu, i) => (
-                <div key={i}>
+              {education.map((edu) => (
+                <div key={edu.id}>
                   <div className="flex justify-between font-bold">
                     <span>{edu.examName}</span>
                     <span>{edu.passingYear}</span>
@@ -70,8 +70,8 @@ export const ClassicElegantTemplate = React.forwardRef<HTMLDivElement, TemplateP
         {selectedSections.includes('workExperience') && workExperience.length > 0 && (
           <section>
             <h2 className="text-xl italic border-b mb-3" style={{ color: theme.primaryColor }}>Professional Experience</h2>
-            {workExperience.map((work, i) => (
-              <div key={i} className="mb-4">
+            {workExperience.map((work) => (
+              <div key={work.id} className="mb-4">
                 <div className="flex justify-between font-bold">
                   <span>{work.position}</span>
                   <span>{work.duration}</span>
@@ -87,8 +87,8 @@ export const ClassicElegantTemplate = React.forwardRef<HTMLDivElement, TemplateP
           <section>
             <h2 className="text-xl italic border-b mb-3" style={{ color: theme.primaryColor }}>Computer Skills</h2>
             <div className="space-y-2">
-              {computerSkills.map((skill, i) => (
-                <div key={i} style={{ fontSize: `${theme.fontSize}pt` }}>
+              {computerSkills.map((skill) => (
+                <div key={skill.id} style={{ fontSize: `${theme.fontSize}pt` }}>
                   {skill.hasTraining && (
                     <p className="italic text-gray-600 mb-1">
                       Completed a {skill.duration} computer training program from {skill.instituteName}.
@@ -112,7 +112,7 @@ export const ClassicElegantTemplate = React.forwardRef<HTMLDivElement, TemplateP
           <section>
             <h2 className="text-xl italic border-b mb-3" style={{ color: theme.primaryColor }}>Self Assessment</h2>
             <ul className="list-disc list-inside space-y-1 text-sm">
-              {selfAssessment.map((item, i) => <li key={i}>{item}</li>)}
+              {selfAssessment.map((item, i) => <li key={`self-${i}-${item}`}>{item}</li>)}
             </ul>
           </section>
         )}
@@ -149,8 +149,8 @@ export const ClassicElegantTemplate = React.forwardRef<HTMLDivElement, TemplateP
           <section>
             <h2 className="text-xl italic border-b mb-3" style={{ color: theme.primaryColor }}>References</h2>
             <div className="grid grid-cols-2 gap-8">
-              {references.map((ref, i) => (
-                <div key={i} className="text-sm">
+              {references.map((ref) => (
+                <div key={ref.id} className="text-sm">
                   <p className="font-bold">{ref.name}</p>
                   <p>{ref.position} | {ref.organization}</p>
                   <p>Phone: {ref.phone}</p>
@@ -164,8 +164,8 @@ export const ClassicElegantTemplate = React.forwardRef<HTMLDivElement, TemplateP
           <section>
             <h2 className="text-xl italic border-b mb-3" style={{ color: theme.primaryColor }}>{customSection.title}</h2>
             <div className="space-y-2 text-sm">
-              {customSection.fields.map((field, i) => (
-                <p key={i}><strong>{field.label}:</strong> {field.value}</p>
+              {customSection.fields.map((field) => (
+                <p key={field.id}><strong>{field.label}:</strong> {field.value}</p>
               ))}
             </div>
           </section>

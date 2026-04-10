@@ -26,11 +26,17 @@ import {
   Mail,
   CheckCircle2,
   Gift,
-  AlertCircle
+  AlertCircle,
+  Tag,
+  CreditCard,
+  Send,
+  X
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { cn } from '../lib/utils';
 import { useSecurity } from './SecurityGate';
+import { db } from '../lib/firebase';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
 interface DashboardProps {
   onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf', cost: number) => void;
@@ -38,8 +44,19 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin }) => {
-  const { coins, userName, isAuthorized, logout, freeTrialUsed, isFreeAccess, activateFreeAccess, error } = useSecurity();
+  const { coins, userName, isAuthorized, logout, freeTrialUsed, isFreeAccess, activateFreeAccess, error, activeKey } = useSecurity();
   const [showFreeSuccess, setShowFreeSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<'tools' | 'pricing'>('tools');
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentData, setPaymentData] = useState({
+    amount: '',
+    transactionId: '',
+    fullName: '',
+    mobileNo: '',
+    comments: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   
   const welcomeMessage = useMemo(() => {
     const hour = new Date().getHours();
@@ -291,9 +308,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
           </div>
           <div className="hidden md:flex items-center gap-8">
             <nav className="flex items-center gap-6">
-              <a href="#" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Home</a>
+              <button 
+                onClick={() => setActiveTab('tools')}
+                className={cn("text-sm font-bold transition-colors", activeTab === 'tools' ? "text-indigo-600" : "text-slate-600 hover:text-indigo-600")}
+              >
+                Home
+              </button>
+              <button 
+                onClick={() => setActiveTab('pricing')}
+                className={cn("text-sm font-bold transition-colors", activeTab === 'pricing' ? "text-indigo-600" : "text-slate-600 hover:text-indigo-600")}
+              >
+                Pricing
+              </button>
               <a href="#" onClick={() => onSelectTool('about')} className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">About</a>
-              <a href="#" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Services</a>
             </nav>
             <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all">
               Contact Us
@@ -319,6 +346,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
               </p>
             </div>
             <div className="flex flex-col gap-4">
+              {isAuthorized && (
+                <div className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-2">
+                  <ShieldCheck size={16} />
+                  <span className="text-xs font-black uppercase tracking-widest">Your Key: {activeKey}</span>
+                </div>
+              )}
               <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
                 <div className="px-4 py-2 bg-indigo-50 rounded-xl">
                   <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Active Tools</p>
@@ -375,56 +408,300 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
           </motion.div>
         </div>
 
-        {/* Bento Grid Tools */}
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {tools.map((tool, index) => (
-            <motion.div
-              key={tool.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => onSelectTool(tool.id as any, tool.cost || 0)}
-              className={cn(
-                "group relative cursor-pointer bg-white rounded-[2rem] border border-slate-200 p-8 transition-all hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-100 active:scale-[0.98]",
-                tool.size === 'large' ? "md:col-span-2 md:row-span-2" : 
-                tool.size === 'medium' ? "md:col-span-2" : "md:col-span-1"
-              )}
-            >
-              <div className={cn(
-                "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 group-hover:rotate-3",
-                tool.color
-              )}>
-                {React.cloneElement(tool.icon as React.ReactElement, { size: 28 })}
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                    {tool.name}
-                    {tool.id === 'cv' && <Sparkles size={16} className="text-amber-500 animate-pulse" />}
-                  </h3>
-                  {tool.cost > 0 ? (
-                    <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
-                      <CoinsIcon size={12} className="text-amber-500" />
-                      <span className="text-[10px] font-black text-slate-600">{tool.cost}</span>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Free</span>
-                  )}
+        {/* Bento Grid Tools or Pricing */}
+        {activeTab === 'tools' ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {tools.map((tool, index) => (
+              <motion.div
+                key={tool.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                onClick={() => onSelectTool(tool.id as any, tool.cost || 0)}
+                className={cn(
+                  "group relative cursor-pointer bg-white rounded-[2rem] border border-slate-200 p-8 transition-all hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-100 active:scale-[0.98]",
+                  tool.size === 'large' ? "md:col-span-2 md:row-span-2" : 
+                  tool.size === 'medium' ? "md:col-span-2" : "md:col-span-1"
+                )}
+              >
+                <div className={cn(
+                  "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 group-hover:rotate-3",
+                  tool.color
+                )}>
+                  {React.cloneElement(tool.icon as React.ReactElement, { size: 28 })}
                 </div>
-                <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                  {tool.description}
-                </p>
-              </div>
-              <div className="absolute bottom-8 right-8 w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                <ChevronRight size={20} />
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                      {tool.name}
+                      {tool.id === 'cv' && <Sparkles size={16} className="text-amber-500 animate-pulse" />}
+                    </h3>
+                    {tool.cost > 0 ? (
+                      <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
+                        <CoinsIcon size={12} className="text-amber-500" />
+                        <span className="text-[10px] font-black text-slate-600">{tool.cost}</span>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Free</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                    {tool.description}
+                  </p>
+                </div>
+                <div className="absolute bottom-8 right-8 w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                  <ChevronRight size={20} />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-12">
+            <div className="text-center max-w-2xl mx-auto">
+              <h2 className="text-3xl font-black text-slate-900 mb-4">Simple, Transparent Pricing</h2>
+              <p className="text-slate-500 font-medium">Choose the coin pack that fits your needs. Coins never expire and can be used for any tool.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {[
+                { coins: 20, price: 20, label: 'Starter' },
+                { coins: 100, price: 70, label: 'Popular', popular: true },
+                { coins: 200, price: 150, label: 'Pro' },
+                { coins: 500, price: 300, label: 'Business' },
+                { coins: 1000, price: 500, label: 'Enterprise' },
+                { coins: 'Unlimited', price: 10000, label: 'Lifetime', lifetime: true }
+              ].map((plan, i) => (
+                <motion.div
+                  key={plan.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={cn(
+                    "relative bg-white rounded-[2.5rem] p-8 border-2 transition-all hover:shadow-2xl",
+                    plan.popular ? "border-indigo-600 shadow-xl shadow-indigo-100 scale-105 z-10" : "border-slate-100 hover:border-indigo-200"
+                  )}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                      Most Popular
+                    </div>
+                  )}
+                  <div className="mb-8">
+                    <p className="text-sm font-black text-indigo-600 uppercase tracking-widest mb-2">{plan.label}</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-black text-slate-900">{plan.price}</span>
+                      <span className="text-lg font-bold text-slate-400">TK</span>
+                    </div>
+                  </div>
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                        <CheckCircle2 size={14} />
+                      </div>
+                      <p className="text-sm font-bold text-slate-600">{plan.coins} Coins</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                        <CheckCircle2 size={14} />
+                      </div>
+                      <p className="text-sm font-bold text-slate-600">All Tools Access</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                        <CheckCircle2 size={14} />
+                      </div>
+                      <p className="text-sm font-bold text-slate-600">No Expiry</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowPaymentForm(true)}
+                    className={cn(
+                      "w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2",
+                      plan.popular ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200" : "bg-slate-50 text-slate-900 hover:bg-slate-100"
+                    )}
+                  >
+                    Add Coins
+                    <CreditCard size={18} />
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </main>
 
-      {/* Footer */}
+      {/* Payment Form Modal */}
+      <AnimatePresence>
+        {showPaymentForm && (
+          <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="max-w-2xl w-full bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 p-8 md:p-12 relative my-8"
+            >
+              <button 
+                onClick={() => setShowPaymentForm(false)}
+                className="absolute top-8 right-8 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
+
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white">
+                  <CreditCard size={24} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">Payment Instructions</h2>
+                  <p className="text-sm font-medium text-slate-500 tracking-wide">Follow the steps below to add coins</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div className="space-y-6">
+                  <div className="p-6 bg-pink-50 rounded-3xl border border-pink-100">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-pink-500 rounded-xl flex items-center justify-center text-white font-black">1</div>
+                      <p className="text-sm font-black text-pink-900 uppercase tracking-widest">bKash Payment</p>
+                    </div>
+                    <ul className="space-y-3 text-sm font-medium text-pink-800">
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full mt-1.5" />
+                        Go to bKash App
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full mt-1.5" />
+                        Select "Payment" option
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full mt-1.5" />
+                        Enter Merchant No: <span className="font-black">01868257470</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full mt-1.5" />
+                        Complete the payment
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <form 
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setIsSubmitting(true);
+                    try {
+                      await addDoc(collection(db, 'paymentRequests'), {
+                        ...paymentData,
+                        userKey: activeKey || 'Guest',
+                        userName: userName || 'Guest',
+                        status: 'pending',
+                        createdAt: Timestamp.now()
+                      });
+                      setShowPaymentForm(false);
+                      setShowPaymentSuccess(true);
+                      setPaymentData({ amount: '', transactionId: '', fullName: '', mobileNo: '', comments: '' });
+                    } catch (err) {
+                      console.error(err);
+                    } finally {
+                      setIsSubmitting(false);
+                    }
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Amount (TK)</label>
+                      <input 
+                        required
+                        type="number"
+                        placeholder="e.g. 70"
+                        value={paymentData.amount}
+                        onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile No</label>
+                      <input 
+                        required
+                        type="text"
+                        placeholder="017XXXXXXXX"
+                        value={paymentData.mobileNo}
+                        onChange={(e) => setPaymentData({...paymentData, mobileNo: e.target.value})}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Transaction ID</label>
+                    <input 
+                      required
+                      type="text"
+                      placeholder="Enter bKash TrxID"
+                      value={paymentData.transactionId}
+                      onChange={(e) => setPaymentData({...paymentData, transactionId: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                    <input 
+                      required
+                      type="text"
+                      placeholder="Your Name"
+                      value={paymentData.fullName}
+                      onChange={(e) => setPaymentData({...paymentData, fullName: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Comments (Optional)</label>
+                    <textarea 
+                      placeholder="Any message..."
+                      value={paymentData.comments}
+                      onChange={(e) => setPaymentData({...paymentData, comments: e.target.value})}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold h-20 resize-none"
+                    />
+                  </div>
+                  <button 
+                    disabled={isSubmitting}
+                    type="submit"
+                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Request"}
+                    <Send size={18} />
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showPaymentSuccess && (
+          <div className="fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-md w-full bg-white rounded-[2.5rem] p-10 text-center shadow-2xl"
+            >
+              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 size={40} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mb-4">Successfully Requested!</h2>
+              <p className="text-slate-500 font-medium mb-8">
+                Please wait for confirmation message. Our team will verify your payments and will inform you by SMS.
+              </p>
+              <button 
+                onClick={() => setShowPaymentSuccess(false)}
+                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <footer className="bg-white border-t border-slate-200 py-16 mt-24">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">

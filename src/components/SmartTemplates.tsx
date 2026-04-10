@@ -97,8 +97,8 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
               Educational Qualification
             </h2>
             <div className="space-y-3">
-              {education.map((edu, idx) => (
-                <div key={idx} className="grid grid-cols-[1fr_auto] gap-2">
+              {education.map((edu) => (
+                <div key={edu.id} className="grid grid-cols-[1fr_auto] gap-2">
                   <div>
                     <h3 className="font-bold" style={{ fontSize: `${theme.fontSize}pt` }}>{edu.examName}</h3>
                     <p className="text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>{edu.instituteName}</p>
@@ -121,8 +121,8 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
               Work Experience
             </h2>
             <div className="space-y-4">
-              {workExperience.map((work, idx) => (
-                <div key={idx}>
+              {workExperience.map((work) => (
+                <div key={work.id}>
                   <div className="flex justify-between items-center mb-1">
                     <h3 className="font-bold" style={{ fontSize: `${theme.fontSize}pt` }}>{work.position}</h3>
                     <span className="text-gray-500 font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>{work.duration}</span>
@@ -142,8 +142,8 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
               Computer Skills
             </h2>
             <div className="space-y-2">
-              {computerSkills.map((skill, idx) => (
-                <div key={idx}>
+              {computerSkills.map((skill) => (
+                <div key={skill.id}>
                   {skill.hasTraining && (
                     <p className="mb-1 text-gray-700 font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                       Completed a {skill.duration} computer training program from {skill.instituteName}.
@@ -151,7 +151,7 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
                   )}
                   <div className="flex flex-wrap gap-2">
                     {skill.skills.map((s, sIdx) => (
-                      <span key={sIdx} className="px-3 py-1 bg-gray-100 rounded-full font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                      <span key={`${skill.id}-skill-${sIdx}`} className="px-3 py-1 bg-gray-100 rounded-full font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                         {s}
                       </span>
                     ))}
@@ -170,7 +170,7 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
             </h2>
             <div className="flex flex-wrap gap-4">
               {languageProficiency.map((lang, idx) => (
-                <div key={idx} className="flex items-center gap-2" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                <div key={`lang-${idx}-${lang}`} className="flex items-center gap-2" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: theme.primaryColor }} />
                   <span>{lang}</span>
                 </div>
@@ -187,7 +187,7 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
             </h2>
             <ul className="list-disc list-inside space-y-1" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
               {selfAssessment.map((item, idx) => (
-                <li key={idx}>{item}</li>
+                <li key={`self-${idx}-${item}`}>{item}</li>
               ))}
             </ul>
           </section>
@@ -201,7 +201,7 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
             </h2>
             <div className="flex flex-wrap gap-2">
               {hobbies.map((hobby, idx) => (
-                <span key={idx} className="px-3 py-1 border rounded-lg" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                <span key={`hobby-${idx}-${hobby}`} className="px-3 py-1 border rounded-lg" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                   {hobby}
                 </span>
               ))}
@@ -279,8 +279,8 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
               References
             </h2>
             <div className="grid grid-cols-2 gap-8">
-              {references.map((ref, idx) => (
-                <div key={idx} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+              {references.map((ref) => (
+                <div key={ref.id} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                   <p className="font-bold">{ref.name}</p>
                   <p className="text-gray-600">{ref.position}</p>
                   <p className="text-gray-600">{ref.organization}</p>
@@ -298,8 +298,8 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
               {customSection.title}
             </h2>
             <div className="space-y-2" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
-              {customSection.fields.map((field, idx) => (
-                <div key={idx} className="flex justify-between border-b border-gray-50 pb-1">
+              {customSection.fields.map((field) => (
+                <div key={field.id} className="flex justify-between border-b border-gray-50 pb-1">
                   <span className="font-bold text-gray-600">{field.label}</span>
                   <span>{field.value}</span>
                 </div>
@@ -400,8 +400,8 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
             <section>
               <h3 className="text-sm font-black uppercase tracking-widest mb-4 border-b border-white/20 pb-2">Skills</h3>
               <div className="space-y-4">
-                {computerSkills.map((skill, idx) => (
-                  <div key={idx}>
+                {computerSkills.map((skill) => (
+                  <div key={skill.id}>
                     {skill.hasTraining && (
                       <p className="text-[10px] opacity-60 mb-2">
                         {skill.duration} training at {skill.instituteName}
@@ -409,7 +409,7 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
                     )}
                     <div className="flex flex-wrap gap-2">
                       {skill.skills.map((s, sIdx) => (
-                        <span key={sIdx} className="px-2 py-1 bg-white/10 rounded text-xs font-medium">
+                        <span key={`${skill.id}-skill-${sIdx}`} className="px-2 py-1 bg-white/10 rounded text-xs font-medium">
                           {s}
                         </span>
                       ))}
@@ -425,7 +425,7 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
               <h3 className="text-sm font-black uppercase tracking-widest mb-4 border-b border-white/20 pb-2">Languages</h3>
               <div className="space-y-2" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                 {languageProficiency.map((lang, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
+                  <div key={`lang-${idx}-${lang}`} className="flex items-center gap-2">
                     <div className="w-1 h-1 rounded-full bg-white" />
                     <span>{lang}</span>
                   </div>
@@ -439,7 +439,7 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
               <h3 className="text-sm font-black uppercase tracking-widest mb-4 border-b border-white/20 pb-2">Hobbies</h3>
               <div className="flex flex-wrap gap-2">
                 {hobbies.map((hobby, idx) => (
-                  <span key={idx} className="px-2 py-1 bg-white/10 rounded text-xs font-medium">
+                  <span key={`hobby-${idx}-${hobby}`} className="px-2 py-1 bg-white/10 rounded text-xs font-medium">
                     {hobby}
                   </span>
                 ))}
@@ -482,8 +482,8 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
                 <span>Experience</span>
               </h2>
               <div className="space-y-8">
-                {workExperience.map((work, idx) => (
-                  <div key={idx} className="relative pl-6 border-l-2 border-gray-100">
+                {workExperience.map((work) => (
+                  <div key={work.id} className="relative pl-6 border-l-2 border-gray-100">
                     <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-white border-2" style={{ borderColor: theme.primaryColor }} />
                     <div className="flex justify-between items-start mb-1">
                       <h3 className="font-bold uppercase" style={{ fontSize: `${theme.fontSize}pt` }}>{work.position}</h3>
@@ -505,7 +505,7 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
               </h2>
               <div className="space-y-6">
                 {education.map((edu, idx) => (
-                  <div key={idx} className="flex gap-4">
+                  <div key={edu.id} className="flex gap-4">
                     <div className="font-black text-gray-200 text-2xl leading-none">0{idx + 1}</div>
                     <div>
                       <h3 className="font-bold uppercase" style={{ fontSize: `${theme.fontSize}pt` }}>{edu.examName}</h3>
@@ -530,7 +530,7 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
               </h2>
               <ul className="list-disc list-inside space-y-1 text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                 {selfAssessment.map((item, idx) => (
-                  <li key={idx}>{item}</li>
+                  <li key={`self-${idx}-${item}`}>{item}</li>
                 ))}
               </ul>
             </section>
@@ -567,8 +567,8 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
                 <span>References</span>
               </h2>
               <div className="grid grid-cols-2 gap-6">
-                {references.map((ref, idx) => (
-                  <div key={idx} className="text-sm text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                {references.map((ref) => (
+                  <div key={ref.id} className="text-sm text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                     <p className="font-bold text-gray-900">{ref.name}</p>
                     <p>{ref.position}</p>
                     <p>{ref.organization}</p>
@@ -586,8 +586,8 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
                 <span>{customSection.title}</span>
               </h2>
               <div className="space-y-2 text-sm text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
-                {customSection.fields.map((field, idx) => (
-                  <p key={idx}><strong>{field.label}:</strong> {field.value}</p>
+                {customSection.fields.map((field) => (
+                  <p key={field.id}><strong>{field.label}:</strong> {field.value}</p>
                 ))}
               </div>
             </section>

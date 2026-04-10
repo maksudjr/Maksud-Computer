@@ -17,7 +17,9 @@ import {
   AlertCircle,
   LogOut,
   LogIn,
-  Loader2
+  Loader2,
+  Minus,
+  CreditCard
 } from 'lucide-react';
 import { db, auth } from '../lib/firebase';
 import { 
@@ -45,6 +47,7 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [keys, setKeys] = useState<any[]>([]);
+  const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
   const [newKeyName, setNewKeyName] = useState('');
   const [newKeyKeyword, setNewKeyKeyword] = useState('');
   const [newKeyCoins, setNewKeyCoins] = useState(10);
@@ -59,8 +62,20 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   useEffect(() => {
     if (isLoggedIn) {
       fetchKeys();
+      fetchPaymentRequests();
     }
   }, [isLoggedIn]);
+
+  const fetchPaymentRequests = async () => {
+    try {
+      const requestsRef = collection(db, 'paymentRequests');
+      const q = query(requestsRef, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      setPaymentRequests(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (err) {
+      console.error("Error fetching payment requests:", err);
+    }
+  };
 
   const fetchKeys = async () => {
     const keysRef = collection(db, 'keys');
@@ -152,18 +167,29 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
-  const addCoinsToKey = async (keyId: string) => {
-    const amount = prompt("Enter amount of coins to add:", "10");
+  const deletePaymentRequest = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'paymentRequests', id));
+      fetchPaymentRequests();
+    } catch (err) {
+      setError('Failed to delete request');
+    }
+  };
+
+  const adjustCoins = async (keyId: string, type: 'add' | 'subtract') => {
+    const amount = prompt(`Enter amount of coins to ${type}:`, "10");
     if (!amount || isNaN(Number(amount))) return;
+    
+    const value = type === 'add' ? Number(amount) : -Number(amount);
     
     setLoading(true);
     try {
       await updateDoc(doc(db, 'keys', keyId), {
-        coins: increment(Number(amount))
+        coins: increment(value)
       });
       fetchKeys();
     } catch (err) {
-      setError('Failed to add coins');
+      setError(`Failed to ${type} coins`);
     } finally {
       setLoading(false);
     }
@@ -341,7 +367,69 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         </div>
 
         {/* Key List */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 space-y-8">
+          {/* Payment Requests */}
+          <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-amber-50/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
+                  <CreditCard size={20} />
+                </div>
+                <h2 className="text-xl font-black text-slate-900">Payment Requests</h2>
+              </div>
+              <span className="px-3 py-1 bg-amber-100 rounded-full text-xs font-bold text-amber-600">
+                {paymentRequests.length} Pending
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50/50">
+                    <th className="px-8 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">User / Key</th>
+                    <th className="px-8 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount / TrxID</th>
+                    <th className="px-8 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Mobile</th>
+                    <th className="px-8 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
+                    <th className="px-8 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {paymentRequests.map((r, index) => (
+                    <tr key={`${r.id}-${index}`} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-8 py-4">
+                        <p className="font-bold text-slate-900">{r.fullName}</p>
+                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{r.userKey}</p>
+                      </td>
+                      <td className="px-8 py-4">
+                        <p className="font-black text-emerald-600">{r.amount} TK</p>
+                        <p className="text-[10px] font-mono text-slate-400">{r.transactionId}</p>
+                      </td>
+                      <td className="px-8 py-4 font-bold text-slate-600">{r.mobileNo}</td>
+                      <td className="px-8 py-4 text-[10px] font-bold text-slate-400">
+                        {r.createdAt?.toDate().toLocaleString()}
+                      </td>
+                      <td className="px-8 py-4">
+                        <button 
+                          onClick={() => deletePaymentRequest(r.id)}
+                          className="p-2 text-slate-400 hover:text-red-600 transition-all"
+                          title="Delete Request"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {paymentRequests.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-8 py-12 text-center text-slate-400 font-bold">
+                        No pending payment requests.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
               <h2 className="text-xl font-black text-slate-900">Active & Used Keys</h2>
@@ -362,7 +450,7 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {keys.map((k, index) => (
-                    <tr key={k.id || `key-${index}`} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={`${k.id}-${index}`} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-8 py-4">
                         <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">
                           {k.code}
@@ -385,11 +473,18 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                       <td className="px-8 py-4">
                         <div className="flex items-center gap-2">
                           <button 
-                            onClick={() => addCoinsToKey(k.id)}
-                            className="p-2 text-slate-400 hover:text-amber-600 transition-all"
+                            onClick={() => adjustCoins(k.id, 'add')}
+                            className="p-2 text-slate-400 hover:text-emerald-600 transition-all"
                             title="Add Coins"
                           >
                             <Plus size={18} />
+                          </button>
+                          <button 
+                            onClick={() => adjustCoins(k.id, 'subtract')}
+                            className="p-2 text-slate-400 hover:text-amber-600 transition-all"
+                            title="Subtract Coins"
+                          >
+                            <Minus size={18} />
                           </button>
                           <button 
                             onClick={() => deleteKey(k.id)}

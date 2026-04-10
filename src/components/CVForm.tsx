@@ -58,8 +58,8 @@ const CustomSelect = ({
           }}
         >
           <option value="">Select {label}</option>
-          {options.map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
+          {options.map((opt, idx) => (
+            <option key={`${opt}-${idx}`} value={opt}>{opt}</option>
           ))}
           <option value="custom">Custom...</option>
         </select>
@@ -113,9 +113,9 @@ const MultiSelect = ({
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">{label}</label>
       <div className="flex flex-wrap gap-2 mb-3">
-        {options.map((opt) => (
+        {options.map((opt, idx) => (
           <button
-            key={opt}
+            key={`${opt}-${idx}`}
             type="button"
             onClick={() => toggleOption(opt)}
             className={cn(
@@ -169,9 +169,9 @@ const MultiSelect = ({
             </button>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {selectedValues.map((val) => (
+            {selectedValues.map((val, idx) => (
               <span 
-                key={val} 
+                key={`${val}-${idx}`} 
                 className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-indigo-200 text-indigo-700 rounded text-xs"
               >
                 {val}
@@ -848,7 +848,7 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
             </div>
             <div className="space-y-2">
               {data[field].map((item, idx) => (
-                <div key={idx} className="flex gap-2">
+                <div key={`${field}-${idx}`} className="flex gap-2">
                   <input 
                     type="text" 
                     className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -1006,7 +1006,7 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
           </div>
           <div className="space-y-3">
             {data.languageProficiency.map((lang, idx) => (
-              <div key={idx} className="flex gap-2">
+              <div key={`lang-prof-${idx}`} className="flex gap-2">
                 <div className="flex-1">
                   <CustomSelect 
                     label="" 
