@@ -14,6 +14,7 @@ interface PhotoEditorProps {
   image: string;
   onSave: (editedImage: string) => void;
   onCancel: () => void;
+  autoRemoveBg?: boolean;
 }
 
 type Tool = 'crop' | 'background' | 'adjust' | 'ai_enhance';
@@ -34,7 +35,7 @@ interface HistoryState {
   image: string;
 }
 
-export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCancel }) => {
+export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCancel, autoRemoveBg }) => {
   // --- State ---
   const [activeTool, setActiveTool] = useState<Tool>('crop');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,6 +75,9 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
   // --- Initialization ---
   useEffect(() => {
     saveToHistory(image);
+    if (autoRemoveBg) {
+      handleRemoveBg();
+    }
   }, []);
 
   const saveToHistory = useCallback((imgToSave?: string) => {

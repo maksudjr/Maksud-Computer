@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, 
@@ -28,16 +28,26 @@ import { CVForm } from './components/CVForm';
 import { CVPreview } from './components/CVPreview';
 import { TemplateSelector } from './components/TemplateSelector';
 import { Dashboard } from './components/Dashboard';
-import { AgeCalculator } from './components/AgeCalculator';
-import { PhotoResizer } from './components/PhotoResizer';
-import { PdfEditor } from './components/PdfEditor';
-import { AboutUs } from './components/AboutUs';
-import { PhotoEditor } from './components/PhotoEditor';
-import { PdfTools } from './components/PdfTools';
-import { AdminPanel } from './components/AdminPanel';
 import { Logo } from './components/Logo';
 import { SecurityProvider, useSecurity } from './components/SecurityGate';
 import { cn } from './lib/utils';
+
+// Lazy load heavy components
+const AgeCalculator = lazy(() => import('./components/AgeCalculator').then(m => ({ default: m.AgeCalculator })));
+const PhotoResizer = lazy(() => import('./components/PhotoResizer').then(m => ({ default: m.PhotoResizer })));
+const PdfEditor = lazy(() => import('./components/PdfEditor').then(m => ({ default: m.PdfEditor })));
+const AboutUs = lazy(() => import('./components/AboutUs').then(m => ({ default: m.AboutUs })));
+const PhotoEditor = lazy(() => import('./components/PhotoEditor').then(m => ({ default: m.PhotoEditor })));
+const PdfTools = lazy(() => import('./components/PdfTools').then(m => ({ default: m.PdfTools })));
+const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const IntelligentAI = lazy(() => import('./components/IntelligentAI').then(m => ({ default: m.IntelligentAI })));
+
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+    <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p className="text-slate-500 font-bold animate-pulse">Loading Tool...</p>
+  </div>
+);
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: 'careerObjective', label: 'Career Objective' },
@@ -76,7 +86,7 @@ const FONTS = [
   { name: 'Lora', value: 'font-lora' },
 ];
 
-type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin';
+type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin' | 'intelligent-ai';
 
 export default function App() {
   return (
@@ -158,7 +168,7 @@ function MainContent() {
     if (hour < 12) return `Good Morning${name}! Welcome to Maksud Computer.`;
     if (hour < 18) return `Good Afternoon${name}! Welcome to Maksud Computer.`;
     return `Good Evening${name}! Welcome to Maksud Computer.`;
-  }, []);
+  }, []); // Note: This only updates on mount, which is fine for a welcome message
 
   const handlePrint = useReactToPrint({
     contentRef: previewRef,
@@ -250,97 +260,132 @@ function MainContent() {
         else if (tool === 'pdf-compress') setStep('pdf-compress');
         else if (tool === 'pdf-merge') setStep('pdf-merge');
         else if (tool === 'img-to-pdf') setStep('img-to-pdf');
+        else if (tool === 'intelligent-ai') setStep('intelligent-ai');
       }, tool);
     }} />;
   }
 
+  if (step === 'intelligent-ai') {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <IntelligentAI onBack={() => setStep('dashboard')} />
+      </Suspense>
+    );
+  }
+
   if (step === 'admin') {
-    return <AdminPanel onBack={() => setStep('dashboard')} />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <AdminPanel onBack={() => setStep('dashboard')} />
+      </Suspense>
+    );
   }
 
   if (step === 'age') {
-    return <AgeCalculator onBack={() => setStep('dashboard')} />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <AgeCalculator onBack={() => setStep('dashboard')} />
+      </Suspense>
+    );
   }
 
   if (step === 'resizer') {
-    return <PhotoResizer onBack={() => setStep('dashboard')} />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <PhotoResizer onBack={() => setStep('dashboard')} />
+      </Suspense>
+    );
   }
 
   if (step === 'pdf') {
-    return <PdfEditor onBack={() => setStep('dashboard')} />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <PdfEditor onBack={() => setStep('dashboard')} />
+      </Suspense>
+    );
   }
 
   if (step === 'pdf-to-img' || step === 'pdf-to-word' || step === 'pdf-compress' || step === 'pdf-merge' || step === 'img-to-pdf') {
-    return <PdfTools type={step as any} onBack={() => setStep('dashboard')} />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <PdfTools type={step as any} onBack={() => setStep('dashboard')} />
+      </Suspense>
+    );
   }
 
   if (step === 'about') {
-    return <AboutUs onBack={() => setStep('dashboard')} />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <AboutUs onBack={() => setStep('dashboard')} />
+      </Suspense>
+    );
   }
 
   if (step === 'photo-editor' || step === 'bg-remover') {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col">
-        {!standalonePhoto ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <button 
-              onClick={() => setStep('dashboard')}
-              className="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft size={20} />
-              Back
-            </button>
-            <div className="max-w-md space-y-6">
-              <div className="w-24 h-24 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/20">
-                {step === 'bg-remover' ? <Sparkles size={48} className="text-white" /> : <Layout size={48} className="text-white" />}
+      <Suspense fallback={<LoadingFallback />}>
+        <div className="min-h-screen bg-gray-900 flex flex-col">
+          {!standalonePhoto ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <button 
+                onClick={() => setStep('dashboard')}
+                className="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft size={20} />
+                Back
+              </button>
+              <div className="max-w-md space-y-6">
+                <div className="w-24 h-24 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/20">
+                  {step === 'bg-remover' ? <Sparkles size={48} className="text-white" /> : <Layout size={48} className="text-white" />}
+                </div>
+                <h1 className="text-3xl font-bold text-white">
+                  {step === 'bg-remover' ? 'AI Background Remover' : 'Advanced Photo Editor'}
+                </h1>
+                <p className="text-gray-400">
+                  {step === 'bg-remover' 
+                    ? 'Upload a photo to instantly remove its background using AI.' 
+                    : 'Upload a photo to start editing with AI background removal and enhancement tools.'}
+                </p>
+                <label className="block">
+                  <span className="sr-only">Choose photo</span>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setStandalonePhoto(ev.target?.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-3 file:px-6
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-bold
+                      file:bg-indigo-600 file:text-white
+                      hover:file:bg-indigo-700
+                      cursor-pointer"
+                  />
+                </label>
               </div>
-              <h1 className="text-3xl font-bold text-white">
-                {step === 'bg-remover' ? 'AI Background Remover' : 'Advanced Photo Editor'}
-              </h1>
-              <p className="text-gray-400">
-                {step === 'bg-remover' 
-                  ? 'Upload a photo to instantly remove its background using AI.' 
-                  : 'Upload a photo to start editing with AI background removal and enhancement tools.'}
-              </p>
-              <label className="block">
-                <span className="sr-only">Choose photo</span>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => setStandalonePhoto(ev.target?.result as string);
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-3 file:px-6
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-bold
-                    file:bg-indigo-600 file:text-white
-                    hover:file:bg-indigo-700
-                    cursor-pointer"
-                />
-              </label>
             </div>
-          </div>
-        ) : (
-          <PhotoEditor 
-            image={standalonePhoto}
-            autoRemoveBg={autoRemoveBg}
-            onSave={(edited) => {
-              const link = document.createElement('a');
-              link.href = edited;
-              link.download = step === 'bg-remover' ? 'no_bg_photo.png' : 'edited_photo.png';
-              link.click();
-              setStandalonePhoto(null);
-            }}
-            onCancel={() => setStandalonePhoto(null)}
-          />
-        )}
-      </div>
+          ) : (
+            <PhotoEditor 
+              image={standalonePhoto}
+              autoRemoveBg={autoRemoveBg}
+              onSave={(edited) => {
+                const link = document.createElement('a');
+                link.href = edited;
+                link.download = step === 'bg-remover' ? 'no_bg_photo.png' : 'edited_photo.png';
+                link.click();
+                setStandalonePhoto(null);
+              }}
+              onCancel={() => setStandalonePhoto(null)}
+            />
+          )}
+        </div>
+      </Suspense>
     );
   }
 

@@ -71,44 +71,47 @@ app.post("/api/remove-bg", async (req, res) => {
 
     console.log("Starting remove.bg Background Removal...");
 
-    // Convert base64 to buffer
+    // Extract base64 data
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Data, 'base64');
 
-    const formData = new FormData();
-    formData.append('size', 'auto');
-    formData.append('image_file', buffer, { filename: 'image.png' });
-
-    const response = await axios.post('https://api.remove.bg/v1.0/removebg', formData, {
+    const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+      method: 'POST',
       headers: {
-        ...formData.getHeaders(),
         'X-Api-Key': process.env.REMOVE_BG_API_KEY,
+        'Content-Type': 'application/json',
       },
-      responseType: 'arraybuffer',
+      body: JSON.stringify({
+        image_file_b64: base64Data,
+        size: 'auto',
+      }),
     });
 
-    const resultBase64 = Buffer.from(response.data).toString('base64');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("remove.bg error response:", errorText);
+      
+      let errorMessage = "Failed to remove background";
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.errors && parsed.errors.length > 0) {
+          errorMessage = parsed.errors[0].title;
+        }
+      } catch (e) {
+        // Not JSON
+      }
+      return res.status(response.status).json({ error: errorMessage });
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const resultBase64 = buffer.toString('base64');
     const output = `data:image/png;base64,${resultBase64}`;
 
     console.log("remove.bg Background Removal complete");
     res.json({ output });
   } catch (error: any) {
-    const errorData = error.response?.data;
-    let errorMessage = "Failed to remove background";
-    
-    if (errorData) {
-      try {
-        const parsed = JSON.parse(errorData.toString());
-        if (parsed.errors && parsed.errors.length > 0) {
-          errorMessage = parsed.errors[0].title;
-        }
-      } catch (e) {
-        console.error("Error parsing remove.bg error response:", e);
-      }
-    }
-    
-    console.error("Background removal error:", errorData?.toString() || error.message);
-    res.status(500).json({ error: errorMessage });
+    console.error("Background removal error:", error.message);
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 });
 

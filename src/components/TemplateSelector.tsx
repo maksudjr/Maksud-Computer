@@ -1,15 +1,22 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { motion } from 'motion/react';
-import { Check, Layout } from 'lucide-react';
+import { Check, Layout, Loader2 } from 'lucide-react';
 import { TemplateId, CVData, DEFAULT_CV_DATA } from '../types';
 import { cn } from '../lib/utils';
-import { ClassicTemplate } from './ClassicTemplate';
-import { ModernTemplate } from './ModernTemplate';
-import { SmartClassicTemplate, SmartModernTemplate } from './SmartTemplates';
-import { 
-  ClassicElegantTemplate
-} from './ExtraTemplates';
 import { CVHistory } from './CVHistory';
+
+// Lazy load templates
+const ClassicTemplate = lazy(() => import('./ClassicTemplate').then(m => ({ default: m.ClassicTemplate })));
+const ModernTemplate = lazy(() => import('./ModernTemplate').then(m => ({ default: m.ModernTemplate })));
+const SmartClassicTemplate = lazy(() => import('./SmartTemplates').then(m => ({ default: m.SmartClassicTemplate })));
+const SmartModernTemplate = lazy(() => import('./SmartTemplates').then(m => ({ default: m.SmartModernTemplate })));
+const ClassicElegantTemplate = lazy(() => import('./ExtraTemplates').then(m => ({ default: m.ClassicElegantTemplate })));
+
+const PreviewLoading = () => (
+  <div className="w-full h-full bg-white flex items-center justify-center">
+    <Loader2 className="w-8 h-8 text-indigo-200 animate-spin" />
+  </div>
+);
 
 interface TemplateSelectorProps {
   selectedId: TemplateId;
@@ -122,11 +129,13 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   pointerEvents: 'none'
                 }}
               >
-                {template.id === 'classic' && <ClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic' } }} />}
-                {template.id === 'modern' && <ModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern' } }} />}
-                {template.id === 'smart-classic' && <SmartClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-classic' } }} />}
-                {template.id === 'smart-modern' && <SmartModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-modern' } }} />}
-                {template.id === 'classic-elegant' && <ClassicElegantTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-elegant' } }} />}
+                <Suspense fallback={<PreviewLoading />}>
+                  {template.id === 'classic' && <ClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic' } }} />}
+                  {template.id === 'modern' && <ModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern' } }} />}
+                  {template.id === 'smart-classic' && <SmartClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-classic' } }} />}
+                  {template.id === 'smart-modern' && <SmartModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-modern' } }} />}
+                  {template.id === 'classic-elegant' && <ClassicElegantTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-elegant' } }} />}
+                </Suspense>
               </div>
               
               {selectedId === template.id && (

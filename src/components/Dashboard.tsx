@@ -30,7 +30,8 @@ import {
   Tag,
   CreditCard,
   Send,
-  X
+  X,
+  Bot
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { cn } from '../lib/utils';
@@ -39,7 +40,7 @@ import { db } from '../lib/firebase';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
 interface DashboardProps {
-  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf', cost: number) => void;
+  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'intelligent-ai', cost: number) => void;
   onAdminLogin: () => void;
 }
 
@@ -65,9 +66,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     if (hour < 12) return `Good Morning${name}!`;
     if (hour < 18) return `Good Afternoon${name}!`;
     return `Good Evening${name}!`;
-  }, []);
+  }, [userName]);
 
   const tools = [
+    {
+      id: 'intelligent-ai',
+      name: 'Maksud Intelligent AI',
+      description: 'Advanced AI Chat powered by Gemini 1.5 Flash.',
+      icon: <Bot className="text-indigo-600" />,
+      color: 'bg-indigo-50',
+      hoverColor: 'hover:bg-indigo-100',
+      borderColor: 'border-indigo-100',
+      size: 'medium',
+      cost: 0.01
+    },
     {
       id: 'cv',
       name: 'CV Builder',
@@ -721,9 +733,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
           <div>
             <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Quick Links</h4>
             <ul className="space-y-4">
-              <li><a href="#" className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">CV Builder</a></li>
-              <li><a href="#" className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">Photo Editor</a></li>
-              <li><a href="#" className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">PDF Tools</a></li>
+              <li><button onClick={() => onSelectTool('cv', 0)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">CV Builder</button></li>
+              <li><button onClick={() => onSelectTool('editor', 5)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">Photo Editor</button></li>
+              <li><button onClick={() => onSelectTool('pdf', 5)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">PDF Tools</button></li>
+              <li><button onClick={() => onSelectTool('about', 0)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">About Us</button></li>
             </ul>
           </div>
           <div>
