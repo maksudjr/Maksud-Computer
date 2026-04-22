@@ -67,6 +67,9 @@ export interface CVData {
     pageCount: number;
     templateId: TemplateId;
     fontSize: number;
+    lineSpacing: number;
+    showBorder: boolean;
+    headerStyle?: 'default' | 'black' | 'primary';
   };
   selectedSections: SectionId[];
   personalInfo: {
@@ -123,6 +126,9 @@ export const DEFAULT_CV_DATA: CVData = {
     pageCount: 1,
     templateId: 'classic',
     fontSize: 11,
+    lineSpacing: 1.5,
+    showBorder: true,
+    headerStyle: 'default',
   },
   selectedSections: [
     'careerObjective',

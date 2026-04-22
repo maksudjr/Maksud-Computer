@@ -369,6 +369,71 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
 
   return (
     <div className="space-y-8 pb-20">
+      {/* Template & Theme Selector Quick Menu */}
+      <section className="bg-white p-6 rounded-xl shadow-sm border border-indigo-100 bg-gradient-to-r from-indigo-50/30 to-white">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles className="text-indigo-600" size={20} />
+              Quick Theme & Layout
+            </h3>
+            <p className="text-xs text-gray-500">Pick a style that suits your profession.</p>
+          </div>
+          
+          <div className="flex flex-wrap gap-4">
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active Template</label>
+              <div className="flex bg-gray-100 p-1 rounded-lg">
+                {[
+                  { id: 'classic', label: 'Classic' },
+                  { id: 'modern', label: 'Modern' },
+                  { id: 'smart-classic', label: 'Smart' },
+                  { id: 'smart-modern', label: 'Elite' },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => onChange({ ...data, theme: { ...data.theme, templateId: t.id as any } })}
+                    className={cn(
+                      "px-3 py-1.5 rounded-md text-xs font-bold transition-all",
+                      data.theme.templateId === t.id 
+                        ? "bg-white text-indigo-600 shadow-sm" 
+                        : "text-gray-500 hover:text-gray-700"
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Accent & Theme</label>
+              <div className="flex gap-2">
+                {[
+                  { name: 'Professional', color: '#2563eb', settings: { primaryColor: '#2563eb', headerStyle: 'default' } },
+                  { name: 'Gold Black', color: '#d4af37', settings: { primaryColor: '#d4af37', headerStyle: 'black' } },
+                  { name: 'Classic Black', color: '#1a1a1a', settings: { primaryColor: '#1a1a1a', headerStyle: 'default' } },
+                  { name: 'Emerald', color: '#10b981', settings: { primaryColor: '#10b981', headerStyle: 'primary' } },
+                ].map((theme) => (
+                  <button
+                    key={theme.name}
+                    onClick={() => onChange({ ...data, theme: { ...data.theme, ...theme.settings } })}
+                    className={cn(
+                      "w-7 h-7 rounded-full border-2 transition-all",
+                      data.theme.primaryColor === theme.color && data.theme.headerStyle === theme.settings.headerStyle 
+                        ? "border-indigo-600 scale-110 shadow-md" 
+                        : "border-transparent"
+                    )}
+                    style={{ backgroundColor: theme.color }}
+                    title={theme.name}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Personal Info */}
       {data.selectedSections.includes('personalInfo') && (
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">

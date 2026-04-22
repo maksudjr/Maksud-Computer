@@ -35,7 +35,7 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
     <div 
       ref={ref}
       className={cn(
-        "bg-white w-[210mm] p-[15mm] mx-auto shadow-lg print:shadow-none print:m-0 flex flex-col relative",
+        "bg-white w-[210mm] p-[15mm] mx-auto shadow-lg print:shadow-none print:m-0 flex flex-col relative cv-paper",
         theme.fontStyle
       )}
       style={{ minHeight: `${297 * theme.pageCount}mm` }}
@@ -44,34 +44,41 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
       <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: theme.primaryColor }} />
 
       {/* Header */}
-      <header className="flex justify-between items-start mb-8 pt-4">
+      <header className={cn(
+        "flex justify-between items-start mb-8 pt-6 p-6 -mx-6 shadow-sm",
+        theme.headerStyle === 'black' ? "bg-black text-white" : (theme.headerStyle === 'primary' ? "bg-indigo-600 text-white" : "")
+      )}
+      style={{ 
+        backgroundColor: theme.headerStyle === 'black' ? '#000000' : (theme.headerStyle === 'primary' ? theme.primaryColor : 'transparent'),
+        color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? (theme.primaryColor === '#ffd700' && theme.headerStyle === 'primary' ? '#000000' : '#ffffff') : 'inherit'
+      }}>
         <div className="flex-1">
-          <h1 className="text-3xl font-black uppercase tracking-tighter mb-1" style={{ color: theme.primaryColor }}>
+          <h1 className="text-3xl font-black uppercase tracking-tighter mb-1" style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor }}>
             {personalInfo.name || 'Your Name'}
           </h1>
-          <div className="flex flex-wrap gap-4 text-gray-600" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+          <div className={cn("flex flex-wrap gap-4", (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? "text-white/80" : "text-gray-600")} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
             {personalInfo.phone && (
               <div className="flex items-center gap-1">
-                <Phone size={12} style={{ color: theme.primaryColor }} />
+                <Phone size={12} style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor }} />
                 <span>{personalInfo.phone}</span>
               </div>
             )}
             {personalInfo.email && (
               <div className="flex items-center gap-1">
-                <Mail size={12} style={{ color: theme.primaryColor }} />
+                <Mail size={12} style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor }} />
                 <span>{personalInfo.email}</span>
               </div>
             )}
             {presentAddressLine && (
               <div className="flex items-center gap-1">
-                <MapPin size={12} style={{ color: theme.primaryColor }} />
+                <MapPin size={12} style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor }} />
                 <span>{presentAddressLine}</span>
               </div>
             )}
           </div>
         </div>
         {personalInfo.photo && (
-          <div className="w-24 h-32 border-2 rounded-lg overflow-hidden shrink-0 ml-6" style={{ borderColor: theme.primaryColor }}>
+          <div className="w-24 h-32 border-2 rounded-lg overflow-hidden shrink-0 ml-6 bg-white" style={{ borderColor: theme.primaryColor }}>
             <img src={personalInfo.photo} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           </div>
         )}
@@ -358,15 +365,19 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
     <div 
       ref={ref}
       className={cn(
-        "bg-white w-[210mm] mx-auto shadow-lg print:shadow-none print:m-0 flex relative",
+        "bg-white w-[210mm] mx-auto shadow-lg print:shadow-none print:m-0 flex relative cv-paper",
         theme.fontStyle
       )}
       style={{ minHeight: `${297 * theme.pageCount}mm` }}
     >
       {/* Sidebar */}
-      <aside className="w-[75mm] flex-shrink-0 p-8 text-white flex flex-col" style={{ backgroundColor: theme.primaryColor }}>
+      <aside className="w-[75mm] flex-shrink-0 p-8 text-white flex flex-col shadow-2xl z-10" 
+      style={{ 
+        backgroundColor: theme.headerStyle === 'black' ? '#000000' : (theme.headerStyle === 'primary' ? theme.primaryColor : theme.primaryColor),
+        color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? (theme.primaryColor === '#ffd700' && theme.headerStyle === 'primary' ? '#000000' : '#ffffff') : '#ffffff'
+      }}>
         {personalInfo.photo && (
-          <div className="w-32 h-32 rounded-full border-4 border-white/20 overflow-hidden mx-auto mb-8 shadow-xl">
+          <div className="w-32 h-32 rounded-full border-4 border-white/20 overflow-hidden mx-auto mb-8 shadow-xl bg-white">
             <img src={personalInfo.photo} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           </div>
         )}

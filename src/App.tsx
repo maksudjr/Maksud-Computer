@@ -17,15 +17,18 @@ import {
   Minus,
   Plus,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  Globe
 } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { generateDocx } from './lib/docx-generator';
 import { CVData, DEFAULT_CV_DATA, SectionId } from './types';
+import { Language } from './lib/translations';
 import { CVForm } from './components/CVForm';
 import { CVPreview } from './components/CVPreview';
+import { CVPreviewToolbar } from './components/CVPreviewToolbar';
 import { TemplateSelector } from './components/TemplateSelector';
 import { Dashboard } from './components/Dashboard';
 import { Logo } from './components/Logo';
@@ -37,10 +40,12 @@ const AgeCalculator = lazy(() => import('./components/AgeCalculator').then(m => 
 const PhotoResizer = lazy(() => import('./components/PhotoResizer').then(m => ({ default: m.PhotoResizer })));
 const PdfEditor = lazy(() => import('./components/PdfEditor').then(m => ({ default: m.PdfEditor })));
 const AboutUs = lazy(() => import('./components/AboutUs').then(m => ({ default: m.AboutUs })));
+const DigitalConverter = lazy(() => import('./components/DigitalConverter').then(m => ({ default: m.DigitalConverter })));
 const PhotoEditor = lazy(() => import('./components/PhotoEditor').then(m => ({ default: m.PhotoEditor })));
 const PdfTools = lazy(() => import('./components/PdfTools').then(m => ({ default: m.PdfTools })));
 const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const IntelligentAI = lazy(() => import('./components/IntelligentAI').then(m => ({ default: m.IntelligentAI })));
+const InheritanceCalculator = lazy(() => import('./components/InheritanceCalculator').then(m => ({ default: m.InheritanceCalculator })));
 
 const LoadingFallback = () => (
   <div className="min-h-screen bg-white flex flex-col items-center justify-center">
@@ -64,11 +69,12 @@ const SECTIONS: { id: SectionId; label: string }[] = [
 ];
 
 const COLORS = [
-  { name: 'Blue', value: '#2563eb' },
-  { name: 'Black', value: '#000000' },
-  { name: 'Green', value: '#16a34a' },
-  { name: 'Red', value: '#dc2626' },
-  { name: 'Purple', value: '#9333ea' },
+  { name: 'Professional Blue', value: '#2563eb' },
+  { name: 'Elite Gold', value: '#d4af37' },
+  { name: 'Classic Black', value: '#1a1a1a' },
+  { name: 'Emerald Green', value: '#10b981' },
+  { name: 'Royal Red', value: '#dc2626' },
+  { name: 'Midnight Blue', value: '#1e293b' },
 ];
 
 const FONTS = [
@@ -86,7 +92,7 @@ const FONTS = [
   { name: 'Lora', value: 'font-lora' },
 ];
 
-type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin' | 'intelligent-ai';
+type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin' | 'intelligent-ai' | 'digital-converter' | 'inheritance';
 
 export default function App() {
   return (
@@ -104,8 +110,23 @@ function MainContent() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [standalonePhoto, setStandalonePhoto] = useState<string | null>(null);
   const [autoRemoveBg, setAutoRemoveBg] = useState(false);
+  const [uiTheme, setUiTheme] = useState<'light' | 'dark' | 'golden'>(() => {
+    return (localStorage.getItem('maksud_ui_theme') as any) || 'light';
+  });
+  const [language, setLanguage] = useState<Language>(() => {
+    return (localStorage.getItem('language') as any) || 'en';
+  });
   const previewRef = useRef<HTMLDivElement>(null);
   const { requestAccess } = useSecurity();
+
+  // Save theme to localStorage
+  useEffect(() => {
+    localStorage.setItem('maksud_ui_theme', uiTheme);
+  }, [uiTheme]);
+
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
 
   // Load history from localStorage
   useEffect(() => {
@@ -234,98 +255,144 @@ function MainContent() {
   };
 
   if (step === 'dashboard') {
-    return <Dashboard 
-      onAdminLogin={() => setStep('admin')}
-      onSelectTool={(tool, cost) => {
-      if (tool === 'age') {
-        setStep('age');
-        return;
-      }
-      
-      requestAccess(cost, () => {
-        if (tool === 'cv') setStep('template');
-        else if (tool === 'resizer') setStep('resizer');
-        else if (tool === 'pdf') setStep('pdf');
-        else if (tool === 'about') setStep('about');
-        else if (tool === 'editor') {
-          setStep('photo-editor');
-          setAutoRemoveBg(false);
-        }
-        else if (tool === 'bg-remover') {
-          setStep('bg-remover');
-          setAutoRemoveBg(true);
-        }
-        else if (tool === 'pdf-to-img') setStep('pdf-to-img');
-        else if (tool === 'pdf-to-word') setStep('pdf-to-word');
-        else if (tool === 'pdf-compress') setStep('pdf-compress');
-        else if (tool === 'pdf-merge') setStep('pdf-merge');
-        else if (tool === 'img-to-pdf') setStep('img-to-pdf');
-        else if (tool === 'intelligent-ai') setStep('intelligent-ai');
-      }, tool);
-    }} />;
+    return (
+      <div className={uiTheme}>
+        <Dashboard 
+          uiTheme={uiTheme}
+          onThemeChange={setUiTheme}
+          onAdminLogin={() => setStep('admin')}
+          language={language}
+          onLanguageChange={setLanguage}
+          onSelectTool={(tool, cost) => {
+            if (tool === 'age') {
+              setStep('age');
+              return;
+            }
+            
+            requestAccess(cost, () => {
+              if (tool === 'cv') setStep('template');
+              else if (tool === 'resizer') setStep('resizer');
+              else if (tool === 'pdf') setStep('pdf');
+              else if (tool === 'about') setStep('about');
+              else if (tool === 'editor') {
+                setStep('photo-editor');
+                setAutoRemoveBg(false);
+              }
+              else if (tool === 'bg-remover') {
+                setStep('bg-remover');
+                setAutoRemoveBg(true);
+              }
+              else if (tool === 'pdf-to-img') setStep('pdf-to-img');
+              else if (tool === 'pdf-to-word') setStep('pdf-to-word');
+              else if (tool === 'pdf-compress') setStep('pdf-compress');
+              else if (tool === 'pdf-merge') setStep('pdf-merge');
+              else if (tool === 'img-to-pdf') setStep('img-to-pdf');
+              else if (tool === 'intelligent-ai') setStep('intelligent-ai');
+              else if (tool === 'converter') setStep('digital-converter');
+              else if (tool === 'inheritance') setStep('inheritance');
+            }, tool);
+          }} 
+        />
+      </div>
+    );
   }
 
   if (step === 'intelligent-ai') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <IntelligentAI onBack={() => setStep('dashboard')} />
-      </Suspense>
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <IntelligentAI onBack={() => setStep('dashboard')} />
+        </Suspense>
+      </div>
     );
   }
 
   if (step === 'admin') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <AdminPanel onBack={() => setStep('dashboard')} />
-      </Suspense>
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <AdminPanel onBack={() => setStep('dashboard')} />
+        </Suspense>
+      </div>
     );
   }
 
   if (step === 'age') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <AgeCalculator onBack={() => setStep('dashboard')} />
-      </Suspense>
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <AgeCalculator onBack={() => setStep('dashboard')} />
+        </Suspense>
+      </div>
     );
   }
 
   if (step === 'resizer') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <PhotoResizer onBack={() => setStep('dashboard')} />
-      </Suspense>
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <PhotoResizer onBack={() => setStep('dashboard')} />
+        </Suspense>
+      </div>
     );
   }
 
   if (step === 'pdf') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <PdfEditor onBack={() => setStep('dashboard')} />
-      </Suspense>
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <PdfEditor onBack={() => setStep('dashboard')} />
+        </Suspense>
+      </div>
     );
   }
 
   if (step === 'pdf-to-img' || step === 'pdf-to-word' || step === 'pdf-compress' || step === 'pdf-merge' || step === 'img-to-pdf') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <PdfTools type={step as any} onBack={() => setStep('dashboard')} />
-      </Suspense>
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <PdfTools type={step as any} onBack={() => setStep('dashboard')} />
+        </Suspense>
+      </div>
     );
   }
 
   if (step === 'about') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <AboutUs onBack={() => setStep('dashboard')} />
-      </Suspense>
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <AboutUs onBack={() => setStep('dashboard')} uiTheme={uiTheme} language={language} />
+        </Suspense>
+      </div>
+    );
+  }
+
+  if (step === 'digital-converter') {
+    return (
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <DigitalConverter onBack={() => setStep('dashboard')} uiTheme={uiTheme} language={language} />
+        </Suspense>
+      </div>
+    );
+  }
+
+  if (step === 'inheritance') {
+    return (
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <InheritanceCalculator onBack={() => setStep('dashboard')} uiTheme={uiTheme} language={language} />
+        </Suspense>
+      </div>
     );
   }
 
   if (step === 'photo-editor' || step === 'bg-remover') {
     return (
-      <Suspense fallback={<LoadingFallback />}>
-        <div className="min-h-screen bg-gray-900 flex flex-col">
-          {!standalonePhoto ? (
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <div className={cn("min-h-screen flex flex-col", uiTheme === 'light' ? "bg-gray-100 text-gray-900" : "bg-gray-900 text-white")}>
+            {!standalonePhoto ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
               <button 
                 onClick={() => setStep('dashboard')}
@@ -386,286 +453,322 @@ function MainContent() {
           )}
         </div>
       </Suspense>
+      </div>
     );
   }
 
   if (step === 'template') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <button 
-          onClick={() => setStep('dashboard')}
-          className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md text-gray-600 hover:text-indigo-600 transition-all font-medium"
-        >
-          <ArrowLeft size={18} />
-          Dashboard
-        </button>
-        <TemplateSelector 
-          selectedId={cvData.theme.templateId}
-          onSelect={(id) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, templateId: id } }))}
-          onNext={() => {
-            saveToHistory(cvData);
-            setStep('setup');
-          }}
-          history={history}
-          onViewHistory={handleViewHistory}
-          onDeleteHistory={deleteFromHistory}
-          onPrintHistory={handlePrintHistory}
-          onDownloadHistory={handleDownloadHistory}
-        />
+      <div className={uiTheme}>
+        <div className={cn("min-h-screen", uiTheme === 'light' ? "bg-gray-50" : (uiTheme === 'dark' ? "bg-slate-950" : "bg-[#121212]"))}>
+          <button 
+            onClick={() => setStep('dashboard')}
+            className={cn(
+              "fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 rounded-full shadow-md transition-all font-medium",
+              uiTheme === 'light' ? "bg-white text-gray-600 hover:text-indigo-600" : (uiTheme === 'dark' ? "bg-slate-900 text-slate-300 hover:text-white" : "bg-amber-950 text-amber-500 hover:text-amber-200")
+            )}
+          >
+            <ArrowLeft size={18} />
+            Dashboard
+          </button>
+          <TemplateSelector 
+            selectedId={cvData.theme.templateId}
+            onSelect={(id) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, templateId: id } }))}
+            onNext={() => {
+              saveToHistory(cvData);
+              setStep('setup');
+            }}
+            history={history}
+            onViewHistory={handleViewHistory}
+            onDeleteHistory={deleteFromHistory}
+            onPrintHistory={handlePrintHistory}
+            onDownloadHistory={handleDownloadHistory}
+          />
+        </div>
       </div>
     );
   }
 
   if (step === 'setup') {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4">
-        <button 
-          onClick={() => setStep('template')}
-          className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md text-gray-600 hover:text-indigo-600 transition-all font-medium"
-        >
-          <ArrowLeft size={18} />
-          Templates
-        </button>
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto"
-        >
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
-              Maksud Computer CV Builder
-            </h1>
-            <p className="text-xl font-medium text-indigo-600 mb-2">
-              {welcomeMessage}
-            </p>
-            <p className="text-lg text-gray-600">
-              Configure your CV structure and theme to get started.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Section Selection */}
-            <div className="lg:col-span-5 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-base font-bold mb-3 flex items-center gap-2">
-                <Layout className="text-indigo-600" size={18} />
-                Select Sections
-              </h2>
-              <div className="grid grid-cols-1 gap-1.5">
-                {SECTIONS.map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => toggleSection(section.id)}
-                    className={cn(
-                      "flex items-center justify-between p-2.5 rounded-xl border transition-all text-left",
-                      cvData.selectedSections.includes(section.id)
-                        ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                        : "border-gray-100 hover:border-gray-200 text-gray-600"
-                    )}
-                  >
-                    <span className="text-sm font-medium">{section.label}</span>
-                    {cvData.selectedSections.includes(section.id) && <Check size={16} />}
-                  </button>
-                ))}
-              </div>
+      <div className={uiTheme}>
+        <div className={cn("min-h-screen py-12 px-4", uiTheme === 'light' ? "bg-gray-50" : (uiTheme === 'dark' ? "bg-slate-950" : "bg-[#121212]"))}>
+          <button 
+            onClick={() => setStep('template')}
+            className={cn(
+              "fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 rounded-full shadow-md transition-all font-medium",
+              uiTheme === 'light' ? "bg-white text-gray-600 hover:text-indigo-600" : (uiTheme === 'dark' ? "bg-slate-900 text-slate-300 hover:text-white" : "bg-amber-950 text-amber-500 hover:text-amber-200")
+            )}
+          >
+            <ArrowLeft size={18} />
+            Templates
+          </button>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="text-center mb-12">
+              <h1 className={cn("text-4xl font-extrabold tracking-tight mb-4", uiTheme === 'light' ? "text-gray-900" : (uiTheme === 'dark' ? "text-white" : "text-amber-500"))}>
+                Maksud Computer CV Builder
+              </h1>
+              <p className={cn("text-xl font-medium mb-2", uiTheme === 'golden' ? "text-amber-600" : "text-indigo-600")}>
+                {welcomeMessage}
+              </p>
+              <p className={cn("text-lg", uiTheme === 'light' ? "text-gray-600" : "text-slate-400")}>
+                Configure your CV structure and theme to get started.
+              </p>
             </div>
 
-            {/* Theme Customization */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h2 className="text-base font-bold mb-4 flex items-center gap-2">
-                  <Palette className="text-indigo-600" size={18} />
-                  Theme & Colors
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Section Selection */}
+              <div className={cn("lg:col-span-5 p-5 rounded-2xl shadow-sm border", 
+                uiTheme === 'light' ? "bg-white border-gray-100" : (uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : "bg-[#1a1a1a] border-amber-900/30"))}>
+                <h2 className={cn("text-base font-bold mb-3 flex items-center gap-2", uiTheme === 'light' ? "text-gray-900" : "text-white")}>
+                  <Layout className={cn(uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600")} size={18} />
+                  Select Sections
                 </h2>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Primary Color</label>
-                    <div className="flex flex-wrap gap-3">
-                      {COLORS.map((color) => (
-                        <button
-                          key={color.value}
-                          onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: color.value } }))}
-                          className={cn(
-                            "w-10 h-10 rounded-full border-2 transition-all",
-                            cvData.theme.primaryColor === color.value ? "border-indigo-600 scale-110" : "border-transparent"
-                          )}
-                          style={{ backgroundColor: color.value }}
-                          title={color.name}
+                <div className="grid grid-cols-1 gap-1.5">
+                  {SECTIONS.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => toggleSection(section.id)}
+                      className={cn(
+                        "flex items-center justify-between p-2.5 rounded-xl border transition-all text-left",
+                        cvData.selectedSections.includes(section.id)
+                          ? (uiTheme === 'golden' ? "border-amber-600 bg-amber-950 text-amber-500" : "border-indigo-600 bg-indigo-50 text-indigo-700")
+                          : (uiTheme === 'light' ? "border-gray-100 hover:border-gray-200 text-gray-600" : "border-slate-800 hover:border-slate-700 text-slate-400")
+                      )}
+                    >
+                      <span className="text-sm font-medium">{section.label}</span>
+                      {cvData.selectedSections.includes(section.id) && <Check size={16} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Theme Customization */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className={cn("p-6 rounded-2xl shadow-sm border", 
+                  uiTheme === 'light' ? "bg-white border-gray-100" : (uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : "bg-[#1a1a1a] border-amber-900/30"))}>
+                  <h2 className={cn("text-base font-bold mb-4 flex items-center gap-2", uiTheme === 'light' ? "text-gray-900" : "text-white")}>
+                    <Palette className={cn(uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600")} size={18} />
+                    Theme & Colors
+                  </h2>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Primary Color</label>
+                      <div className="flex flex-wrap gap-3">
+                        {COLORS.map((color) => (
+                          <button
+                            key={color.value}
+                            onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: color.value } }))}
+                            className={cn(
+                              "w-10 h-10 rounded-full border-2 transition-all",
+                              cvData.theme.primaryColor === color.value ? (uiTheme === 'golden' ? "border-amber-500 scale-110" : "border-indigo-600 scale-110") : "border-transparent"
+                            )}
+                            style={{ backgroundColor: color.value }}
+                            title={color.name}
+                          />
+                        ))}
+                        <input 
+                          type="color" 
+                          className="w-10 h-10 rounded-full border-2 border-slate-700 p-0.5 cursor-pointer bg-slate-800"
+                          value={cvData.theme.primaryColor}
+                          onChange={(e) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))}
                         />
-                      ))}
-                      <input 
-                        type="color" 
-                        className="w-10 h-10 rounded-full border-2 border-gray-100 p-0.5 cursor-pointer"
-                        value={cvData.theme.primaryColor}
-                        onChange={(e) => setCvData(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))}
-                      />
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Typography</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {FONTS.map((font) => (
-                        <button
-                          key={font.value}
-                          onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, font: font.value } }))}
-                          className={cn(
-                            "px-3 py-2 rounded-lg border text-sm transition-all",
-                            cvData.theme.font === font.value
-                              ? "border-indigo-600 bg-indigo-50 text-indigo-700 font-bold"
-                              : "border-gray-100 hover:border-gray-200 text-gray-600"
-                          )}
-                        >
-                          {font.name}
-                        </button>
-                      ))}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Typography</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {FONTS.map((font) => (
+                          <button
+                            key={font.value}
+                            onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, font: font.value } }))}
+                            className={cn(
+                              "px-3 py-2 rounded-lg border text-sm transition-all",
+                              cvData.theme.font === font.value
+                                ? (uiTheme === 'golden' ? "border-amber-500 bg-amber-950 text-amber-500 font-bold" : "border-indigo-600 bg-indigo-50 text-indigo-700 font-bold")
+                                : (uiTheme === 'light' ? "border-gray-100 hover:border-gray-200 text-gray-600" : "border-slate-800 hover:border-slate-700 text-slate-400")
+                            )}
+                          >
+                            {font.name}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Font Size</label>
-                    <div className="flex items-center gap-4">
-                      <button 
-                        onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, fontSize: Math.max(10, prev.theme.fontSize - 1) } }))}
-                        className="p-2 rounded-lg border border-gray-100 hover:bg-gray-50"
+                    <div className="flex items-center justify-between">
+                      <label className={cn("text-sm font-bold", uiTheme === 'light' ? "text-gray-700" : "text-slate-300")}>Show Section Borders</label>
+                      <button
+                        onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, showBorder: !prev.theme.showBorder } }))}
+                        className={cn(
+                          "w-12 h-6 rounded-full transition-colors relative",
+                          cvData.theme.showBorder ? (uiTheme === 'golden' ? "bg-amber-600" : "bg-indigo-600") : "bg-gray-400"
+                        )}
                       >
-                        <Minus size={16} />
-                      </button>
-                      <span className="text-lg font-bold w-12 text-center">{cvData.theme.fontSize}px</span>
-                      <button 
-                        onClick={() => setCvData(prev => ({ ...prev, theme: { ...prev.theme, fontSize: Math.min(18, prev.theme.fontSize + 1) } }))}
-                        className="p-2 rounded-lg border border-gray-100 hover:bg-gray-50"
-                      >
-                        <Plus size={16} />
+                        <div className={cn(
+                          "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                          cvData.theme.showBorder ? "left-7" : "left-1"
+                        )} />
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <button
-                onClick={() => setStep('builder')}
-                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2"
-              >
-                Start Building CV
-                <ChevronRight size={20} />
-              </button>
+                <button
+                  onClick={() => setStep('builder')}
+                  className={cn(
+                    "w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2",
+                    uiTheme === 'golden' ? "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-950/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200"
+                  )}
+                >
+                  Start Building CV
+                  <ChevronRight size={20} />
+                </button>
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Builder Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setStep('setup')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
-              title="Back to Setup"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div className="flex items-center gap-2">
-              <Logo className="w-10 h-10" />
-              <div>
-                <h1 className="text-lg font-bold text-gray-900 leading-tight">
-                  {cvData.personalInfo.name || 'Untitled CV'}
-                </h1>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Maksud Computer's
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
-            <button
-              onClick={() => setActiveTab('edit')}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                activeTab === 'edit' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
-              )}
-            >
-              <Edit3 size={16} />
-              Edit
-            </button>
-            <button
-              onClick={() => setActiveTab('preview')}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                activeTab === 'preview' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
-              )}
-            >
-              <Eye size={16} />
-              Preview
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2 mr-2">
-              <button
-                onClick={handleSaveAsWord}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"
+    <div className={uiTheme}>
+      <div className={cn("min-h-screen", uiTheme === 'light' ? "bg-gray-50" : (uiTheme === 'dark' ? "bg-slate-950" : "bg-[#121212]"))}>
+        {/* Builder Header */}
+        <header className={cn(
+          "sticky top-0 z-50 px-4 py-3 border-b transition-all",
+          uiTheme === 'light' ? "bg-white border-gray-200" : (uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : "bg-[#1a1a1a] border-amber-900/30")
+        )}>
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setStep('setup')}
+                className={cn("p-2 rounded-lg transition-colors", uiTheme === 'light' ? "hover:bg-gray-100 text-gray-500" : "hover:bg-slate-800 text-slate-400")}
+                title="Back to Setup"
               >
-                <FileCode size={16} className="text-blue-600" />
-                Word
+                <ArrowLeft size={20} />
               </button>
-              <button
-                onClick={handleSaveAsPDF}
-                disabled={isGeneratingPDF}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"
-              >
-                {isGeneratingPDF ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent"></div>
-                ) : (
-                  <FileDown size={16} className="text-red-600" />
-                )}
-                PDF
-              </button>
-            </div>
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 transition-all"
-            >
-              <Printer size={16} />
-              Print
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        <AnimatePresence mode="wait">
-          {activeTab === 'edit' ? (
-            <motion.div
-              key="edit"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-            >
-              <CVForm data={cvData} onChange={setCvData} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="preview"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="flex justify-center"
-            >
-              <div className="w-full max-w-[210mm] bg-white shadow-2xl rounded-sm overflow-hidden">
-                <div ref={previewRef}>
-                  <CVPreview data={cvData} />
+              <div className="flex items-center gap-2">
+                <Logo className="w-10 h-10" />
+                <div>
+                  <h1 className={cn("text-lg font-bold leading-tight", uiTheme === 'light' ? "text-gray-900" : (uiTheme === 'dark' ? "text-white" : "text-amber-500"))}>
+                    {cvData.personalInfo.name || 'Untitled CV'}
+                  </h1>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Maksud Computer's
+                  </p>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+            </div>
+
+            <div className={cn("flex items-center gap-2 p-1 rounded-xl", uiTheme === 'light' ? "bg-gray-100" : "bg-slate-800")}>
+              <button
+                onClick={() => setActiveTab('edit')}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
+                  activeTab === 'edit' 
+                    ? (uiTheme === 'golden' ? "bg-amber-600 text-white shadow-sm" : "bg-white text-indigo-600 shadow-sm") 
+                    : (uiTheme === 'light' ? "text-gray-500 hover:text-gray-700" : "text-slate-400 hover:text-white")
+                )}
+              >
+                <Edit3 size={16} />
+                Edit
+              </button>
+              <button
+                onClick={() => setActiveTab('preview')}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all",
+                  activeTab === 'preview' 
+                    ? (uiTheme === 'golden' ? "bg-amber-600 text-white shadow-sm" : "bg-white text-indigo-600 shadow-sm") 
+                    : (uiTheme === 'light' ? "text-gray-500 hover:text-gray-700" : "text-slate-400 hover:text-white")
+                )}
+              >
+                <Eye size={16} />
+                Preview
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 mr-2">
+                <button
+                  onClick={handleSaveAsWord}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 border rounded-xl text-sm font-bold transition-all",
+                    uiTheme === 'light' ? "bg-white border-gray-200 text-gray-700 hover:bg-gray-50" : "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
+                  )}
+                >
+                  <FileCode size={16} className="text-blue-500 text-blue-600" />
+                  Word
+                </button>
+                <button
+                  onClick={handleSaveAsPDF}
+                  disabled={isGeneratingPDF}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 border rounded-xl text-sm font-bold transition-all",
+                    uiTheme === 'light' ? "bg-white border-gray-200 text-gray-700 hover:bg-gray-50" : "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
+                  )}
+                >
+                  {isGeneratingPDF ? (
+                    <div className={cn("animate-spin rounded-full h-4 w-4 border-2 border-t-transparent", uiTheme === 'golden' ? "border-amber-500" : "border-indigo-600")}></div>
+                  ) : (
+                    <FileDown size={16} className="text-red-500 text-red-600" />
+                  )}
+                  PDF
+                </button>
+              </div>
+              <button
+                onClick={handlePrint}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold shadow-lg transition-all",
+                  uiTheme === 'golden' ? "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-950/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200"
+                )}
+              >
+                <Printer size={16} />
+                Print
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          <AnimatePresence mode="wait">
+            {activeTab === 'edit' ? (
+              <motion.div
+                key="edit"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <CVForm data={cvData} onChange={setCvData} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="preview"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="relative flex flex-col items-center xl:pr-72"
+              >
+                <CVPreviewToolbar data={cvData} onChange={setCvData} uiTheme={uiTheme} />
+                
+                <div className={cn(
+                  "w-full max-w-[210mm] bg-white shadow-2xl rounded-sm overflow-hidden cv-paper",
+                  uiTheme === 'light' ? "ring-1 ring-gray-100" : "ring-1 ring-slate-800"
+                )}>
+                  <div ref={previewRef}>
+                    <CVPreview data={cvData} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+      </div>
     </div>
   );
 }

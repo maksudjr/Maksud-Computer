@@ -133,6 +133,12 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
     setIsProcessing(true);
     setErrorMessage(null);
     try {
+      // Check size (Vercel limit is 4.5MB for the whole request)
+      // Base64 is ~33% larger than binary. 4MB base64 is ~3MB binary.
+      if (currentImage.length > 4 * 1024 * 1024) {
+        throw new Error("Image is too large for AI processing (max ~3MB). Please try a smaller or lower resolution image.");
+      }
+
       const response = await fetch('/api/remove-bg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,8 +146,23 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to remove background');
+        let errorMessage = 'Failed to remove background';
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } else {
+          const errorText = await response.text();
+          if (errorText.includes('A server error occurred')) {
+            errorMessage = "Vercel Server Error. This usually means the function timed out or the image was too large for the serverless limit (4.5MB).";
+          } else if (response.status === 413) {
+            errorMessage = "Image is too large for the server to process. Please use a smaller file.";
+          } else {
+            errorMessage = `Server Error (${response.status}): ${errorText.substring(0, 100)}...`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -250,6 +271,11 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
     setIsEnhancing(true);
     setErrorMessage(null);
     try {
+      // Check size (Vercel limit is 4.5MB for the whole request)
+      if (currentImage.length > 4 * 1024 * 1024) {
+        throw new Error("Image is too large for AI processing (max ~3MB). Please try a smaller image.");
+      }
+
       const response = await fetch('/api/enhance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -257,8 +283,21 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({ image, onSave, onCance
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to enhance image');
+        let errorMessage = 'Failed to enhance image';
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } else {
+          const errorText = await response.text();
+          if (errorText.includes('A server error occurred')) {
+            errorMessage = "Vercel Server Error. This usually means the function timed out or the image was too large for the serverless limit (4.5MB).";
+          } else {
+            errorMessage = `Server Error (${response.status}): ${errorText.substring(0, 100)}...`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

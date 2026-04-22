@@ -14,4 +14,93 @@
   --font-poppins: "Poppins", sans-serif;
   --font-ubuntu: "Ubuntu", sans-serif;
   --font-lora: "Lora", serif;
+
+  --color-gold: #d4af37;
+  --color-gold-light: #f1e5ac;
+  --color-gold-dark: #b8860b;
+}
+
+@layer base {
+  .dark {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+  
+  .golden {
+    background-color: #121212;
+    color: #fbbf24;
+  }
+
+  /* Global form stylings for themes */
+  .dark input:not([type="color"]), 
+  .dark select, 
+  .dark textarea {
+    @apply bg-slate-800 border-slate-700 text-slate-200 placeholder-slate-500 focus:ring-indigo-500 focus:border-indigo-500;
+  }
+
+  .golden input:not([type="color"]), 
+  .golden select, 
+  .golden textarea {
+    @apply bg-[#1a1a1a] border-amber-900/40 text-amber-100 placeholder-amber-900/50 focus:ring-amber-600 focus:border-amber-600;
+  }
+
+  /* Label styling */
+  .dark label {
+    @apply text-slate-400;
+  }
+  .golden label {
+    @apply text-amber-700;
+  }
+
+  /* Card styling overrides for themes */
+  .dark .bg-white {
+    @apply bg-slate-900 border-slate-800;
+  }
+  .golden .bg-white {
+    @apply bg-[#1a1a1a] border-amber-900/20 text-amber-200;
+  }
+
+  .dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700 {
+    @apply text-slate-100;
+  }
+  .dark .text-gray-600, .dark .text-gray-500 {
+    @apply text-slate-400;
+  }
+
+  .golden .text-gray-900, .golden .text-gray-800, .golden .text-gray-700 {
+    @apply text-amber-500;
+  }
+  .golden .text-gray-600, .golden .text-gray-500 {
+    @apply text-amber-600/70;
+  }
+
+  .dark .bg-gray-50, .dark .bg-gray-100 {
+    @apply bg-slate-800/50;
+  }
+  .golden .bg-gray-50, .golden .bg-gray-100 {
+    @apply bg-[#0a0a0a];
+  }
+
+  /* CV Preview Isolation: Keeps CV paper white and text dark even in global Dark/Golden modes */
+  .cv-paper {
+    background-color: #ffffff !important;
+    color: #111827 !important; /* Force text-gray-900 */
+    --tw-text-opacity: 1 !important;
+  }
+
+  /* Ensure standard element colors are restored inside the CV paper */
+  .cv-paper p, .cv-paper span, .cv-paper div, .cv-paper h1, .cv-paper h2, .cv-paper h3, .cv-paper h4, .cv-paper li {
+    color: inherit;
+  }
+
+  .dark .cv-paper .text-gray-900, .golden .cv-paper .text-gray-900 { color: #111827 !important; }
+  .dark .cv-paper .text-gray-800, .golden .cv-paper .text-gray-800 { color: #1f2937 !important; }
+  .dark .cv-paper .text-gray-700, .golden .cv-paper .text-gray-700 { color: #374151 !important; }
+  .dark .cv-paper .text-gray-600, .golden .cv-paper .text-gray-600 { color: #4b5563 !important; }
+  .dark .cv-paper .text-gray-500, .golden .cv-paper .text-gray-500 { color: #6b7280 !important; }
+  .dark .cv-paper .bg-white, .golden .cv-paper .bg-white { background-color: #ffffff !important; }
+  .dark .cv-paper .bg-gray-50, .golden .cv-paper .bg-gray-50 { background-color: #f9fafb !important; }
+  .dark .cv-paper .bg-gray-100, .golden .cv-paper .bg-gray-100 { background-color: #f3f4f6 !important; }
+  .dark .cv-paper { background-color: #ffffff !important; color: #111827 !important; }
+  .golden .cv-paper { background-color: #ffffff !important; color: #111827 !important; }
 }

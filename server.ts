@@ -1,11 +1,9 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import Replicate from "replicate";
 import axios from "axios";
-import FormData from "form-data";
 
 dotenv.config();
 
@@ -15,10 +13,21 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Increase payload size for base64 images
-app.use(express.json({ limit: '50mb' }));
+// IMPORTANT: Vercel has a 4.5MB limit for serverless functions.
+// If images are larger than this, Vercel will return a 413 error.
+app.use(express.json({ limit: '10mb' }));
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
+});
+
+// Health check route
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    status: "ok", 
+    environment: process.env.NODE_ENV,
+    vercel: !!process.env.VERCEL
+  });
 });
 
 // API Route for AI Enhancement
@@ -36,9 +45,8 @@ app.post("/api/enhance", async (req, res) => {
 
     console.log("Starting Replicate AI Enhancement...");
 
-    // Using nightmare-ai/real-esrgan which is reliable for upscaling and face enhancement
     const output = await replicate.run(
-      "nightmare-ai/real-esrgan:42fed1c49742f5d1c23358760513d2aa2d294509d465b554bc2c238ce43432df",
+      "nightmare-ai/real-esrgan",
       {
         input: {
           image: image,
@@ -74,44 +82,42 @@ app.post("/api/remove-bg", async (req, res) => {
     // Extract base64 data
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
 
-    const response = await fetch('https://api.remove.bg/v1.0/removebg', {
-      method: 'POST',
-      headers: {
-        'X-Api-Key': process.env.REMOVE_BG_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const response = await axios.post('https://api.remove.bg/v1.0/removebg', 
+      {
         image_file_b64: base64Data,
         size: 'auto',
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("remove.bg error response:", errorText);
-      
-      let errorMessage = "Failed to remove background";
-      try {
-        const parsed = JSON.parse(errorText);
-        if (parsed.errors && parsed.errors.length > 0) {
-          errorMessage = parsed.errors[0].title;
-        }
-      } catch (e) {
-        // Not JSON
+      },
+      {
+        headers: {
+          'X-Api-Key': process.env.REMOVE_BG_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        responseType: 'arraybuffer'
       }
-      return res.status(response.status).json({ error: errorMessage });
-    }
+    );
 
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const buffer = Buffer.from(response.data);
     const resultBase64 = buffer.toString('base64');
     const output = `data:image/png;base64,${resultBase64}`;
 
     console.log("remove.bg Background Removal complete");
     res.json({ output });
   } catch (error: any) {
-    console.error("Background removal error:", error.message);
-    res.status(500).json({ error: error.message || "Internal server error" });
+    console.error("Background removal error:", error.response?.data?.toString() || error.message);
+    
+    let errorMessage = "Failed to remove background";
+    if (error.response?.data) {
+      try {
+        const errorData = JSON.parse(error.response.data.toString());
+        if (errorData.errors && errorData.errors.length > 0) {
+          errorMessage = errorData.errors[0].title;
+        }
+      } catch (e) {
+        // Not JSON
+      }
+    }
+
+    res.status(error.response?.status || 500).json({ error: errorMessage });
   }
 });
 
@@ -120,12 +126,14 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (!process.env.VERCEL) {
+    // Only serve static files if NOT on Vercel (Vercel handles this via vercel.json)
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
@@ -134,13 +142,15 @@ async function startServer() {
   }
 
   // Only listen if not in a serverless environment (like Vercel)
-  if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
+  if (!process.env.VERCEL) {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
   }
 }
 
-startServer();
+startServer().catch(err => {
+  console.error("Failed to start server:", err);
+});
 
 export default app;

@@ -11,9 +11,9 @@ interface SectionHeaderProps {
   primaryColor: string;
 }
 
-const SectionHeader = ({ title, primaryColor, fontSize }: SectionHeaderProps & { fontSize: number }) => (
+const SectionHeader = ({ title, primaryColor, fontSize, showBorder }: SectionHeaderProps & { fontSize: number; showBorder: boolean }) => (
   <div className="mt-3 mb-1">
-    <div style={{ backgroundColor: primaryColor }} className="h-[1.5px] w-full mb-0.5" />
+    {showBorder && <div style={{ backgroundColor: primaryColor }} className="h-[1.5px] w-full mb-0.5" />}
     <h2 style={{ color: primaryColor, fontSize: `${fontSize + 2}pt` }} className="font-bold uppercase tracking-tight">
       {title}:
     </h2>
@@ -23,23 +23,27 @@ const SectionHeader = ({ title, primaryColor, fontSize }: SectionHeaderProps & {
 interface BulletItemProps {
   children: React.ReactNode;
   primaryColor: string;
-  key?: React.Key;
+  fontSize: number;
+  lineSpacing: number;
+  key?: string | number;
 }
 
-const BulletItem = ({ children, primaryColor, fontSize }: BulletItemProps & { fontSize: number }) => (
-  <div className="flex items-start gap-1.5 mb-0.5">
+const BulletItem = ({ children, primaryColor, fontSize, lineSpacing }: BulletItemProps) => (
+  <div className="flex items-start gap-1.5 mb-0.5" style={{ lineHeight: lineSpacing }}>
     <span style={{ color: primaryColor, fontSize: `${fontSize - 2}pt` }} className="mt-1">❖</span>
-    <div style={{ fontSize: `${fontSize}pt` }} className="leading-tight">{children}</div>
+    <div style={{ fontSize: `${fontSize}pt` }}>{children}</div>
   </div>
 );
 
 interface InfoRowProps {
   label: string;
   value: string;
-  key?: React.Key;
+  fontSize: number;
+  lineSpacing: number;
+  key?: string | number;
 }
 
-const InfoRow = ({ label, value, fontSize }: InfoRowProps & { fontSize: number }) => {
+const InfoRow = ({ label, value, fontSize, lineSpacing }: InfoRowProps) => {
   if (!value) return null;
   
   const formatDate = (dateStr: string) => {
@@ -54,7 +58,7 @@ const InfoRow = ({ label, value, fontSize }: InfoRowProps & { fontSize: number }
   const displayValue = label === "Date of Birth" ? formatDate(value) : value;
 
   return (
-    <div style={{ fontSize: `${fontSize}pt` }} className="grid grid-cols-[160px_10px_1fr] leading-tight mb-0.5">
+    <div style={{ fontSize: `${fontSize}pt`, lineHeight: lineSpacing }} className="grid grid-cols-[160px_10px_1fr] mb-0.5">
       <div className="font-bold">{label}</div>
       <div>:</div>
       <div>{displayValue}</div>
@@ -62,7 +66,7 @@ const InfoRow = ({ label, value, fontSize }: InfoRowProps & { fontSize: number }
   );
 };
 
-export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateProps>(({ data }, ref) => {
+export const ClassicTemplate = React.memo(React.forwardRef<HTMLDivElement, ClassicTemplateProps>(({ data }, ref) => {
   const { theme, personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections } = data;
 
   const formatAddress = (village: string, po: string, upazila: string, district: string) => {
@@ -81,7 +85,7 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
     <div 
       ref={ref}
       className={cn(
-        "bg-white w-[210mm] p-[15mm] mx-auto shadow-lg print:shadow-none print:m-0 flex flex-col relative",
+        "bg-white w-[210mm] p-[15mm] mx-auto shadow-lg print:shadow-none print:m-0 flex flex-col relative cv-paper",
         theme.fontStyle
       )}
       style={{ 
@@ -102,16 +106,23 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
         </div>
       )}
       {/* Header */}
-      <div className="flex justify-between items-start mb-4">
+      <div className={cn(
+        "flex justify-between items-start mb-4 p-4 -mx-4",
+        theme.headerStyle === 'black' ? "bg-black text-white" : (theme.headerStyle === 'primary' ? "bg-indigo-600 text-white" : "")
+      )}
+      style={{ 
+        backgroundColor: theme.headerStyle === 'black' ? '#000000' : (theme.headerStyle === 'primary' ? theme.primaryColor : 'transparent'),
+        color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? (theme.primaryColor === '#ffd700' && theme.headerStyle === 'primary' ? '#000000' : '#ffffff') : 'inherit'
+      }}>
         <div className="flex-1">
-          <h1 style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 7}pt` }} className="font-bold leading-tight uppercase">
+          <h1 style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor, fontSize: `${theme.fontSize + 7}pt` }} className="font-bold leading-tight uppercase">
             CURRICULUM VITAE
           </h1>
-          <h1 style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 7}pt` }} className="font-bold leading-tight uppercase">
+          <h1 style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor, fontSize: `${theme.fontSize + 7}pt` }} className="font-bold leading-tight uppercase">
             OF {personalInfo.name || 'YOUR NAME'}
           </h1>
           
-          <div style={{ fontSize: `${theme.fontSize}pt` }} className="mt-2 leading-tight">
+          <div style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="mt-2 text-justify">
             <p className="font-bold">Present Address:</p>
             <p className="whitespace-pre-wrap">{presentAddressLine}</p>
             {personalInfo.phone && <p>Cell: {personalInfo.phone}</p>}
@@ -119,7 +130,7 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
           </div>
         </div>
         {personalInfo.photo && (
-          <div className="w-[35mm] h-[45mm] border border-gray-300 ml-4 overflow-hidden shrink-0">
+          <div className="w-[35mm] h-[45mm] border border-gray-300 ml-4 overflow-hidden shrink-0 bg-white">
             <img src={personalInfo.photo} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           </div>
         )}
@@ -128,8 +139,8 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Career Objective */}
       {selectedSections.includes('careerObjective') && careerObjective && (
         <section>
-          <SectionHeader title="Career Objective" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
-          <p style={{ fontSize: `${theme.fontSize - 0.5}pt` }} className="leading-snug text-justify">
+          <SectionHeader title="Career Objective" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+          <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="text-justify whitespace-pre-wrap">
             {careerObjective}
           </p>
         </section>
@@ -138,18 +149,18 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Academic Qualification */}
       {selectedSections.includes('education') && education.length > 0 && (
         <section>
-          <SectionHeader title="Academic Qualification" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title="Academic Qualification" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           {education.map((edu) => (
             <div key={edu.id} className="mb-3">
-              <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize}>
+              <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>
                 <span className="font-bold">{edu.examName}</span>
               </BulletItem>
               <div className="ml-6">
-                <InfoRow label="Board" value={edu.board} fontSize={theme.fontSize} />
-                <InfoRow label="Subject" value={edu.subject} fontSize={theme.fontSize} />
-                <InfoRow label="Institute" value={edu.instituteName} fontSize={theme.fontSize} />
-                <InfoRow label="Result" value={edu.gpa ? `${edu.gpa} (${edu.gpaType})` : ''} fontSize={theme.fontSize} />
-                <InfoRow label="Passing Year" value={edu.passingYear} fontSize={theme.fontSize} />
+                <InfoRow label="Board" value={edu.board} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+                <InfoRow label="Subject" value={edu.subject} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+                <InfoRow label="Institute" value={edu.instituteName} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+                <InfoRow label="Result" value={edu.gpa ? `${edu.gpa} (${edu.gpaType})` : ''} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+                <InfoRow label="Passing Year" value={edu.passingYear} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
               </div>
             </div>
           ))}
@@ -159,10 +170,10 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Computer Skills */}
       {selectedSections.includes('computerSkills') && computerSkills.length > 0 && (
         <section>
-          <SectionHeader title="Computer Skills" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title="Computer Skills" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           {computerSkills.map((skill) => (
             <div key={skill.id} className="mb-2">
-              <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize}>
+              <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>
                 <div className="flex flex-col">
                   {skill.hasTraining && (
                     <span>Completed a {skill.duration} computer training program from {skill.instituteName}.</span>
@@ -180,11 +191,11 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Job Experience */}
       {selectedSections.includes('workExperience') && workExperience.length > 0 && (
         <section>
-          <SectionHeader title="Job Experience" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title="Job Experience" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           {workExperience.map((work) => (
-            <BulletItem key={work.id} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>
+            <BulletItem key={work.id} primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>
               Worked as a <span className="font-bold">{work.position}</span> at <span className="font-bold">{work.companyName}</span> for {work.duration}
-              {work.description && <p style={{ fontSize: `${theme.fontSize - 1}pt` }} className="mt-1 italic">{work.description}</p>}
+              {work.description && <p style={{ fontSize: `${theme.fontSize - 1}pt`, lineHeight: theme.lineSpacing }} className="mt-1 italic">{work.description}</p>}
             </BulletItem>
           ))}
         </section>
@@ -193,9 +204,9 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Language Proficiency */}
       {selectedSections.includes('languageProficiency') && languageProficiency.length > 0 && (
         <section>
-          <SectionHeader title="Language Proficiency" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title="Language Proficiency" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           {languageProficiency.map((lang, idx) => (
-            <BulletItem key={`lang-${idx}-${lang}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{lang}</BulletItem>
+            <BulletItem key={`lang-${idx}-${lang}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>{lang}</BulletItem>
           ))}
         </section>
       )}
@@ -203,9 +214,9 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Self Assessment */}
       {selectedSections.includes('selfAssessment') && selfAssessment.length > 0 && (
         <section>
-          <SectionHeader title="Self-Assessment" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title="Self-Assessment" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           {selfAssessment.map((item, idx) => (
-            <BulletItem key={`self-${idx}-${item}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{item}</BulletItem>
+            <BulletItem key={`self-${idx}-${item}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>{item}</BulletItem>
           ))}
         </section>
       )}
@@ -213,9 +224,9 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Hobby and Interest */}
       {selectedSections.includes('hobbies') && hobbies.length > 0 && (
         <section>
-          <SectionHeader title="Hobby and Interest" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title="Hobby and Interest" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           {hobbies.map((hobby, idx) => (
-            <BulletItem key={`hobby-${idx}-${hobby}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize}>{hobby}</BulletItem>
+            <BulletItem key={`hobby-${idx}-${hobby}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>{hobby}</BulletItem>
           ))}
         </section>
       )}
@@ -223,24 +234,24 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Personal Information */}
       {selectedSections.includes('personalInfo') && (
         <section className="break-before-auto">
-          <SectionHeader title="Personal Information" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title="Personal Information" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <InfoRow label="Name" value={personalInfo.name} fontSize={theme.fontSize} />
-              <InfoRow label="Father’s Name" value={personalInfo.fathersName} fontSize={theme.fontSize} />
-              <InfoRow label="Mother’s Name" value={personalInfo.mothersName} fontSize={theme.fontSize} />
-              <InfoRow label="Date of Birth" value={personalInfo.dob} fontSize={theme.fontSize} />
-              <InfoRow label="Nationality" value={personalInfo.nationality} fontSize={theme.fontSize} />
-              <InfoRow label="Religion" value={personalInfo.religion} fontSize={theme.fontSize} />
-              <InfoRow label="Marital Status" value={personalInfo.maritalStatus} fontSize={theme.fontSize} />
-              <InfoRow label="Sex" value={personalInfo.gender} fontSize={theme.fontSize} />
-              <InfoRow label="NID" value={personalInfo.nid} fontSize={theme.fontSize} />
-              <InfoRow label="Birth Registration No" value={personalInfo.birthRegNo} fontSize={theme.fontSize} />
-              <InfoRow label="Blood Group" value={personalInfo.bloodGroup} fontSize={theme.fontSize} />
-              <InfoRow label="Height" value={personalInfo.heightFeet || personalInfo.heightInches ? `${personalInfo.heightFeet || '0'}' ${personalInfo.heightInches || '0'}"` : ''} fontSize={theme.fontSize} />
-              <InfoRow label="Weight" value={personalInfo.weight ? `${personalInfo.weight} Kg` : ''} fontSize={theme.fontSize} />
-              <InfoRow label="Permanent Address" value={permanentAddressLine} fontSize={theme.fontSize} />
-              <InfoRow label="Present Address" value={presentAddressLine} fontSize={theme.fontSize} />
+              <InfoRow label="Name" value={personalInfo.name} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Father’s Name" value={personalInfo.fathersName} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Mother’s Name" value={personalInfo.mothersName} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Date of Birth" value={personalInfo.dob} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Nationality" value={personalInfo.nationality} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Religion" value={personalInfo.religion} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Marital Status" value={personalInfo.maritalStatus} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Sex" value={personalInfo.gender} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="NID" value={personalInfo.nid} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Birth Registration No" value={personalInfo.birthRegNo} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Blood Group" value={personalInfo.bloodGroup} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Height" value={personalInfo.heightFeet || personalInfo.heightInches ? `${personalInfo.heightFeet || '0'}' ${personalInfo.heightInches || '0'}"` : ''} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Weight" value={personalInfo.weight ? `${personalInfo.weight} Kg` : ''} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Permanent Address" value={permanentAddressLine} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
+              <InfoRow label="Present Address" value={presentAddressLine} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
             </div>
           </div>
         </section>
@@ -249,9 +260,9 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Custom Section */}
       {selectedSections.includes('custom') && customSection.fields.length > 0 && (
         <section>
-          <SectionHeader title={customSection.title} primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title={customSection.title} primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           {customSection.fields.map((field) => (
-            <InfoRow key={field.id} label={field.label} value={field.value} fontSize={theme.fontSize} />
+            <InfoRow key={field.id} label={field.label} value={field.value} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
           ))}
         </section>
       )}
@@ -259,10 +270,10 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* References */}
       {selectedSections.includes('references') && data.references && data.references.length > 0 && (
         <section>
-          <SectionHeader title="References" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
+          <SectionHeader title="References" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
           <div className="grid grid-cols-2 gap-4">
             {data.references.map((ref) => (
-              <div key={ref.id} style={{ fontSize: `${theme.fontSize}pt` }} className="leading-tight">
+              <div key={ref.id} style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}>
                 <p className="font-bold">{ref.name}</p>
                 <p>{ref.position}</p>
                 <p>{ref.organization}</p>
@@ -276,8 +287,8 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       {/* Certification / Declaration */}
       {selectedSections.includes('declaration') && declaration && (
         <section className="mt-4">
-          <SectionHeader title="Declaration" primaryColor={theme.primaryColor} fontSize={theme.fontSize} />
-          <p style={{ fontSize: `${theme.fontSize - 0.5}pt` }} className="leading-snug text-justify">
+          <SectionHeader title="Declaration" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+          <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="text-justify whitespace-pre-wrap">
             {declaration}
           </p>
           
@@ -295,8 +306,8 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
               <div className="h-8" /> // Gap if no signature
             )}
             <div style={{ backgroundColor: theme.primaryColor }} className="h-[1px] w-32 mb-1" />
-            <p style={{ fontSize: `${theme.fontSize}pt` }} className="font-bold">Signature</p>
-            <p style={{ fontSize: `${theme.fontSize}pt` }}>({personalInfo.name || 'Your Name'})</p>
+            <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="font-bold">Signature</p>
+            <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}>({personalInfo.name || 'Your Name'})</p>
           </div>
         </section>
       )}
@@ -309,4 +320,6 @@ export const ClassicTemplate = React.forwardRef<HTMLDivElement, ClassicTemplateP
       </div>
     </div>
   );
-});
+}));
+
+ClassicTemplate.displayName = 'ClassicTemplate';

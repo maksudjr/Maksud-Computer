@@ -7,7 +7,7 @@ interface ModernTemplateProps {
   data: CVData;
 }
 
-export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplateProps>(({ data }, ref) => {
+export const ModernTemplate = React.memo(React.forwardRef<HTMLDivElement, ModernTemplateProps>(({ data }, ref) => {
   const { theme, personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections } = data;
 
   const formatAddress = (village: string, po: string, upazila: string, district: string) => {
@@ -35,7 +35,7 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
     <div 
       ref={ref}
       className={cn(
-        "bg-white w-[210mm] mx-auto shadow-lg print:shadow-none print:m-0 flex flex-col relative overflow-hidden",
+        "bg-white w-[210mm] mx-auto shadow-lg print:shadow-none print:m-0 flex flex-col relative overflow-hidden cv-paper",
         theme.fontStyle
       )}
       style={{ 
@@ -44,8 +44,13 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
       id="cv-preview-content"
     >
       {/* Header */}
-      <div className="h-24 flex items-center px-12" style={{ backgroundColor: '#1e293b' }}>
-        <h1 className="text-white font-bold uppercase tracking-wider" style={{ fontSize: `${theme.fontSize + 11}pt` }}>
+      <div className="h-24 flex items-center px-12" style={{ 
+        backgroundColor: theme.headerStyle === 'black' ? '#000000' : (theme.headerStyle === 'primary' ? theme.primaryColor : '#1e293b') 
+      }}>
+        <h1 className="font-bold uppercase tracking-wider" style={{ 
+          fontSize: `${theme.fontSize + 11}pt`,
+          color: theme.headerStyle === 'primary' && theme.primaryColor === '#ffd700' ? '#000000' : '#ffffff'
+        }}>
           {personalInfo.name || 'YOUR NAME'}
         </h1>
       </div>
@@ -67,8 +72,8 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
           </div>
 
           {/* Contact */}
-          <div>
-            <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Contact</h3>
+          <div style={{ lineHeight: theme.lineSpacing }}>
+            <h3 className="font-bold uppercase mb-4 pb-1 tracking-wide" style={{ color: '#1e293b', fontSize: `${theme.fontSize + 1}pt`, borderBottom: theme.showBorder ? '2px solid #94a3b8' : 'none' }}>Contact</h3>
             <div className="space-y-3" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
               {personalInfo.phone && (
                 <div className="flex items-start gap-2">
@@ -93,19 +98,19 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
 
           {/* Computer Skills */}
           {selectedSections.includes('computerSkills') && computerSkills.length > 0 && (
-            <div>
-              <h3 className="font-bold uppercase border-b-2 border-gray-400 mb-4 pb-1 tracking-wide" style={{ fontSize: `${theme.fontSize + 1}pt` }}>Computer Skills</h3>
+            <div style={{ lineHeight: theme.lineSpacing }}>
+              <h3 className="font-bold uppercase mb-4 pb-1 tracking-wide" style={{ color: '#1e293b', fontSize: `${theme.fontSize + 1}pt`, borderBottom: theme.showBorder ? '2px solid #94a3b8' : 'none' }}>Computer Skills</h3>
               <div className="space-y-4">
                 {computerSkills.map((skill) => (
                   <div key={skill.id} style={{ fontSize: `${theme.fontSize - 1}pt` }}>
                     {skill.hasTraining && (
-                      <p className="mb-2 text-gray-700 leading-tight">
+                      <p className="mb-2 text-gray-700">
                         Completed a {skill.duration} computer training program from {skill.instituteName}.
                       </p>
                     )}
                     <ul className="list-disc list-inside space-y-1">
                       {skill.skills.map((s, sIdx) => (
-                        <li key={`${skill.id}-skill-${sIdx}`} className="leading-tight">{s}</li>
+                        <li key={`${skill.id}-skill-${sIdx}`}>{s}</li>
                       ))}
                     </ul>
                   </div>
@@ -144,12 +149,12 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
           {/* Profile / Career Objective */}
           {selectedSections.includes('careerObjective') && (
             <div className="mb-8 relative pl-8">
-              <div className="absolute left-0 top-0 bottom-0 w-[1px]" style={{ backgroundColor: `${theme.primaryColor}33` }} />
+              {theme.showBorder && <div className="absolute left-0 top-0 bottom-0 w-[1px]" style={{ backgroundColor: `${theme.primaryColor}33` }} />}
               <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
                 <User size={12} style={{ color: theme.primaryColor }} />
               </div>
               <h3 className="font-bold uppercase mb-3 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Profile</h3>
-              <p className="leading-relaxed text-justify text-gray-700" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
+              <p className="text-justify text-gray-700 whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}>
                 {careerObjective}
               </p>
             </div>
@@ -385,4 +390,6 @@ export const ModernTemplate = React.forwardRef<HTMLDivElement, ModernTemplatePro
       </div>
     </div>
   );
-});
+}));
+
+ModernTemplate.displayName = 'ModernTemplate';

@@ -3,21 +3,20 @@ import {
   Packer, 
   Paragraph, 
   TextRun, 
-  HeadingLevel, 
   AlignmentType, 
   BorderStyle, 
   Table, 
   TableRow, 
   TableCell, 
   WidthType,
-  VerticalAlign,
-  ImageRun
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { CVData } from '../types';
 
 export const generateDocx = async (data: CVData) => {
   const { personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections, theme } = data;
+
+  const spacingTwips = Math.round(theme.lineSpacing * 240); // 1.5 -> 360 twips
 
   const formatAddress = (village: string, po: string, upazila: string, district: string) => {
     const parts = [];
@@ -31,314 +30,298 @@ export const generateDocx = async (data: CVData) => {
   const presentAddressLine = formatAddress(personalInfo.presentVillage, personalInfo.presentPostOffice, personalInfo.presentUpazila, personalInfo.presentDistrict);
   const permanentAddressLine = formatAddress(personalInfo.permanentVillage, personalInfo.permanentPostOffice, personalInfo.permanentUpazila, personalInfo.permanentDistrict);
 
-  const sections = [];
-
-  // Helper for Section Header
   const createSectionHeader = (title: string) => {
     return [
       new Paragraph({
-        border: {
+        border: theme.showBorder ? {
           bottom: {
             color: theme.primaryColor.replace('#', ''),
             size: 12,
             style: BorderStyle.SINGLE,
           },
-        },
+        } : undefined,
         children: [
           new TextRun({
             text: `${title.toUpperCase()}:`,
             color: theme.primaryColor.replace('#', ''),
             bold: true,
-            size: 26, // 13pt
+            size: (theme.fontSize + 2) * 2,
           }),
         ],
-        spacing: { before: 400, after: 200 },
+        spacing: { before: 300, after: 150 },
       }),
     ];
   };
 
-  // Header
-  const headerParagraphs = [
-    new Paragraph({
+  const createBulletParagraph = (text: string, bold = false) => {
+    return new Paragraph({
       children: [
-        new TextRun({
-          text: "CURRICULUM VITAE",
-          color: theme.primaryColor.replace('#', ''),
-          bold: true,
-          size: 36, // 18pt
-        }),
+        new TextRun({ text: "❖ ", color: theme.primaryColor.replace('#', ''), size: (theme.fontSize - 3) * 2 }),
+        new TextRun({ text: text, bold, size: theme.fontSize * 2 }),
       ],
-      alignment: AlignmentType.LEFT,
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: `OF ${personalInfo.name.toUpperCase() || 'YOUR NAME'}`,
-          color: theme.primaryColor.replace('#', ''),
-          bold: true,
-          size: 36, // 18pt
-        }),
-      ],
-      alignment: AlignmentType.LEFT,
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: "Present Address:",
-          bold: true,
-          size: 22, // 11pt
-        }),
-      ],
-      spacing: { before: 200 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: presentAddressLine,
-          size: 22,
-        }),
-      ],
-    }),
-  ];
+      spacing: { line: spacingTwips, before: 100 },
+    });
+  };
 
-  if (personalInfo.phone) {
-    headerParagraphs.push(new Paragraph({
-      children: [new TextRun({ text: `Cell: ${personalInfo.phone}`, size: 22 })],
-    }));
-  }
-
-  if (personalInfo.email) {
-    headerParagraphs.push(new Paragraph({
+  const createInfoRow = (label: string, value: string) => {
+    if (!value) return null;
+    return new Paragraph({
+      indent: { left: 400 },
       children: [
-        new TextRun({ text: "E-mail: ", size: 22 }),
-        new TextRun({ text: personalInfo.email, size: 22, italics: true }),
+        new TextRun({ text: label, bold: true, size: theme.fontSize * 2 }),
+        new TextRun({ text: ` : ${value}`, size: theme.fontSize * 2 }),
       ],
-    }));
-  }
+      spacing: { line: spacingTwips },
+    });
+  };
+
+  const isSidebarTemplate = theme.templateId === 'modern' || theme.templateId === 'smart-modern';
+
+  const mainContent = [];
 
   // Career Objective
   if (selectedSections.includes('careerObjective') && careerObjective) {
-    sections.push(...createSectionHeader("Career Objective"));
-    sections.push(new Paragraph({
-      children: [new TextRun({ text: careerObjective, size: 21 })],
+    mainContent.push(...createSectionHeader("Career Objective"));
+    mainContent.push(new Paragraph({
+      children: [new TextRun({ text: careerObjective, size: theme.fontSize * 2 })],
       alignment: AlignmentType.JUSTIFIED,
+      spacing: { line: spacingTwips },
     }));
   }
 
-  // Academic Qualification
+  // Education
   if (selectedSections.includes('education') && education.length > 0) {
-    sections.push(...createSectionHeader("Academic Qualification"));
+    mainContent.push(...createSectionHeader("Academic Qualification"));
     education.forEach(edu => {
-      sections.push(new Paragraph({
-        children: [
-          new TextRun({ text: "❖ ", color: theme.primaryColor.replace('#', ''), size: 18 }),
-          new TextRun({ text: edu.examName, bold: true, size: 21 }),
-        ],
-        spacing: { before: 200 },
-      }));
-      
-      const addInfoRow = (label: string, value: string) => {
-        if (!value) return;
-        sections.push(new Paragraph({
-          indent: { left: 720 },
-          children: [
-            new TextRun({ text: label, bold: true, size: 21 }),
-            new TextRun({ text: ` : ${value}`, size: 21 }),
-          ],
-        }));
-      };
-
-      addInfoRow("Board", edu.board);
-      addInfoRow("Subject", edu.subject);
-      addInfoRow("Institute", edu.instituteName);
-      addInfoRow("Result", edu.gpa ? `${edu.gpa} (${edu.gpaType})` : '');
-      addInfoRow("Passing Year", edu.passingYear);
+      mainContent.push(createBulletParagraph(edu.examName, true));
+      [
+        createInfoRow("Board", edu.board),
+        createInfoRow("Subject", edu.subject),
+        createInfoRow("Institute", edu.instituteName),
+        createInfoRow("Result", edu.gpa ? `${edu.gpa} (${edu.gpaType})` : ''),
+        createInfoRow("Passing Year", edu.passingYear),
+      ].forEach(p => p && mainContent.push(p));
     });
   }
 
   // Computer Skills
   if (selectedSections.includes('computerSkills') && computerSkills.length > 0) {
-    sections.push(...createSectionHeader("Computer Skills"));
+    mainContent.push(...createSectionHeader("Computer Skills"));
     computerSkills.forEach(skill => {
       if (skill.hasTraining) {
-        sections.push(new Paragraph({
-          children: [
-            new TextRun({ text: "❖ ", color: theme.primaryColor.replace('#', ''), size: 18 }),
-            new TextRun({ text: `Completed a ${skill.duration} computer training program from ${skill.instituteName}.`, size: 21 }),
-          ],
-        }));
+        mainContent.push(createBulletParagraph(`Completed a ${skill.duration} computer training program from ${skill.instituteName}.`));
       }
       if (skill.skills.length > 0) {
-        sections.push(new Paragraph({
-          children: [
-            new TextRun({ text: "❖ ", color: theme.primaryColor.replace('#', ''), size: 18 }),
-            new TextRun({ text: `Proficient in ${skill.skills.join(', ')}, etc,`, size: 21 }),
-          ],
-        }));
+        mainContent.push(createBulletParagraph(`Proficient in ${skill.skills.join(', ')}, etc.`));
       }
     });
   }
 
-  // Job Experience
+  // Experience
   if (selectedSections.includes('workExperience') && workExperience.length > 0) {
-    sections.push(...createSectionHeader("Job Experience"));
+    mainContent.push(...createSectionHeader("Experience"));
     workExperience.forEach(work => {
-      sections.push(new Paragraph({
-        children: [
-          new TextRun({ text: "❖ ", color: theme.primaryColor.replace('#', ''), size: 18 }),
-          new TextRun({ text: "Worked as a ", size: 21 }),
-          new TextRun({ text: work.position, bold: true, size: 21 }),
-          new TextRun({ text: " at ", size: 21 }),
-          new TextRun({ text: work.companyName, bold: true, size: 21 }),
-          new TextRun({ text: ` for ${work.duration}`, size: 21 }),
-        ],
-      }));
+      mainContent.push(createBulletParagraph(`${work.position} at ${work.companyName} (${work.duration})`, true));
       if (work.description) {
-        sections.push(new Paragraph({
-          indent: { left: 720 },
-          children: [new TextRun({ text: work.description, italics: true, size: 20 })],
+        mainContent.push(new Paragraph({
+          indent: { left: 400 },
+          children: [new TextRun({ text: work.description, italics: true, size: (theme.fontSize - 1) * 2 })],
+          spacing: { line: spacingTwips },
         }));
       }
     });
   }
 
-  // Language Proficiency
+  // Languages
   if (selectedSections.includes('languageProficiency') && languageProficiency.length > 0) {
-    sections.push(...createSectionHeader("Language Proficiency"));
-    languageProficiency.forEach(lang => {
-      sections.push(new Paragraph({
-        children: [
-          new TextRun({ text: "❖ ", color: theme.primaryColor.replace('#', ''), size: 18 }),
-          new TextRun({ text: lang, size: 21 }),
-        ],
-      }));
-    });
-  }
-
-  // Self Assessment
-  if (selectedSections.includes('selfAssessment') && selfAssessment.length > 0) {
-    sections.push(...createSectionHeader("Self-Assessment"));
-    selfAssessment.forEach(item => {
-      sections.push(new Paragraph({
-        children: [
-          new TextRun({ text: "❖ ", color: theme.primaryColor.replace('#', ''), size: 18 }),
-          new TextRun({ text: item, size: 21 }),
-        ],
-      }));
-    });
+    mainContent.push(...createSectionHeader("Languages"));
+    languageProficiency.forEach(lang => mainContent.push(createBulletParagraph(lang)));
   }
 
   // Hobbies
   if (selectedSections.includes('hobbies') && hobbies.length > 0) {
-    sections.push(...createSectionHeader("Hobby and Interest"));
-    hobbies.forEach(hobby => {
-      sections.push(new Paragraph({
-        children: [
-          new TextRun({ text: "❖ ", color: theme.primaryColor.replace('#', ''), size: 18 }),
-          new TextRun({ text: hobby, size: 21 }),
-        ],
-      }));
-    });
+    mainContent.push(...createSectionHeader("Hobbies"));
+    hobbies.forEach(hobby => mainContent.push(createBulletParagraph(hobby)));
   }
 
-  // Personal Information
-  if (selectedSections.includes('personalInfo')) {
-    sections.push(...createSectionHeader("Personal Information"));
-    
-    const formatDate = (dateStr: string) => {
-      if (!dateStr) return '';
-      const parts = dateStr.split('-');
-      if (parts.length === 3 && parts[0].length === 4) {
-        return `${parts[2]}-${parts[1]}-${parts[0]}`;
-      }
-      return dateStr;
-    };
+  // Personal Info Details
+  const personalFields = [
+    { label: "Name", value: personalInfo.name },
+    { label: "Father’s Name", value: personalInfo.fathersName },
+    { label: "Mother’s Name", value: personalInfo.mothersName },
+    { label: "Date of Birth", value: personalInfo.dob },
+    { label: "Phone", value: personalInfo.phone },
+    { label: "Email", value: personalInfo.email },
+    { label: "Religion", value: personalInfo.religion },
+    { label: "Gender", value: personalInfo.gender },
+    { label: "NID/Birth Reg", value: personalInfo.nid || personalInfo.birthRegNo },
+    { label: "Permanent Address", value: permanentAddressLine },
+  ].filter(f => f.value);
 
-    const personalFields = [
-      { label: "Name", value: personalInfo.name },
-      { label: "Father’s Name", value: personalInfo.fathersName },
-      { label: "Mother’s Name", value: personalInfo.mothersName },
-      { label: "Date of Birth", value: formatDate(personalInfo.dob) },
-      { label: "Nationality", value: personalInfo.nationality },
-      { label: "Religion", value: personalInfo.religion },
-      { label: "Marital Status", value: personalInfo.maritalStatus },
-      { label: "Sex", value: personalInfo.gender },
-      { label: "NID", value: personalInfo.nid },
-      { label: "Birth Registration No", value: personalInfo.birthRegNo },
-      { label: "Blood Group", value: personalInfo.bloodGroup },
-      { label: "Height", value: personalInfo.heightFeet || personalInfo.heightInches ? `${personalInfo.heightFeet || '0'}' ${personalInfo.heightInches || '0'}"` : '' },
-      { label: "Weight", value: personalInfo.weight ? `${personalInfo.weight} Kg` : '' },
-      { label: "Permanent Address", value: permanentAddressLine },
-      { label: "Present Address", value: presentAddressLine },
-    ].filter(f => f.value);
-
-    const tableRows = personalFields.map(field => new TableRow({
+  const personalTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: { 
+      top: { style: BorderStyle.NONE }, 
+      bottom: { style: BorderStyle.NONE }, 
+      left: { style: BorderStyle.NONE }, 
+      right: { style: BorderStyle.NONE },
+      insideHorizontal: { style: BorderStyle.NONE },
+      insideVertical: { style: BorderStyle.NONE }
+    },
+    rows: personalFields.map(field => new TableRow({
       children: [
         new TableCell({
-          width: { size: 30, type: WidthType.PERCENTAGE },
-          borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ children: [new TextRun({ text: field.label, bold: true, size: 21 })] })],
+          width: { size: 35, type: WidthType.PERCENTAGE },
+          children: [new Paragraph({ children: [new TextRun({ text: field.label, bold: true, size: (theme.fontSize - 1) * 2 })], spacing: { line: spacingTwips } })],
         }),
         new TableCell({
-          width: { size: 5, type: WidthType.PERCENTAGE },
-          borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ children: [new TextRun({ text: ":", size: 21 })] })],
-        }),
-        new TableCell({
-          width: { size: 65, type: WidthType.PERCENTAGE },
-          borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ children: [new TextRun({ text: field.value, size: 21 })] })],
+          children: [new Paragraph({ children: [new TextRun({ text: `: ${field.value}`, size: (theme.fontSize - 1) * 2 })], spacing: { line: spacingTwips } })],
         }),
       ],
-    }));
+    })),
+  });
 
-    sections.push(new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE }, insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE } },
-      rows: tableRows,
-    }));
+  if (!isSidebarTemplate) {
+    mainContent.push(...createSectionHeader("Personal Details"));
+    mainContent.push(personalTable);
   }
 
   // Declaration
   if (selectedSections.includes('declaration') && declaration) {
-    sections.push(...createSectionHeader("Certification"));
-    sections.push(new Paragraph({
-      children: [new TextRun({ text: declaration, size: 21 })],
+    mainContent.push(...createSectionHeader("Declaration"));
+    mainContent.push(new Paragraph({
+      children: [new TextRun({ text: declaration, size: theme.fontSize * 2 })],
       alignment: AlignmentType.JUSTIFIED,
+      spacing: { line: spacingTwips },
     }));
-    sections.push(new Paragraph({
-      children: [new TextRun({ text: "Signature", bold: true, size: 21 })],
+    mainContent.push(new Paragraph({
+      children: [new TextRun({ text: "Signature", bold: true, underline: {}, size: theme.fontSize * 2 })],
       spacing: { before: 800 },
     }));
-    sections.push(new Paragraph({
-      children: [new TextRun({ text: `(${personalInfo.name || 'Your Name'})`, size: 21 })],
+    mainContent.push(new Paragraph({
+      children: [new TextRun({ text: `(${personalInfo.name || 'Your Name'})`, size: (theme.fontSize - 1) * 2 })],
     }));
   }
 
-  // Watermark
-  sections.push(new Paragraph({
-    children: [
-      new TextRun({ 
-        text: "This Cv Was Build from Maksud Computer", 
-        size: 16, 
-        italics: true, 
-        color: "999999" 
+  // FINAL DOCUMENT STRUCTURE
+  let docSections = [];
+
+  if (isSidebarTemplate) {
+    // Two column layout
+    const leftColumn = [];
+    const sidebarBg = theme.headerStyle === 'black' ? '000000' : theme.primaryColor.replace('#', '');
+    const sidebarTextColor = (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? (theme.primaryColor === '#ffd700' && theme.headerStyle === 'primary' ? '000000' : 'FFFFFF') : 'FFFFFF';
+
+    leftColumn.push(new Paragraph({
+      children: [new TextRun({ text: "CONTACT", bold: true, color: sidebarTextColor, size: 24 })],
+      spacing: { before: 200, after: 100 },
+    }));
+    leftColumn.push(new Paragraph({ children: [new TextRun({ text: personalInfo.phone, color: sidebarTextColor, size: 18 })] }));
+    leftColumn.push(new Paragraph({ children: [new TextRun({ text: personalInfo.email, color: sidebarTextColor, size: 18 })] }));
+    leftColumn.push(new Paragraph({ children: [new TextRun({ text: presentAddressLine, color: sidebarTextColor, size: 18 })] }));
+
+    leftColumn.push(new Paragraph({
+      children: [new TextRun({ text: "PERSONAL", bold: true, color: sidebarTextColor, size: 24 })],
+      spacing: { before: 400, after: 100 },
+    }));
+    personalFields.forEach(f => {
+      leftColumn.push(new Paragraph({ children: [new TextRun({ text: `${f.label}:`, bold: true, color: sidebarTextColor, size: 16 })] }));
+      leftColumn.push(new Paragraph({ children: [new TextRun({ text: f.value, color: sidebarTextColor, size: 16 })] }));
+    });
+
+    const sidebarContentTable = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: BorderStyle.NONE as any,
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              width: { size: 30, type: WidthType.PERCENTAGE },
+              shading: { fill: sidebarBg },
+              children: leftColumn,
+              margins: { left: 200, right: 200, top: 200, bottom: 200 },
+            }),
+            new TableCell({
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: personalInfo.name.toUpperCase() || "YOUR NAME", bold: true, color: theme.primaryColor.replace('#', ''), size: 40 })],
+                  spacing: { after: 400 },
+                }),
+                ...mainContent,
+              ],
+              margins: { left: 400, right: 200, top: 200 },
+            }),
+          ],
+        }),
+      ],
+    });
+    docSections = [sidebarContentTable];
+  } else {
+    // Classic Header
+    const headerBg = theme.headerStyle === 'black' ? '000000' : (theme.headerStyle === 'primary' ? theme.primaryColor.replace('#', '') : null);
+    const headerTextColor = headerBg ? (theme.primaryColor === '#ffd700' && theme.headerStyle === 'primary' ? '000000' : 'FFFFFF') : theme.primaryColor.replace('#', '');
+
+    const isElegant = theme.templateId === 'classic-elegant';
+    const isSmartClassic = theme.templateId === 'smart-classic';
+
+    const classicHeaderContent = [
+      new Paragraph({
+        children: [new TextRun({ text: "CURRICULUM VITAE", color: headerTextColor, bold: true, size: 36 })],
+        alignment: isElegant ? AlignmentType.CENTER : AlignmentType.LEFT,
+        border: isElegant ? { bottom: { color: theme.primaryColor.replace('#', ''), size: 24, style: BorderStyle.DOUBLE } } : undefined
       }),
-    ],
+      new Paragraph({
+        children: [new TextRun({ text: `OF ${personalInfo.name.toUpperCase() || 'YOUR NAME'}`, color: headerTextColor, bold: true, size: 36 })],
+        alignment: isElegant ? AlignmentType.CENTER : AlignmentType.LEFT,
+      }),
+      new Paragraph({
+        children: [new TextRun({ text: presentAddressLine, size: 22, color: headerBg ? 'FFFFFF' : '000000' })],
+        alignment: isElegant ? AlignmentType.CENTER : AlignmentType.LEFT,
+        spacing: { before: 200 },
+      }),
+    ];
+
+    if (isSmartClassic) {
+      docSections.push(new Paragraph({
+        shading: { fill: theme.primaryColor.replace('#', '') },
+        children: [new TextRun({ text: " ", size: 10 })]
+      }));
+    }
+
+    if (headerBg) {
+      docSections.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: BorderStyle.NONE as any,
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({
+                  shading: { fill: headerBg },
+                  margins: { left: 200, right: 200, top: 200, bottom: 200 },
+                  children: classicHeaderContent,
+                })
+              ]
+            })
+          ]
+        })
+      );
+    } else {
+      docSections.push(...classicHeaderContent);
+    }
+    docSections.push(...mainContent);
+  }
+
+  // Watermark
+  docSections.push(new Paragraph({
+    children: [new TextRun({ text: "Generated by Maksud Computer CV Builder", size: 14, italics: true, color: "999999" })],
     alignment: AlignmentType.CENTER,
     spacing: { before: 1000 },
   }));
 
   const doc = new Document({
-    sections: [
-      {
-        properties: {},
-        children: [
-          ...headerParagraphs,
-          ...sections,
-        ],
-      },
-    ],
+    sections: [{ children: docSections }],
   });
 
   const blob = await Packer.toBlob(doc);

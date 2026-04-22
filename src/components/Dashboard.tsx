@@ -31,24 +31,39 @@ import {
   CreditCard,
   Send,
   X,
-  Bot
+  Bot,
+  Globe,
+  ArrowRightLeft
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { cn } from '../lib/utils';
 import { useSecurity } from './SecurityGate';
 import { db } from '../lib/firebase';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { Language, translations } from '../lib/translations';
 
 interface DashboardProps {
-  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'intelligent-ai', cost: number) => void;
+  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'intelligent-ai' | 'converter' | 'inheritance', cost: number) => void;
   onAdminLogin: () => void;
+  uiTheme: 'light' | 'dark' | 'golden';
+  onThemeChange: (theme: 'light' | 'dark' | 'golden') => void;
+  language: Language;
+  onLanguageChange: (lang: Language) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ 
+  onSelectTool, 
+  onAdminLogin, 
+  uiTheme, 
+  onThemeChange,
+  language,
+  onLanguageChange
+}) => {
   const { coins, userName, isAuthorized, logout, freeTrialUsed, isFreeAccess, activateFreeAccess, error, activeKey } = useSecurity();
   const [showFreeSuccess, setShowFreeSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<'tools' | 'pricing'>('tools');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const t = translations[language];
   const [paymentData, setPaymentData] = useState({
     amount: '',
     transactionId: '',
@@ -63,16 +78,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     const hour = new Date().getHours();
     const name = userName ? `, ${userName}` : '';
     
-    if (hour < 12) return `Good Morning${name}!`;
-    if (hour < 18) return `Good Afternoon${name}!`;
-    return `Good Evening${name}!`;
-  }, [userName]);
+    let base = t.dashboard.welcomeMorning;
+    if (hour >= 12 && hour < 18) base = t.dashboard.welcomeAfternoon;
+    else if (hour >= 18) base = t.dashboard.welcomeEvening;
+    
+    return `${base}${name}!`;
+  }, [userName, t]);
 
   const tools = [
     {
       id: 'intelligent-ai',
-      name: 'Maksud Intelligent AI',
-      description: 'Advanced AI Chat powered by Gemini 1.5 Flash.',
+      name: t.dashboard.tools.ai,
+      description: t.dashboard.toolDescriptions.ai,
       icon: <Bot className="text-indigo-600" />,
       color: 'bg-indigo-50',
       hoverColor: 'hover:bg-indigo-100',
@@ -82,8 +99,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'cv',
-      name: 'CV Builder',
-      description: 'Create professional CVs with multiple templates.',
+      name: t.dashboard.tools.cv,
+      description: t.dashboard.toolDescriptions.cv,
       icon: <FileText className="text-blue-600" />,
       color: 'bg-blue-50',
       hoverColor: 'hover:bg-blue-100',
@@ -93,8 +110,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'editor',
-      name: 'Photo Editor',
-      description: 'AI Background removal, upscaling & retouching.',
+      name: t.dashboard.tools.photoEditor,
+      description: t.dashboard.toolDescriptions.photoEditor,
       icon: <ImageIcon className="text-indigo-600" />,
       color: 'bg-indigo-50',
       hoverColor: 'hover:bg-indigo-100',
@@ -104,8 +121,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'bg-remover',
-      name: 'BG Remover',
-      description: 'Remove background from any image instantly.',
+      name: t.dashboard.tools.bgRemover,
+      description: t.dashboard.toolDescriptions.bgRemover,
       icon: <Sparkles className="text-amber-600" />,
       color: 'bg-amber-50',
       hoverColor: 'hover:bg-amber-100',
@@ -115,8 +132,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'resizer',
-      name: 'Photo Resizer',
-      description: 'Crop and resize by pixels or inches.',
+      name: t.dashboard.tools.resizer,
+      description: t.dashboard.toolDescriptions.resizer,
       icon: <Layout className="text-purple-600" />,
       color: 'bg-purple-50',
       hoverColor: 'hover:bg-purple-100',
@@ -126,8 +143,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'pdf',
-      name: 'PDF Editor',
-      description: 'Import, edit text and images in PDF files.',
+      name: t.dashboard.tools.pdfEditor,
+      description: t.dashboard.toolDescriptions.pdfEditor,
       icon: <FileEdit className="text-red-600" />,
       color: 'bg-red-50',
       hoverColor: 'hover:bg-red-100',
@@ -137,8 +154,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'pdf-to-img',
-      name: 'PDF to Image',
-      description: 'Convert PDF pages to high-quality images.',
+      name: t.dashboard.tools.pdfToImg,
+      description: t.dashboard.toolDescriptions.pdfToImg,
       icon: <FileImage className="text-orange-600" />,
       color: 'bg-orange-50',
       hoverColor: 'hover:bg-orange-100',
@@ -148,8 +165,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'pdf-to-word',
-      name: 'PDF to Word',
-      description: 'Extract text from PDF to Word document.',
+      name: t.dashboard.tools.pdfToWord,
+      description: t.dashboard.toolDescriptions.pdfToWord,
       icon: <FileType className="text-blue-600" />,
       color: 'bg-blue-50',
       hoverColor: 'hover:bg-blue-100',
@@ -159,8 +176,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'pdf-compress',
-      name: 'PDF Compress',
-      description: 'Reduce PDF file size without losing quality.',
+      name: t.dashboard.tools.pdfCompress,
+      description: t.dashboard.toolDescriptions.pdfCompress,
       icon: <FileArchive className="text-emerald-600" />,
       color: 'bg-emerald-50',
       hoverColor: 'hover:bg-emerald-100',
@@ -170,8 +187,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'pdf-merge',
-      name: 'PDF Merge',
-      description: 'Combine multiple PDF files into one.',
+      name: t.dashboard.tools.pdfMerge,
+      description: t.dashboard.toolDescriptions.pdfMerge,
       icon: <Files className="text-rose-600" />,
       color: 'bg-rose-50',
       hoverColor: 'hover:bg-rose-100',
@@ -181,8 +198,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'img-to-pdf',
-      name: 'Image to PDF',
-      description: 'Convert images into a professional PDF.',
+      name: t.dashboard.tools.imgToPdf,
+      description: t.dashboard.toolDescriptions.imgToPdf,
       icon: <ImagePlus className="text-cyan-600" />,
       color: 'bg-cyan-50',
       hoverColor: 'hover:bg-cyan-100',
@@ -192,8 +209,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
     },
     {
       id: 'age',
-      name: 'Age Calculator',
-      description: 'Calculate exact age and next birthday.',
+      name: t.dashboard.tools.ageCalc,
+      description: t.dashboard.toolDescriptions.ageCalc,
       icon: <Calculator className="text-green-600" />,
       color: 'bg-green-50',
       hoverColor: 'hover:bg-green-100',
@@ -202,46 +219,63 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
       cost: 0
     },
     {
-      id: 'about',
-      name: 'About Us',
-      description: 'Learn more about Maksud Computer.',
-      icon: <Users className="text-gray-600" />,
-      color: 'bg-gray-50',
-      hoverColor: 'hover:bg-gray-100',
-      borderColor: 'border-gray-100',
+      id: 'inheritance',
+      name: t.dashboard.tools.inheritance,
+      description: t.dashboard.toolDescriptions.inheritance,
+      icon: <Users className="text-purple-600" />,
+      color: 'bg-purple-50',
+      hoverColor: 'hover:bg-purple-100',
+      borderColor: 'border-purple-100',
+      size: 'small',
+      cost: 0
+    },
+    {
+      id: 'converter',
+      name: t.dashboard.tools.converter,
+      description: t.dashboard.toolDescriptions.converter,
+      icon: <ArrowRightLeft className="text-emerald-600" />,
+      color: 'bg-emerald-50',
+      hoverColor: 'hover:bg-emerald-100',
+      borderColor: 'border-emerald-100',
       size: 'small',
       cost: 0
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className={cn(
+      "min-h-screen transition-colors duration-300",
+      uiTheme === 'light' ? "bg-[#f8fafc]" : (uiTheme === 'dark' ? "bg-slate-950 text-slate-100" : "bg-[#121212] text-amber-100")
+    )}>
       {/* Premium Banner */}
-      <div className="bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white py-3 px-4">
+      <div className={cn(
+        "py-3 px-4",
+        uiTheme === 'golden' ? "bg-gradient-to-r from-amber-700 to-amber-900 border-b border-amber-500/30" : "bg-gradient-to-r from-indigo-600 to-fuchsia-600"
+      )}>
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-1.5 rounded-lg">
               <Crown size={18} className="text-amber-300" />
             </div>
-            <p className="text-sm font-bold tracking-wide">
-              GET PREMIUM ACCESS: <span className="text-amber-300 ml-2">01622638268</span> | <span className="text-amber-300">maksudjr2020@gmail.com</span>
+            <p className="text-sm font-bold tracking-wide text-white lowercase">
+              {t.dashboard.premiumBanner} <span className="text-amber-300 ml-2 uppercase">01622638268</span> | <span className="text-amber-300 uppercase">maksudjr2020@gmail.com</span>
             </p>
           </div>
           <div className="flex items-center gap-4">
             <button 
               onClick={onAdminLogin}
-              className="px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
+              className="px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 text-white"
             >
               <Settings size={14} />
-              Admin Login
+              {t.dashboard.adminLogin}
             </button>
             {isAuthorized && (
               <button 
                 onClick={logout}
-                className="px-4 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                className="px-4 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 text-white"
               >
                 <LogOut size={14} />
-                Logout
+                {t.dashboard.logout}
               </button>
             )}
           </div>
@@ -257,8 +291,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                 <Gift size={20} />
               </div>
               <div>
-                <p className="text-sm font-black text-slate-900">New User? Get Free Access!</p>
-                <p className="text-xs font-medium text-slate-500">Includes 1 CV and 2 uses of all other tools.</p>
+                <p className="text-sm font-black text-slate-900">{t.dashboard.newUserGift}</p>
+                <p className="text-xs font-medium text-slate-500">{t.dashboard.newUserInfo}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -272,7 +306,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                 }}
                 className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black text-sm shadow-lg shadow-amber-200 transition-all flex items-center gap-2 group"
               >
-                Get Free Access
+                {t.dashboard.getFreeAccess}
                 <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
@@ -300,7 +334,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
               >
                 <div className="bg-emerald-500 text-white p-3 rounded-xl flex items-center gap-3 font-black text-sm">
                   <CheckCircle2 size={18} />
-                  Congratulations! You have got free access.
+                  {t.dashboard.freeAccessSuccess}
                 </div>
               </motion.div>
             )}
@@ -309,33 +343,96 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
       )}
 
       {/* Modern Header */}
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
+      <header className={cn(
+        "sticky top-0 z-50 border-b transition-all duration-300",
+        uiTheme === 'light' ? "bg-white/80 backdrop-blur-md border-slate-200" : 
+        uiTheme === 'dark' ? "bg-slate-900/80 backdrop-blur-md border-slate-800" :
+        "bg-[#1a1a1a]/80 backdrop-blur-md border-amber-900/30"
+      )}>
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo className="w-12 h-12" />
             <div>
-              <h2 className="text-xl font-black text-slate-900 leading-none">MAKSUD</h2>
-              <p className="text-[10px] font-bold text-indigo-600 tracking-[0.2em] uppercase mt-1">Computers</p>
+              <h2 className={cn("text-xl font-black leading-none", uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'dark' ? "text-white" : "text-amber-500"))}>MAKSUD</h2>
+              <p className={cn("text-[10px] font-bold tracking-[0.2em] uppercase mt-1", uiTheme === 'golden' ? "text-amber-600" : "text-indigo-600")}>Computers</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-8">
             <nav className="flex items-center gap-6">
               <button 
                 onClick={() => setActiveTab('tools')}
-                className={cn("text-sm font-bold transition-colors", activeTab === 'tools' ? "text-indigo-600" : "text-slate-600 hover:text-indigo-600")}
+                className={cn("text-sm font-bold transition-colors", 
+                  activeTab === 'tools' ? (uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600") : 
+                  (uiTheme === 'light' ? "text-slate-600 hover:text-indigo-600" : "text-slate-400 hover:text-white"))}
               >
-                Home
+                {t.dashboard.home}
               </button>
               <button 
                 onClick={() => setActiveTab('pricing')}
-                className={cn("text-sm font-bold transition-colors", activeTab === 'pricing' ? "text-indigo-600" : "text-slate-600 hover:text-indigo-600")}
+                className={cn("text-sm font-bold transition-colors", 
+                  activeTab === 'pricing' ? (uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600") : 
+                  (uiTheme === 'light' ? "text-slate-600 hover:text-indigo-600" : "text-slate-400 hover:text-white"))}
               >
-                Pricing
+                {t.dashboard.pricing}
               </button>
-              <a href="#" onClick={() => onSelectTool('about')} className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">About</a>
             </nav>
-            <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all">
-              Contact Us
+
+            {/* Language Switcher */}
+            <div className={cn("flex items-center p-1 rounded-full border", 
+              uiTheme === 'light' ? "bg-slate-100 border-slate-200" : 
+              uiTheme === 'dark' ? "bg-slate-800 border-slate-700" : 
+              "bg-amber-950 border-amber-900")}>
+              <button 
+                onClick={() => onLanguageChange('en')}
+                className={cn("px-2 py-1 rounded-full text-[10px] font-black transition-all", language === 'en' ? (uiTheme === 'golden' ? "bg-amber-600 text-white" : "bg-white text-indigo-600 shadow-sm") : "text-slate-500 hover:text-slate-700")}
+              >
+                EN
+              </button>
+              <button 
+                onClick={() => onLanguageChange('bn')}
+                className={cn("px-2 py-1 rounded-full text-[10px] font-black transition-all", language === 'bn' ? (uiTheme === 'golden' ? "bg-amber-600 text-white" : "bg-white text-indigo-600 shadow-sm") : "text-slate-500 hover:text-slate-700")}
+              >
+                BN
+              </button>
+            </div>
+
+            {/* Theme Switcher */}
+            <div className={cn("flex items-center p-1 rounded-full border", 
+              uiTheme === 'light' ? "bg-slate-100 border-slate-200" : 
+              uiTheme === 'dark' ? "bg-slate-800 border-slate-700" : 
+              "bg-amber-950 border-amber-900")}>
+              <button 
+                onClick={() => onThemeChange('light')}
+                className={cn("p-1.5 rounded-full transition-all", uiTheme === 'light' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-white")}
+                title="Light Mode"
+              >
+                <Monitor size={14} />
+              </button>
+              <button 
+                onClick={() => onThemeChange('dark')}
+                className={cn("p-1.5 rounded-full transition-all", uiTheme === 'dark' ? "bg-indigo-600 text-white shadow-sm" : "text-slate-500 hover:text-white")}
+                title="Dark Mode"
+              >
+                <Zap size={14} />
+              </button>
+              <button 
+                onClick={() => onThemeChange('golden')}
+                className={cn("p-1.5 rounded-full transition-all", uiTheme === 'golden' ? "bg-amber-600 text-white shadow-sm" : "text-slate-500 hover:text-amber-500")}
+                title="Golden Mode"
+              >
+                <Crown size={14} />
+              </button>
+            </div>
+
+            <button 
+              onClick={() => onSelectTool('about', 0)}
+              className={cn(
+                "px-5 py-2.5 rounded-full text-sm font-bold shadow-lg transition-all",
+                uiTheme === 'golden' ? "bg-amber-600 text-white shadow-amber-950 hover:bg-amber-700" : 
+                "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700"
+              )}
+            >
+              {t.dashboard.contactUs}
             </button>
           </div>
         </div>
@@ -350,41 +447,45 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
             className="flex flex-col md:flex-row md:items-end justify-between gap-6"
           >
             <div>
-              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
+              <h1 className={cn("text-4xl md:text-5xl font-black tracking-tight mb-4", 
+                uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'dark' ? "text-white" : "text-amber-500"))}>
                 {welcomeMessage}
               </h1>
-              <p className="text-lg text-slate-500 max-w-xl font-medium">
-                Your professional digital workspace. Everything you need to create, edit, and manage your digital assets in one place.
+              <p className={cn("text-lg max-w-xl font-medium", uiTheme === 'light' ? "text-slate-500" : "text-slate-400")}>
+                {t.dashboard.workspaceTitle}
               </p>
             </div>
             <div className="flex flex-col gap-4">
               {isAuthorized && (
-                <div className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-2">
+                <div className={cn("px-4 py-2 rounded-xl shadow-lg flex items-center gap-2", 
+                  uiTheme === 'golden' ? "bg-amber-700 text-white" : "bg-indigo-600 text-white")}>
                   <ShieldCheck size={16} />
                   <span className="text-xs font-black uppercase tracking-widest">Your Key: {activeKey}</span>
                 </div>
               )}
-              <div className="flex items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-                <div className="px-4 py-2 bg-indigo-50 rounded-xl">
-                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Active Tools</p>
-                  <p className="text-xl font-black text-indigo-900">12</p>
+              <div className={cn("flex items-center gap-4 p-2 rounded-2xl shadow-sm border", 
+                uiTheme === 'light' ? "bg-white border-slate-100" : (uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : "bg-[#1a1a1a] border-amber-900/30"))}>
+                <div className={cn("px-4 py-2 rounded-xl", uiTheme === 'golden' ? "bg-amber-950" : "bg-indigo-50")}>
+                  <p className={cn("text-[10px] font-bold uppercase tracking-wider", uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600")}>{t.dashboard.activeTools}</p>
+                  <p className={cn("text-xl font-black", uiTheme === 'golden' ? "text-amber-200" : "text-indigo-900")}>13</p>
                 </div>
-                <div className="px-4 py-2 bg-emerald-50 rounded-xl">
-                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Status</p>
-                  <p className="text-xl font-black text-emerald-900">Online</p>
+                <div className={cn("px-4 py-2 rounded-xl", uiTheme === 'golden' ? "bg-emerald-950/30" : "bg-emerald-50")}>
+                  <p className={cn("text-[10px] font-bold uppercase tracking-wider", uiTheme === 'golden' ? "text-emerald-500" : "text-emerald-600")}>{t.dashboard.status}</p>
+                  <p className={cn("text-xl font-black", uiTheme === 'golden' ? "text-emerald-200" : "text-emerald-900")}>{t.dashboard.online}</p>
                 </div>
               </div>
               
               {isAuthorized && (
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 min-w-[240px] w-fit">
+                <div className={cn("p-4 rounded-2xl shadow-sm border min-w-[240px] w-fit", 
+                  uiTheme === 'light' ? "bg-white border-slate-100" : (uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : "bg-[#1a1a1a] border-amber-900/30"))}>
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2">
                       <CoinsIcon size={16} className="text-amber-500" />
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        {isFreeAccess ? "Free Access Usage" : "Coin Usages"}
+                        {isFreeAccess ? t.dashboard.freeTrial : t.dashboard.coinUsage}
                       </p>
                     </div>
-                    <p className="text-[10px] font-bold text-indigo-600">
+                    <p className={cn("text-[10px] font-bold", uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600")}>
                       {isFreeAccess ? (coins > 0 ? "1 COIN" : "EXPIRED") : `${coins.toFixed(2)} Coins`}
                     </p>
                   </div>
@@ -392,12 +493,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                   {isFreeAccess ? (
                     <div className="space-y-2">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-                        You have 1 free coin. Use it for 1 CV or 2 other tools.
+                        {t.dashboard.freeAccountNotice}
                       </p>
                     </div>
                   ) : (
                     <>
-                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div className={cn("w-full h-2 rounded-full overflow-hidden", uiTheme === 'light' ? "bg-slate-100" : "bg-slate-800")}>
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.min((coins / 50) * 100, 100)}%` }}
@@ -409,7 +510,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                       </div>
                       {!freeTrialUsed && (
                         <p className="text-[9px] font-black text-emerald-600 mt-2 uppercase tracking-widest">
-                          ✨ 1 Free Use Available
+                          ✨ {t.dashboard.freeUseAvailable}
                         </p>
                       )}
                     </>
@@ -431,37 +532,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                 transition={{ delay: index * 0.05 }}
                 onClick={() => onSelectTool(tool.id as any, tool.cost || 0)}
                 className={cn(
-                  "group relative cursor-pointer bg-white rounded-[2rem] border border-slate-200 p-8 transition-all hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-100 active:scale-[0.98]",
+                  "group relative cursor-pointer rounded-[2rem] border p-8 transition-all active:scale-[0.98]",
+                  uiTheme === 'light' ? "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-100" : 
+                  uiTheme === 'dark' ? "bg-slate-900 border-slate-800 hover:border-slate-700 hover:shadow-2xl hover:shadow-slate-950/50" :
+                  "bg-[#1a1a1a] border-amber-900/30 hover:border-amber-600/50 hover:shadow-2xl hover:shadow-amber-950/50",
                   tool.size === 'large' ? "md:col-span-2 md:row-span-2" : 
                   tool.size === 'medium' ? "md:col-span-2" : "md:col-span-1"
                 )}
               >
                 <div className={cn(
                   "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 group-hover:rotate-3",
-                  tool.color
+                  uiTheme === 'golden' ? "bg-amber-900/20" : tool.color
                 )}>
-                  {React.cloneElement(tool.icon as React.ReactElement, { size: 28 })}
+                  {React.cloneElement(tool.icon as React.ReactElement, { 
+                    size: 28,
+                    className: uiTheme === 'golden' ? "text-amber-500" : (tool.icon as any).props.className
+                  })}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <h3 className={cn("text-xl font-black flex items-center gap-2", 
+                      uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'dark' ? "text-white" : "text-amber-200"))}>
                       {tool.name}
                       {tool.id === 'cv' && <Sparkles size={16} className="text-amber-500 animate-pulse" />}
                     </h3>
                     {tool.cost > 0 ? (
-                      <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
+                      <div className={cn("flex items-center gap-1 px-2 py-1 rounded-lg", 
+                        uiTheme === 'light' ? "bg-slate-50" : "bg-slate-800")}>
                         <CoinsIcon size={12} className="text-amber-500" />
-                        <span className="text-[10px] font-black text-slate-600">{tool.cost}</span>
+                        <span className={cn("text-[10px] font-black", uiTheme === 'light' ? "text-slate-600" : "text-slate-400")}>{tool.cost}</span>
                       </div>
                     ) : (
                       <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Free</span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                  <p className={cn("text-sm font-medium leading-relaxed", 
+                    uiTheme === 'light' ? "text-slate-500" : "text-slate-400")}>
                     {tool.description}
                   </p>
                 </div>
-                <div className="absolute bottom-8 right-8 w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                <div className={cn("absolute bottom-8 right-8 w-10 h-10 rounded-full flex items-center justify-center transition-all", 
+                  uiTheme === 'light' ? "bg-slate-50 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white" : 
+                  uiTheme === 'dark' ? "bg-slate-800 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white" :
+                  "bg-amber-950 text-amber-900 group-hover:bg-amber-600 group-hover:text-white")}>
                   <ChevronRight size={20} />
                 </div>
               </motion.div>
@@ -470,8 +583,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
         ) : (
           <div className="space-y-12">
             <div className="text-center max-w-2xl mx-auto">
-              <h2 className="text-3xl font-black text-slate-900 mb-4">Simple, Transparent Pricing</h2>
-              <p className="text-slate-500 font-medium">Choose the coin pack that fits your needs. Coins never expire and can be used for any tool.</p>
+              <h2 className={cn("text-3xl font-black mb-4", uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'dark' ? "text-white" : "text-amber-500"))}>
+                {t.pricing.title}
+              </h2>
+              <p className={cn("font-medium", uiTheme === 'light' ? "text-slate-500" : "text-slate-400")}>
+                {t.pricing.subtitle}
+              </p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -489,50 +606,48 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
                   className={cn(
-                    "relative bg-white rounded-[2.5rem] p-8 border-2 transition-all hover:shadow-2xl",
-                    plan.popular ? "border-indigo-600 shadow-xl shadow-indigo-100 scale-105 z-10" : "border-slate-100 hover:border-indigo-200"
+                    "relative rounded-[2.5rem] p-8 border-2 transition-all",
+                    uiTheme === 'light' ? "bg-white border-slate-100 shadow-sm hover:shadow-xl" : 
+                    uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : 
+                    "bg-[#1a1a1a] border-amber-900/30",
+                    plan.popular ? "border-indigo-600 shadow-xl shadow-indigo-100 scale-105 z-10" : "hover:border-indigo-200"
                   )}
                 >
                   {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                      Most Popular
+                    <div className={cn("absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest", uiTheme === 'golden' ? "bg-amber-600 text-white" : "bg-indigo-600 text-white")}>
+                      {t.pricing.popular}
                     </div>
                   )}
                   <div className="mb-8">
-                    <p className="text-sm font-black text-indigo-600 uppercase tracking-widest mb-2">{plan.label}</p>
+                    <p className={cn("text-sm font-black uppercase tracking-widest mb-2", uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600")}>{plan.label}</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-slate-900">{plan.price}</span>
+                      <span className={cn("text-4xl font-black", uiTheme === 'light' ? "text-slate-900" : "text-white")}>{plan.price}</span>
                       <span className="text-lg font-bold text-slate-400">TK</span>
                     </div>
                   </div>
                   <div className="space-y-4 mb-8">
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
-                        <CheckCircle2 size={14} />
-                      </div>
-                      <p className="text-sm font-bold text-slate-600">{plan.coins} Coins</p>
+                      <div className="w-6 h-6 bg-emerald-100/20 rounded-full flex items-center justify-center text-emerald-500 font-bold">✓</div>
+                      <p className={cn("text-sm font-bold", uiTheme === 'light' ? "text-slate-600" : "text-slate-400")}>{plan.coins} {t.pricing.features.coins}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
-                        <CheckCircle2 size={14} />
-                      </div>
-                      <p className="text-sm font-bold text-slate-600">All Tools Access</p>
+                      <div className="w-6 h-6 bg-emerald-100/20 rounded-full flex items-center justify-center text-emerald-500 font-bold">✓</div>
+                      <p className={cn("text-sm font-bold", uiTheme === 'light' ? "text-slate-600" : "text-slate-400")}>{t.pricing.features.access}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
-                        <CheckCircle2 size={14} />
-                      </div>
-                      <p className="text-sm font-bold text-slate-600">No Expiry</p>
+                      <div className="w-6 h-6 bg-emerald-100/20 rounded-full flex items-center justify-center text-emerald-500 font-bold">✓</div>
+                      <p className={cn("text-sm font-bold", uiTheme === 'light' ? "text-slate-600" : "text-slate-400")}>{t.pricing.features.expiry}</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setShowPaymentForm(true)}
                     className={cn(
                       "w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2",
-                      plan.popular ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200" : "bg-slate-50 text-slate-900 hover:bg-slate-100"
+                      plan.popular ? (uiTheme === 'golden' ? "bg-amber-600" : "bg-indigo-600") + " text-white hover:opacity-90 shadow-lg" : 
+                      (uiTheme === 'light' ? "bg-slate-50 text-slate-900 hover:bg-slate-100" : "bg-slate-800 text-white hover:bg-slate-700")
                     )}
                   >
-                    Add Coins
+                    {t.pricing.addCoins}
                     <CreditCard size={18} />
                   </button>
                 </motion.div>
@@ -551,7 +666,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="max-w-2xl w-full bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 p-8 md:p-12 relative my-8"
+              className={cn(
+                "max-w-2xl w-full rounded-[2.5rem] shadow-2xl border p-8 md:p-12 relative my-8",
+                uiTheme === 'light' ? "bg-white border-slate-100" : (uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : "bg-[#1a1a1a] border-amber-900/30")
+              )}
             >
               <button 
                 onClick={() => setShowPaymentForm(false)}
@@ -561,39 +679,35 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
               </button>
 
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white">
+                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white", uiTheme === 'golden' ? "bg-amber-600" : "bg-indigo-600")}>
                   <CreditCard size={24} />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900">Payment Instructions</h2>
-                  <p className="text-sm font-medium text-slate-500 tracking-wide">Follow the steps below to add coins</p>
+                  <h2 className={cn("text-2xl font-black", uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'dark' ? "text-white" : "text-amber-500"))}>{t.pricing.payment.title}</h2>
+                  <p className="text-sm font-medium text-slate-500 tracking-wide">{t.pricing.payment.subtitle}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                 <div className="space-y-6">
-                  <div className="p-6 bg-pink-50 rounded-3xl border border-pink-100">
+                  <div className={cn("p-6 rounded-3xl border", uiTheme === 'golden' ? "bg-amber-950/20 border-amber-900/30" : "bg-pink-50 border-pink-100")}>
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-pink-500 rounded-xl flex items-center justify-center text-white font-black">1</div>
-                      <p className="text-sm font-black text-pink-900 uppercase tracking-widest">bKash Payment</p>
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-white font-black", uiTheme === 'golden' ? "bg-amber-600" : "bg-pink-500")}>1</div>
+                      <p className={cn("text-sm font-black uppercase tracking-widest", uiTheme === 'golden' ? "text-amber-500" : "text-pink-900")}>{t.pricing.payment.step1}</p>
                     </div>
-                    <ul className="space-y-3 text-sm font-medium text-pink-800">
-                      <li className="flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full mt-1.5" />
-                        Go to bKash App
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full mt-1.5" />
-                        Select "Payment" option
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full mt-1.5" />
-                        Enter Merchant No: <span className="font-black">01868257470</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 bg-pink-400 rounded-full mt-1.5" />
-                        Complete the payment
-                      </li>
+                    <ul className={cn("space-y-3 text-sm font-medium", uiTheme === 'golden' ? "text-amber-200/70" : "text-pink-800")}>
+                      {t.pricing.payment.steps.map((step, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <div className={cn("w-1.5 h-1.5 rounded-full mt-1.5", uiTheme === 'golden' ? "bg-amber-500" : "bg-pink-400")} />
+                          {step === "Enter Merchant No: 01868257470" ? (
+                            <>Enter Merchant No: <span className="font-black">01868257470</span></>
+                          ) : (
+                            language === 'bn' && step.includes("01868257470") ? (
+                             <>মার্চেন্ট নম্বর দিন: <span className="font-black">01868257470</span></>
+                            ) : step
+                          )}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -630,7 +744,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                         placeholder="e.g. 70"
                         value={paymentData.amount}
                         onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold"
+                        className={cn("w-full px-4 py-3 border rounded-xl outline-none transition-all text-sm font-bold", 
+                          uiTheme === 'light' ? "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500" : 
+                          "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-amber-500 text-white")}
                       />
                     </div>
                     <div className="space-y-1">
@@ -641,47 +757,59 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
                         placeholder="017XXXXXXXX"
                         value={paymentData.mobileNo}
                         onChange={(e) => setPaymentData({...paymentData, mobileNo: e.target.value})}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold"
+                        className={cn("w-full px-4 py-3 border rounded-xl outline-none transition-all text-sm font-bold", 
+                          uiTheme === 'light' ? "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500" : 
+                          "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-amber-500 text-white")}
                       />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Transaction ID</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.pricing.payment.form.trxId}</label>
                     <input 
                       required
                       type="text"
                       placeholder="Enter bKash TrxID"
                       value={paymentData.transactionId}
                       onChange={(e) => setPaymentData({...paymentData, transactionId: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold"
+                      className={cn("w-full px-4 py-3 border rounded-xl outline-none transition-all text-sm font-bold", 
+                        uiTheme === 'light' ? "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500" : 
+                        "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-amber-500 text-white")}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.pricing.payment.form.name}</label>
                     <input 
                       required
                       type="text"
                       placeholder="Your Name"
                       value={paymentData.fullName}
                       onChange={(e) => setPaymentData({...paymentData, fullName: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold"
+                      className={cn("w-full px-4 py-3 border rounded-xl outline-none transition-all text-sm font-bold", 
+                        uiTheme === 'light' ? "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500" : 
+                        "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-amber-500 text-white")}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Comments (Optional)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.pricing.payment.form.comments}</label>
                     <textarea 
                       placeholder="Any message..."
                       value={paymentData.comments}
                       onChange={(e) => setPaymentData({...paymentData, comments: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-bold h-20 resize-none"
+                      className={cn("w-full px-4 py-3 border rounded-xl outline-none transition-all text-sm font-bold h-20 resize-none", 
+                        uiTheme === 'light' ? "bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-500" : 
+                        "bg-slate-800 border-slate-700 focus:ring-2 focus:ring-amber-500 text-white")}
                     />
                   </div>
                   <button 
                     disabled={isSubmitting}
                     type="submit"
-                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+                    className={cn(
+                      "w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2",
+                      uiTheme === 'golden' ? "bg-amber-600 hover:bg-amber-700 text-white shadow-xl shadow-amber-950/20" : 
+                      "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-200"
+                    )}
                   >
-                    {isSubmitting ? "Submitting..." : "Submit Request"}
+                    {isSubmitting ? t.pricing.payment.form.submitting : t.pricing.payment.form.submit}
                     <Send size={18} />
                   </button>
                 </form>
@@ -700,56 +828,73 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectTool, onAdminLogin
               <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 size={40} />
               </div>
-              <h2 className="text-2xl font-black text-slate-900 mb-4">Successfully Requested!</h2>
+              <h2 className="text-2xl font-black text-slate-900 mb-4">
+                {language === 'en' ? 'Successfully Requested!' : 'সফলভাবে অনুরোধ করা হয়েছে!'}
+              </h2>
               <p className="text-slate-500 font-medium mb-8">
-                Please wait for confirmation message. Our team will verify your payments and will inform you by SMS.
+                {language === 'en' 
+                  ? 'Please wait for confirmation message. Our team will verify your payments and will inform you by SMS.' 
+                  : 'অনুগ্রহ করে কনফার্মেশন মেসেজের জন্য অপেক্ষা করুন। আমাদের টিম আপনার পেমেন্ট যাচাই করবে এবং এসএমএসের মাধ্যমে জানাবে।'}
               </p>
               <button 
                 onClick={() => setShowPaymentSuccess(false)}
                 className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all"
               >
-                Got it
+                {language === 'en' ? 'Got it' : 'বুঝেছি'}
               </button>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-      <footer className="bg-white border-t border-slate-200 py-16 mt-24">
+      <footer className={cn(
+        "border-t py-16 mt-24 transition-colors duration-300",
+        uiTheme === 'light' ? "bg-white border-slate-200" : (uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : "bg-[#121212] border-amber-900/30")
+      )}>
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-3 mb-6">
               <Logo className="w-10 h-10" />
-              <h2 className="text-xl font-black text-slate-900">MAKSUD COMPUTERS</h2>
+              <h2 className={cn("text-xl font-black", uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'dark' ? "text-white" : "text-amber-500"))}>MAKSUD COMPUTERS</h2>
             </div>
-            <p className="text-slate-500 font-medium max-w-md mb-8">
+            <p className={cn("font-medium max-w-md mb-8", uiTheme === 'light' ? "text-slate-500" : "text-slate-400")}>
               Professional digital services and tools since 2020. Providing the best-in-class solutions for your daily digital needs.
             </p>
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all cursor-pointer">
+              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer", 
+                uiTheme === 'light' ? "bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600" : "bg-slate-800 text-slate-500 hover:bg-amber-600 hover:text-white")}>
                 <Facebook size={20} />
               </div>
             </div>
           </div>
           <div>
-            <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Quick Links</h4>
+            <h4 className={cn("text-sm font-black uppercase tracking-widest mb-6", uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'dark' ? "text-slate-300" : "text-slate-900"))}>
+              {language === 'en' ? 'Quick Links' : 'দ্রুত লিঙ্ক'}
+            </h4>
             <ul className="space-y-4">
-              <li><button onClick={() => onSelectTool('cv', 0)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">CV Builder</button></li>
-              <li><button onClick={() => onSelectTool('editor', 5)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">Photo Editor</button></li>
-              <li><button onClick={() => onSelectTool('pdf', 5)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">PDF Tools</button></li>
-              <li><button onClick={() => onSelectTool('about', 0)} className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors">About Us</button></li>
+              <li><button onClick={() => onSelectTool('cv', 0)} className={cn("text-sm font-bold transition-colors", uiTheme === 'light' ? "text-slate-500 hover:text-indigo-600" : "text-slate-400 hover:text-white")}>{t.dashboard.tools.cv}</button></li>
+              <li><button onClick={() => onSelectTool('editor', 5)} className={cn("text-sm font-bold transition-colors", uiTheme === 'light' ? "text-slate-500 hover:text-indigo-600" : "text-slate-400 hover:text-white")}>{t.dashboard.tools.photoEditor}</button></li>
+              <li><button onClick={() => onSelectTool('pdf', 5)} className={cn("text-sm font-bold transition-colors", uiTheme === 'light' ? "text-slate-500 hover:text-indigo-600" : "text-slate-400 hover:text-white")}>{t.dashboard.tools.pdfEditor}</button></li>
+              <li><button onClick={() => onSelectTool('converter', 0)} className={cn("text-sm font-bold transition-colors", uiTheme === 'light' ? "text-slate-500 hover:text-indigo-600" : "text-slate-400 hover:text-white")}>{t.dashboard.tools.converter}</button></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Contact</h4>
+            <button 
+              onClick={() => onSelectTool('about', 0)}
+              className={cn("text-sm font-black uppercase tracking-widest mb-6 block text-left w-full hover:underline transition-all", uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'dark' ? "text-slate-300" : "text-slate-900"))}
+            >
+              {language === 'en' ? 'Contact' : 'যোগাযোগ'}
+            </button>
             <ul className="space-y-4">
-              <li className="text-sm font-bold text-slate-500">Jamalpur, Bangladesh</li>
-              <li className="text-sm font-bold text-slate-500">01622638268</li>
-              <li className="text-sm font-bold text-slate-500">maksudjr2020@gmail.com</li>
+              <li className={cn("text-sm font-bold", uiTheme === 'light' ? "text-slate-500" : "text-slate-400")}>{language === 'en' ? "Jamalpur, Bangladesh" : "জামালপুর, বাংলাদেশ"}</li>
+              <li className={cn("text-sm font-bold", uiTheme === 'light' ? "text-slate-500" : "text-slate-400")}>01868257470</li>
+              <li className={cn("text-sm font-bold", uiTheme === 'light' ? "text-slate-500" : "text-slate-400")}>maksudjr2020@gmail.com</li>
             </ul>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-slate-100 text-center">
-          <p className="text-slate-400 text-xs font-bold">© 2026 MAKSUD COMPUTERS. ALL RIGHTS RESERVED.</p>
+        <div className="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-slate-100/10 text-center">
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+            © 2026 MAKSUD COMPUTERS. {language === 'en' ? 'ALL RIGHTS RESERVED.' : 'সর্বস্বত্ব সংরক্ষিত।'}
+          </p>
         </div>
       </footer>
     </div>
