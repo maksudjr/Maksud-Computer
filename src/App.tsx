@@ -46,6 +46,7 @@ const PdfTools = lazy(() => import('./components/PdfTools').then(m => ({ default
 const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const IntelligentAI = lazy(() => import('./components/IntelligentAI').then(m => ({ default: m.IntelligentAI })));
 const InheritanceCalculator = lazy(() => import('./components/InheritanceCalculator').then(m => ({ default: m.InheritanceCalculator })));
+const Translator = lazy(() => import('./components/Translator').then(m => ({ default: m.Translator })));
 
 const LoadingFallback = () => (
   <div className="min-h-screen bg-white flex flex-col items-center justify-center">
@@ -92,7 +93,7 @@ const FONTS = [
   { name: 'Lora', value: 'font-lora' },
 ];
 
-type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin' | 'intelligent-ai' | 'digital-converter' | 'inheritance';
+type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin' | 'intelligent-ai' | 'digital-converter' | 'inheritance' | 'translator';
 
 export default function App() {
   return (
@@ -110,9 +111,26 @@ function MainContent() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [standalonePhoto, setStandalonePhoto] = useState<string | null>(null);
   const [autoRemoveBg, setAutoRemoveBg] = useState(false);
-  const [uiTheme, setUiTheme] = useState<'light' | 'dark' | 'golden'>(() => {
+  const [uiTheme, setUiTheme] = useState<'light' | 'dark' | 'golden' | 'chameleon'>(() => {
     return (localStorage.getItem('maksud_ui_theme') as any) || 'light';
   });
+  const [chameleonColor, setChameleonColor] = useState('#6366f1'); // Default indigo
+
+  // Update chameleon color periodically or on selection
+  useEffect(() => {
+    if (uiTheme === 'chameleon') {
+      const colors = ['#f43f5e', '#ec4899', '#d946ef', '#8b5cf6', '#6366f1', '#3b82f6', '#06b6d4', '#10b981', '#84cc16', '#eab308', '#f97316'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      setChameleonColor(randomColor);
+      
+      const interval = setInterval(() => {
+        const nextColor = colors[Math.floor(Math.random() * colors.length)];
+        setChameleonColor(nextColor);
+      }, 5000); // Change every 5 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [uiTheme]);
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem('language') as any) || 'en';
   });
@@ -256,13 +274,14 @@ function MainContent() {
 
   if (step === 'dashboard') {
     return (
-      <div className={uiTheme}>
+      <div className={cn(uiTheme, uiTheme === 'chameleon' ? 'dark' : '')}>
         <Dashboard 
           uiTheme={uiTheme}
           onThemeChange={setUiTheme}
           onAdminLogin={() => setStep('admin')}
           language={language}
           onLanguageChange={setLanguage}
+          chameleonColor={chameleonColor}
           onSelectTool={(tool, cost) => {
             if (tool === 'age') {
               setStep('age');
@@ -288,6 +307,7 @@ function MainContent() {
               else if (tool === 'pdf-merge') setStep('pdf-merge');
               else if (tool === 'img-to-pdf') setStep('img-to-pdf');
               else if (tool === 'intelligent-ai') setStep('intelligent-ai');
+              else if (tool === 'translator') setStep('translator');
               else if (tool === 'converter') setStep('digital-converter');
               else if (tool === 'inheritance') setStep('inheritance');
             }, tool);
@@ -302,6 +322,16 @@ function MainContent() {
       <div className={uiTheme}>
         <Suspense fallback={<LoadingFallback />}>
           <IntelligentAI onBack={() => setStep('dashboard')} />
+        </Suspense>
+      </div>
+    );
+  }
+
+  if (step === 'translator') {
+    return (
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <Translator onBack={() => setStep('dashboard')} uiTheme={uiTheme} language={language} />
         </Suspense>
       </div>
     );
@@ -351,7 +381,7 @@ function MainContent() {
     return (
       <div className={uiTheme}>
         <Suspense fallback={<LoadingFallback />}>
-          <PdfTools type={step as any} onBack={() => setStep('dashboard')} />
+          <PdfTools type={step as any} onBack={() => setStep('dashboard')} uiTheme={uiTheme} language={language} />
         </Suspense>
       </div>
     );

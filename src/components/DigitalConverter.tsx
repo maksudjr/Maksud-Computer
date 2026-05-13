@@ -129,123 +129,162 @@ export const DigitalConverter: React.FC<DigitalConverterProps> = ({ onBack, uiTh
   ];
 
   return (
-    <div className={cn("min-h-screen py-12 px-4 transition-all", 
-      uiTheme === 'light' ? "bg-slate-50" : uiTheme === 'dark' ? "bg-slate-950" : "bg-[#121212]")}>
-      <div className="max-w-3xl mx-auto">
+    <div className={cn("min-h-screen pt-24 px-4 transition-all pb-24", 
+      uiTheme === 'light' ? "bg-slate-50" : uiTheme === 'dark' ? "bg-slate-950" : "bg-black")}>
+      <div className="max-w-4xl mx-auto">
         <button 
           onClick={onBack}
-          className={cn("flex items-center gap-2 mb-8 transition-colors font-medium", 
-            uiTheme === 'light' ? "text-slate-600 hover:text-indigo-600" : 
-            uiTheme === 'dark' ? "text-slate-400 hover:text-white" : 
-            "text-amber-500/70 hover:text-amber-500")}
+          className={cn(
+            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm mb-8",
+            uiTheme === 'light' ? "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50" : 
+            "bg-slate-900 text-white border border-slate-800 hover:bg-slate-800"
+          )}
         >
-          <ArrowLeft size={20} />
-          {t.labels.back}
+          <ArrowLeft size={24} />
         </button>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={cn("rounded-[2.5rem] shadow-xl overflow-hidden border", 
-            uiTheme === 'light' ? "bg-white border-slate-100" : 
-            uiTheme === 'dark' ? "bg-slate-900 border-slate-800 text-white" : 
-            "bg-[#1a1a1a] border-amber-950 text-amber-100")}
+          className={cn("standard-card overflow-hidden", 
+            uiTheme === 'light' ? "bg-white" : 
+            uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : 
+            "bg-[#1a1a1a] border-amber-900/30")}
         >
-          <div className={cn("p-10 text-white text-center", uiTheme === 'golden' ? "bg-amber-700" : "bg-indigo-600")}>
-            <div className="w-20 h-20 bg-white/20 rounded-3xl mx-auto mb-6 flex items-center justify-center backdrop-blur-md">
-              <Calculator size={40} className="text-white" />
+          <div className={cn("p-10 border-b", 
+            uiTheme === 'golden' ? "bg-amber-600/10 border-amber-900/20" : "bg-indigo-600/10 border-indigo-100")}>
+            <div className="flex flex-col md:flex-row items-center gap-8 md:text-left text-center">
+              <div className={cn("w-20 h-20 rounded-[2rem] flex items-center justify-center text-white shadow-xl", 
+                uiTheme === 'golden' ? "bg-amber-600" : "bg-indigo-600")}>
+                <Calculator size={40} />
+              </div>
+              <div>
+                <h1 className={cn("text-3xl md:text-4xl font-black tracking-tight mb-2", 
+                  uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'light' ? "text-slate-900" : "text-white"))}>
+                  {t.title}
+                </h1>
+                <p className="text-slate-500 font-medium max-w-xl text-sm leading-relaxed">{t.subtitle}</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-black mb-2">{t.title}</h1>
-            <p className="text-white/80 font-medium max-w-md mx-auto small text-sm">{t.subtitle}</p>
           </div>
 
-          <div className="p-8">
+          <div className="p-8 md:p-10">
             {/* Tabs */}
-            <div className={cn("flex flex-wrap gap-2 mb-8 p-1 rounded-2xl", 
-              uiTheme === 'light' ? "bg-slate-100" : "bg-white/5")}>
+            <div className="flex flex-wrap gap-3 mb-10">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveType(tab.id as ConverterType)}
-                  className={cn("flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-black transition-all",
+                  className={cn(
+                    "flex-1 min-w-[120px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl font-bold transition-all text-sm group active:scale-95 border-2",
                     activeType === tab.id 
-                      ? (uiTheme === 'golden' ? "bg-amber-600 text-white" : "bg-white text-indigo-600 shadow-sm")
-                      : (uiTheme === 'light' ? "text-slate-500 hover:text-slate-900" : "text-slate-500 hover:text-slate-300")
+                      ? (uiTheme === 'golden' ? "bg-amber-600 border-amber-600 text-white shadow-lg shadow-amber-900/20" : "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/20")
+                      : (uiTheme === 'light' ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600")
                   )}
                 >
-                  {tab.icon}
+                  <div className={cn(
+                    "transition-transform group-hover:scale-110",
+                    activeType === tab.id ? "text-white" : (uiTheme === 'golden' ? "text-amber-600" : "text-indigo-600")
+                  )}>
+                    {tab.icon}
+                  </div>
                   {tab.label}
                 </button>
               ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.labels.amount}</label>
-                <input 
-                  type="number"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className={cn("w-full px-6 py-4 rounded-2xl text-xl font-black outline-none transition-all border",
-                    uiTheme === 'light' ? "bg-slate-50 border-slate-200 focus:ring-4 focus:ring-indigo-100" : 
-                    uiTheme === 'dark' ? "bg-slate-800 border-slate-700 focus:ring-4 focus:ring-indigo-900/30" :
-                    "bg-black border-amber-900/30 focus:ring-4 focus:ring-amber-900/20")}
-                  placeholder="0.00"
-                />
+            <div className={cn(
+              "p-8 rounded-[2.5rem] border mb-8",
+              uiTheme === 'light' ? "bg-slate-50 border-slate-100" : "bg-slate-800/50 border-slate-700"
+            )}>
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 items-center">
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.labels.amount}</label>
+                  <div className="relative">
+                    <input 
+                      type="number"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      className={cn(
+                        "w-full px-6 py-5 rounded-[1.5rem] text-3xl font-black outline-none transition-all",
+                        uiTheme === 'light' ? "bg-white border border-slate-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600" : "bg-slate-900 border border-slate-800 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-white"
+                      )}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-center py-4 lg:py-0">
+                  <div className={cn(
+                    "w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg",
+                    uiTheme === 'golden' ? "bg-amber-600" : "bg-indigo-600"
+                  )}>
+                    <ArrowRightLeft size={24} />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.labels.result}</label>
+                  <div className={cn(
+                    "w-full px-6 py-5 rounded-[1.5rem] border text-3xl font-black shadow-sm flex items-center min-h-[82px]",
+                    uiTheme === 'light' ? "bg-white border-slate-200 text-slate-900" : "bg-slate-900 border-slate-800 text-amber-500"
+                  )}>
+                    {conversionResult}
+                  </div>
+                </div>
               </div>
 
-              <div className="hidden md:flex justify-center pb-5 text-slate-400">
-                <ArrowRightLeft size={24} />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.labels.from}</label>
+                  <div className="relative">
+                    <select 
+                      value={fromUnit}
+                      onChange={(e) => setFromUnit(e.target.value)}
+                      className={cn(
+                        "w-full px-6 py-4 rounded-2xl font-bold transition-all outline-none appearance-none cursor-pointer text-base pr-12",
+                        uiTheme === 'light' ? "bg-white border border-slate-200 focus:border-indigo-600" : "bg-slate-900 border border-slate-800 focus:border-amber-500 text-white"
+                      )}
+                    >
+                      {Object.entries(t.units[activeType]).map(([val, label]) => (
+                        <option key={val} value={val}>{label as string}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <Repeat size={14} className="rotate-90" />
+                    </div>
+                  </div>
+                </div>
 
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.labels.result}</label>
-                <div className={cn("w-full px-6 py-4 rounded-2xl text-xl font-black border flex items-center",
-                  uiTheme === 'light' ? "bg-slate-50 border-slate-100" : 
-                  uiTheme === 'dark' ? "bg-slate-800/50 border-slate-700" :
-                  "bg-black/50 border-amber-900/20")}>
-                  {conversionResult}
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.labels.to}</label>
+                  <div className="relative">
+                    <select 
+                      value={toUnit}
+                      onChange={(e) => setToUnit(e.target.value)}
+                      className={cn(
+                        "w-full px-6 py-4 rounded-2xl font-bold transition-all outline-none appearance-none cursor-pointer text-base pr-12",
+                        uiTheme === 'light' ? "bg-white border border-slate-200 focus:border-indigo-600" : "bg-slate-900 border border-slate-800 focus:border-amber-500 text-white"
+                      )}
+                    >
+                      {Object.entries(t.units[activeType]).map(([val, label]) => (
+                        <option key={val} value={val}>{label as string}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <Repeat size={14} className="rotate-90" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.labels.from}</label>
-                <select 
-                  value={fromUnit}
-                  onChange={(e) => setFromUnit(e.target.value)}
-                  className={cn("w-full px-6 py-4 rounded-2xl font-bold outline-none transition-all border appearance-none cursor-pointer",
-                    uiTheme === 'light' ? "bg-white border-slate-200 focus:ring-4 focus:ring-indigo-100" : 
-                    uiTheme === 'dark' ? "bg-slate-800 border-slate-700 text-white" :
-                    "bg-[#1a1a1a] border-amber-900/30 text-amber-100")}
-                >
-                  {Object.entries(t.units[activeType]).map(([val, label]) => (
-                    <option key={val} value={val}>{label as string}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t.labels.to}</label>
-                <select 
-                  value={toUnit}
-                  onChange={(e) => setToUnit(e.target.value)}
-                  className={cn("w-full px-6 py-4 rounded-2xl font-bold outline-none transition-all border appearance-none cursor-pointer",
-                    uiTheme === 'light' ? "bg-white border-slate-200 focus:ring-4 focus:ring-indigo-100" : 
-                    uiTheme === 'dark' ? "bg-slate-800 border-slate-700 text-white" :
-                    "bg-[#1a1a1a] border-amber-900/30 text-amber-100")}
-                >
-                  {Object.entries(t.units[activeType]).map(([val, label]) => (
-                    <option key={val} value={val}>{label as string}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-12 p-6 rounded-2xl bg-indigo-50/50 border border-indigo-100/30 text-center">
-              <p className={cn("text-xs font-bold", uiTheme === 'light' ? "text-indigo-600" : "text-indigo-400")}>
-                Note: Currency rates are estimated. For critical conversions, please verify with your local bank.
+            <div className={cn(
+              "p-6 rounded-3xl border border-dashed text-center",
+              uiTheme === 'light' ? "bg-indigo-50 border-indigo-200 text-indigo-700/60" : "bg-amber-950/20 border-amber-900/30 text-amber-500/60"
+            )}>
+              <p className="text-xs font-bold uppercase tracking-widest">
+                Rates derived from global indices. Refreshed daily for accuracy.
               </p>
             </div>
           </div>

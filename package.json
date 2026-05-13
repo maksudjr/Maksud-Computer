@@ -11,8 +11,10 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/genai": "^2.0.1",
     "@google/generative-ai": "^0.24.1",
     "@tailwindcss/vite": "^4.1.14",
+    "@types/file-saver": "^2.0.7",
     "@vitejs/plugin-react": "^5.0.4",
     "axios": "^1.15.0",
     "clsx": "^2.1.1",
@@ -26,6 +28,7 @@
     "form-data": "^4.0.5",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.38.0",
     "pdf-lib": "^1.17.1",

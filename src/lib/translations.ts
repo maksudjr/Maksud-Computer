@@ -40,7 +40,9 @@ export const translations = {
         imgToPdf: "Image to PDF",
         ageCalc: "Age Calculator",
         converter: "Digital Converter",
-        inheritance: "Inheritance Calculator"
+        inheritance: "Inheritance Calculator",
+        translator: "AI Translator",
+        pdfGroup: "PDF Power Tools"
       },
       toolDescriptions: {
         ai: "Advanced AI Chat powered by Gemini 1.5 Flash.",
@@ -56,7 +58,24 @@ export const translations = {
         imgToPdf: "Convert images into a professional PDF.",
         ageCalc: "Calculate exact age and next birthday.",
         converter: "Convert Currency, Length, Weight and Area.",
-        inheritance: "Calculate Islamic inheritance shares for heirs."
+        inheritance: "Calculate Islamic inheritance shares for heirs.",
+        translator: "Translate any language to any language instantly.",
+        pdfGroup: "Merge, compress, convert and edit PDF files."
+      },
+      pdf: {
+        uploadTitle: "Click or drag to upload",
+        selectedFiles: "Selected Files",
+        processing: "Processing...",
+        processingComplete: "Processing complete! Your files have been downloaded.",
+        start: "Start Processing",
+        pdfOnly: "PDF files only",
+        imgOnly: "Images (JPG, PNG, etc.)",
+        backToDashboard: "Dashboard",
+        mergeError: "Please select at least 2 PDF files to merge.",
+        failedToConvert: "Failed to convert PDF.",
+        failedToCompress: "Failed to compress PDF.",
+        failedToMerge: "Failed to merge PDF files.",
+        failedToWord: "Failed to convert PDF to Word."
       }
     },
     pricing: {
@@ -142,7 +161,9 @@ export const translations = {
         imgToPdf: "ইমেজ টু পিডিএফ",
         ageCalc: "বয়স ক্যালকুলেটর",
         converter: "ডিজিটাল কনভার্টার",
-        inheritance: "উত্তরাধিকার ক্যালকুলেটর"
+        inheritance: "উত্তরাধিকার ক্যালকুলেটর",
+        translator: "এআই অনুবাদক",
+        pdfGroup: "পিডিএফ পাওয়ার টুলস"
       },
       toolDescriptions: {
         ai: "জেমিনি ১.৫ ফ্ল্যাশ দ্বারা চালিত উন্নত এআই চ্যাট।",
@@ -158,7 +179,24 @@ export const translations = {
         imgToPdf: "ছবিগুলোকে একটি পেশাদার পিডিএফে রূপান্তর করুন।",
         ageCalc: "সঠিক বয়স এবং পরবর্তী জন্মদিন গণনা করুন।",
         converter: "কারেন্সি, দৈর্ঘ্য, ওজন এবং ক্ষেত্রফল রূপান্তর করুন।",
-        inheritance: "ইসলামিক নিয়ম অনুযায়ী উত্তরাধিকারীদের শেয়ার গণনা করুন।"
+        inheritance: "ইসলামিক নিয়ম অনুযায়ী উত্তরাধিকারীদের শেয়ার গণনা করুন।",
+        translator: "যেকোনো ভাষা থেকে অন্য ভাষায় তাৎক্ষণিকভাবে অনুবাদ করুন।",
+        pdfGroup: "পিডিএফ ফাইল মার্জ, কমপ্রেস, কনভার্ট এবং এডিট করুন।"
+      },
+      pdf: {
+        uploadTitle: "আপলোড করতে ক্লিক করুন বা ড্র্যাগ করুন",
+        selectedFiles: "নির্বাচিত ফাইলসমূহ",
+        processing: "প্রসেসিং হচ্ছে...",
+        processingComplete: "প্রসেসিং সম্পন্ন হয়েছে! আপনার ফাইলগুলো ডাউনলোড করা হয়েছে।",
+        start: "প্রসেসিং শুরু করুন",
+        pdfOnly: "শুধুমাত্র পিডিএফ ফাইল",
+        imgOnly: "ছবি (জেপিজি, পিএনজি ইত্যাদি)",
+        backToDashboard: "ড্যাশবোর্ড",
+        mergeError: "একত্রিত করার জন্য কমপক্ষে ২টি পিডিএফ ফাইল নির্বাচন করুন।",
+        failedToConvert: "পিডিএফ রূপান্তর করতে ব্যর্থ হয়েছে।",
+        failedToCompress: "পিডিএফ কমপ্রেস করতে ব্যর্থ হয়েছে।",
+        failedToMerge: "পিডিএফ ফাইল একত্রিত করতে ব্যর্থ হয়েছে।",
+        failedToWord: "পিডিএফ থেকে ওয়ার্ডে রূপান্তর করতে ব্যর্থ হয়েছে।"
       }
     },
     pricing: {

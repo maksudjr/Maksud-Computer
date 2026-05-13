@@ -18,8 +18,10 @@ import * as pdfjs from 'pdfjs-dist';
 import { jsPDF } from 'jspdf';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 
 import { cn } from '../lib/utils';
+import { Language, translations } from '../lib/translations';
 
 // Set up pdfjs worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
@@ -27,13 +29,17 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 interface PdfToolsProps {
   type: 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf';
   onBack: () => void;
+  uiTheme: 'light' | 'dark' | 'golden';
+  language: Language;
 }
 
-export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
+export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack, uiTheme, language }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  
+  const t = translations[language];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -50,6 +56,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      const zip = new JSZip();
       
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
@@ -60,14 +67,17 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
         canvas.width = viewport.width;
         
         await page.render({ canvasContext: context!, viewport, canvas: canvas }).promise;
-        const imgData = canvas.toDataURL('image/png');
-        saveAs(imgData, `${file.name.replace('.pdf', '')}_page_${i}.png`);
+        const imgData = canvas.toDataURL('image/png').split(',')[1];
+        zip.file(`${file.name.replace('.pdf', '')}_page_${i}.png`, imgData, { base64: true });
       }
+      
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, `${file.name.replace('.pdf', '')}_images.zip`);
       setStatus('success');
     } catch (err) {
       console.error(err);
       setStatus('error');
-      setErrorMessage('Failed to convert PDF to Image.');
+      setErrorMessage(t.dashboard.pdf.failedToConvert);
     } finally {
       setIsProcessing(false);
     }
@@ -106,7 +116,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
     } catch (err) {
       console.error(err);
       setStatus('error');
-      setErrorMessage('Failed to convert PDF to Word.');
+      setErrorMessage(t.dashboard.pdf.failedToWord);
     } finally {
       setIsProcessing(false);
     }
@@ -129,7 +139,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
     } catch (err) {
       console.error(err);
       setStatus('error');
-      setErrorMessage('Failed to compress PDF.');
+      setErrorMessage(t.dashboard.pdf.failedToCompress);
     } finally {
       setIsProcessing(false);
     }
@@ -138,7 +148,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
   const processPdfMerge = async () => {
     if (files.length < 2) {
       setStatus('error');
-      setErrorMessage('Please select at least 2 PDF files to merge.');
+      setErrorMessage(t.dashboard.pdf.mergeError);
       return;
     }
     setIsProcessing(true);
@@ -160,7 +170,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
     } catch (err) {
       console.error(err);
       setStatus('error');
-      setErrorMessage('Failed to merge PDF files.');
+      setErrorMessage(t.dashboard.pdf.failedToMerge);
     } finally {
       setIsProcessing(false);
     }
@@ -198,7 +208,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
     } catch (err) {
       console.error(err);
       setStatus('error');
-      setErrorMessage('Failed to convert Image to PDF.');
+      setErrorMessage(t.dashboard.pdf.failedToConvert);
     } finally {
       setIsProcessing(false);
     }
@@ -216,70 +226,122 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
 
   const getToolInfo = () => {
     switch (type) {
-      case 'pdf-to-img': return { title: 'PDF to Image', icon: <FileImage size={48} />, desc: 'Convert each page of your PDF into a high-quality PNG image.', accept: '.pdf', multiple: false };
-      case 'pdf-to-word': return { title: 'PDF to Word', icon: <FileType size={48} />, desc: 'Extract text from your PDF and save it as a Word (.docx) document.', accept: '.pdf', multiple: false };
-      case 'pdf-compress': return { title: 'PDF Compressor', icon: <FileArchive size={48} />, desc: 'Optimize your PDF file size for easier sharing and storage.', accept: '.pdf', multiple: false };
-      case 'pdf-merge': return { title: 'PDF Merger', icon: <Files size={48} />, desc: 'Combine multiple PDF files into a single document in your preferred order.', accept: '.pdf', multiple: true };
-      case 'img-to-pdf': return { title: 'Image to PDF', icon: <ImagePlus size={48} />, desc: 'Convert your photos and images into a professional PDF document.', accept: 'image/*', multiple: true };
+      case 'pdf-to-img': return { title: t.dashboard.tools.pdfToImg, icon: <FileImage size={48} />, desc: t.dashboard.toolDescriptions.pdfToImg, accept: '.pdf', multiple: false };
+      case 'pdf-to-word': return { title: t.dashboard.tools.pdfToWord, icon: <FileType size={48} />, desc: t.dashboard.toolDescriptions.pdfToWord, accept: '.pdf', multiple: false };
+      case 'pdf-compress': return { title: t.dashboard.tools.pdfCompress, icon: <FileArchive size={48} />, desc: t.dashboard.toolDescriptions.pdfCompress, accept: '.pdf', multiple: false };
+      case 'pdf-merge': return { title: t.dashboard.tools.pdfMerge, icon: <Files size={48} />, desc: t.dashboard.toolDescriptions.pdfMerge, accept: '.pdf', multiple: true };
+      case 'img-to-pdf': return { title: t.dashboard.tools.imgToPdf, icon: <ImagePlus size={48} />, desc: t.dashboard.toolDescriptions.imgToPdf, accept: 'image/*', multiple: true };
     }
   };
 
   const info = getToolInfo();
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
+    <div className={cn(
+      "min-h-screen py-24 px-4 transition-all pb-32",
+      uiTheme === 'light' ? "bg-slate-50" : uiTheme === 'dark' ? "bg-[#0c110f]" : "bg-[#004d35]"
+    )}>
       <button 
         onClick={onBack}
-        className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md text-gray-600 hover:text-indigo-600 transition-all font-medium"
+        className={cn(
+          "fixed top-8 left-8 z-50 w-12 h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-lg",
+          uiTheme === 'light' ? "bg-white text-[#006747] border border-slate-200" : (uiTheme === 'dark' ? "bg-slate-900 text-white border border-slate-800" : "bg-[#f42a41] text-white border-none")
+        )}
       >
-        <ArrowLeft size={18} />
-        Dashboard
+        <ArrowLeft size={24} />
       </button>
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl mx-auto"
+        className="max-w-3xl mx-auto"
       >
-        <div className="text-center mb-12">
-          <div className="w-24 h-24 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/20 mb-6 text-white">
-            {info.icon}
+        <div className="text-center mb-16">
+          <div className={cn(
+            "w-24 h-24 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl mb-8 transition-transform hover:scale-110",
+            uiTheme === 'golden' ? "bg-[#f42a41] text-white shadow-red-900/40" : "bg-[#006747] text-white shadow-emerald-900/20"
+          )}>
+            {React.cloneElement(info.icon as React.ReactElement, { size: 40 })}
           </div>
-          <h1 className="text-4xl font-black text-slate-900 mb-4">{info.title}</h1>
-          <p className="text-lg text-slate-500 font-medium">{info.desc}</p>
+          <h1 className={cn(
+            "text-4xl md:text-5xl font-black mb-4 tracking-tight",
+            uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'dark' ? "text-white" : "text-white")
+          )}>
+            {info.title}
+          </h1>
+          <p className="text-lg text-slate-500 font-medium max-w-xl mx-auto leading-relaxed">{info.desc}</p>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-200 p-10 shadow-sm">
-          <div className="space-y-8">
-            <div className="relative border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center hover:border-indigo-300 transition-colors group">
+        <div className={cn(
+          "standard-card p-8 md:p-12 overflow-hidden",
+          uiTheme === 'light' ? "bg-white" : 
+          uiTheme === 'dark' ? "bg-slate-900 border-slate-800" :
+          "bg-[#005a3e] border-emerald-900/30"
+        )}>
+          <div className="space-y-10">
+            <div className={cn(
+              "relative border-2 border-dashed rounded-[2.5rem] p-12 md:p-20 text-center transition-all group overflow-hidden",
+              uiTheme === 'light' ? "bg-slate-50 border-slate-200 hover:border-[#006747] hover:bg-slate-100" : 
+              "border-[#f42a41]/30 bg-black/10 hover:border-[#f42a41] hover:bg-black/20"
+            )}>
               <input
                 type="file"
                 accept={info.accept}
                 multiple={info.multiple}
                 onChange={handleFileChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
               />
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Upload className="text-slate-400 group-hover:text-indigo-600" />
+              <div className="flex flex-col items-center relative z-10 pointer-events-none">
+                <div className={cn(
+                  "w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 shadow-xl transition-all group-hover:scale-110 group-hover:rotate-6",
+                  uiTheme === 'golden' ? "bg-[#f42a41] text-white shadow-red-900/20" : "bg-white text-[#006747] shadow-emerald-100/50 dark:bg-[#002b1c] dark:shadow-none"
+                )}>
+                  <Upload size={32} />
                 </div>
-                <p className="text-slate-900 font-bold mb-1">
-                  {files.length > 0 ? `${files.length} file(s) selected` : 'Click or drag to upload'}
+                <p className={cn(
+                  "text-2xl font-bold tracking-tight mb-2",
+                  uiTheme === 'light' ? "text-slate-900" : "text-white"
+                )}>
+                  {files.length > 0 ? `${files.length} ${language === 'en' ? 'Files Selected' : 'ফাইল সিলেক্ট করা হয়েছে'}` : t.dashboard.pdf.uploadTitle}
                 </p>
-                <p className="text-slate-400 text-sm font-medium">
-                  {info.accept === '.pdf' ? 'PDF files only' : 'Images (JPG, PNG, etc.)'}
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                  {info.accept === '.pdf' ? "Supported format: PDF" : "Supported formats: Images"}
                 </p>
               </div>
+
+              {/* Decorative gradient */}
+              <div className={cn(
+                "absolute inset-0 opacity-0 group-hover:opacity-10 pointer-events-none transition-opacity duration-500",
+                uiTheme === 'golden' ? "bg-gradient-to-tr from-[#f42a41] to-transparent" : "bg-gradient-to-tr from-[#006747] to-transparent"
+              )} />
             </div>
 
             {files.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">Selected Files</p>
-                <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Ready to Process</h3>
+                  <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{files.length} Files</span>
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                   {files.map((f, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <span className="text-sm font-bold text-slate-700 truncate max-w-[80%]">{f.name}</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">{(f.size / 1024 / 1024).toFixed(2)} MB</span>
+                    <div key={i} className={cn(
+                      "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                      uiTheme === 'light' ? "bg-white border-slate-100 hover:border-slate-200 shadow-sm" : 
+                      "bg-black/20 border-emerald-900/30 hover:border-emerald-800"
+                    )}>
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-[10px] shadow-sm",
+                          uiTheme === 'golden' ? "bg-[#f42a41] text-white" : "bg-[#006747] text-white"
+                        )}>
+                          {f.name.split('.').pop()?.toUpperCase()}
+                        </div>
+                        <span className={cn(
+                          "text-sm font-bold truncate tracking-tight",
+                          uiTheme === 'light' ? "text-slate-700" : "text-white"
+                        )}>{f.name}</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-400">{(f.size / 1024 / 1024).toFixed(2)} MB</span>
                     </div>
                   ))}
                 </div>
@@ -290,10 +352,18 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-700"
+                className={cn(
+                  "p-6 rounded-[2rem] flex items-center gap-6 shadow-xl",
+                  "bg-emerald-50 text-emerald-900 border border-emerald-100"
+                )}
               >
-                <CheckCircle2 size={20} />
-                <p className="text-sm font-bold text-emerald-700">Processing complete! Your files have been downloaded.</p>
+                <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-200 animate-bounce">
+                  <CheckCircle2 size={28} />
+                </div>
+                <div>
+                  <p className="text-xl font-black tracking-tight">Success!</p>
+                  <p className="text-sm font-medium opacity-70">{t.dashboard.pdf.processingComplete}</p>
+                </div>
               </motion.div>
             )}
 
@@ -301,10 +371,15 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-700"
+                className="p-6 rounded-[2rem] bg-rose-50 border border-rose-100 flex items-center gap-6 text-rose-900 shadow-xl"
               >
-                <AlertCircle size={20} />
-                <p className="text-sm font-bold text-red-700">{errorMessage}</p>
+                <div className="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-200">
+                  <AlertCircle size={28} />
+                </div>
+                <div>
+                  <p className="text-xl font-black tracking-tight">System Error</p>
+                  <p className="text-sm font-medium opacity-70">{errorMessage}</p>
+                </div>
               </motion.div>
             )}
 
@@ -312,21 +387,21 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ type, onBack }) => {
               onClick={handleProcess}
               disabled={files.length === 0 || isProcessing}
               className={cn(
-                "w-full py-4 rounded-2xl font-black text-lg shadow-xl transition-all flex items-center justify-center gap-3",
+                "w-full py-6 rounded-[2rem] font-bold text-xl tracking-tight shadow-xl flex items-center justify-center gap-4 transition-all active:scale-95",
                 files.length === 0 || isProcessing
-                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200"
+                  ? "bg-slate-100 text-slate-300 cursor-not-allowed"
+                  : (uiTheme === 'golden' ? "bg-[#f42a41] text-white shadow-red-900/20 hover:bg-red-700" : "bg-[#006747] text-white shadow-emerald-900/20 hover:bg-emerald-800")
               )}
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="animate-spin" size={20} />
+                  <Loader2 className="animate-spin" size={24} />
                   Processing...
                 </>
               ) : (
                 <>
-                  <Download size={20} />
-                  Start Processing
+                  <Download size={24} />
+                  {t.dashboard.pdf.start}
                 </>
               )}
             </button>

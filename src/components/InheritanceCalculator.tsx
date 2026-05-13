@@ -170,50 +170,59 @@ export const InheritanceCalculator: React.FC<InheritanceCalculatorProps> = ({ on
 
   return (
     <div className={cn(
-      "min-h-screen pt-20 pb-12 px-4 transition-colors duration-300",
+      "min-h-screen pt-24 pb-20 px-6 transition-colors duration-300",
       uiTheme === 'dark' ? "bg-slate-950" : (uiTheme === 'golden' ? "bg-[#0c0a09]" : "bg-slate-50")
     )}>
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <button 
-            onClick={onBack}
-            className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-              uiTheme === 'light' ? "bg-white text-slate-600 hover:bg-slate-100 shadow-sm" : "bg-slate-900 text-slate-400 hover:bg-slate-800"
-            )}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className={cn(
-              "text-2xl font-black uppercase tracking-tight",
-              uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'dark' ? "text-white" : "text-slate-900")
-            )}>
-              {t.title}
-            </h1>
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={onBack}
+              className={cn(
+                "w-12 h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm",
+                uiTheme === 'light' ? "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50" : 
+                "bg-slate-900 text-white border border-slate-800 hover:bg-slate-800"
+              )}
+            >
+              <ArrowLeft size={24} />
+            </button>
+            <div>
+              <h1 className={cn(
+                "text-3xl md:text-5xl font-black tracking-tight",
+                uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'dark' ? "text-white" : "text-slate-900")
+              )}>
+                {t.title}
+              </h1>
+              <div className="flex items-center gap-2 mt-2">
+                <div className={cn("h-1 w-12 rounded-full", uiTheme === 'golden' ? "bg-amber-500" : "bg-indigo-600")} />
+                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Legal Distribution Engine / v1.0</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Inputs Section */}
-          <div className="space-y-6">
+          <div className="lg:col-span-7 space-y-8">
             {/* Deceased Gender */}
             <div className={cn(
-              "p-6 rounded-3xl border transition-all",
-              uiTheme === 'light' ? "bg-white border-slate-100 shadow-sm" : "bg-slate-900/50 border-slate-800 shadow-xl shadow-black/20"
+              "standard-card p-8",
+              uiTheme === 'golden' ? "bg-amber-950/20 border-amber-900/30" : "bg-white"
             )}>
-              <h3 className={cn("text-lg font-bold mb-4 flex items-center gap-2", uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'dark' ? "text-white" : "text-slate-900"))}>
-                <Users size={20} className="text-indigo-500" />
-                {t.deceasedInfo}
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className={cn("text-lg font-bold flex items-center gap-2", uiTheme === 'golden' ? "text-amber-500" : "text-slate-900 dark:text-white")}>
+                  <Users size={20} className="text-indigo-500" />
+                  {t.deceasedInfo}
+                </h3>
+              </div>
               <div className="flex gap-4">
                 <button
                   onClick={() => setDeceasedGender('male')}
                   className={cn(
-                    "flex-1 py-3 px-4 rounded-xl font-bold transition-all border-2",
+                    "flex-1 py-4 px-4 rounded-2xl font-bold transition-all border-2",
                     deceasedGender === 'male' 
-                      ? (uiTheme === 'golden' ? "border-amber-600 bg-amber-600/10 text-amber-500" : "border-indigo-600 bg-indigo-600/10 text-indigo-600")
-                      : (uiTheme === 'light' ? "border-slate-100 bg-slate-50 text-slate-500" : "border-slate-800 bg-slate-800/50 text-slate-400")
+                      ? (uiTheme === 'golden' ? "bg-amber-600 border-amber-600 text-white" : "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/20")
+                      : (uiTheme === 'light' ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600")
                   )}
                 >
                   {t.male}
@@ -221,10 +230,10 @@ export const InheritanceCalculator: React.FC<InheritanceCalculatorProps> = ({ on
                 <button
                   onClick={() => setDeceasedGender('female')}
                   className={cn(
-                    "flex-1 py-3 px-4 rounded-xl font-bold transition-all border-2",
+                    "flex-1 py-4 px-4 rounded-2xl font-bold transition-all border-2",
                     deceasedGender === 'female' 
-                      ? (uiTheme === 'golden' ? "border-amber-600 bg-amber-600/10 text-amber-500" : "border-indigo-600 bg-indigo-600/10 text-indigo-600")
-                      : (uiTheme === 'light' ? "border-slate-100 bg-slate-50 text-slate-500" : "border-slate-800 bg-slate-800/50 text-slate-400")
+                      ? (uiTheme === 'golden' ? "bg-amber-600 border-amber-600 text-white" : "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/20")
+                      : (uiTheme === 'light' ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600")
                   )}
                 >
                   {t.female}
@@ -234,48 +243,51 @@ export const InheritanceCalculator: React.FC<InheritanceCalculatorProps> = ({ on
 
             {/* Assets */}
             <div className={cn(
-              "p-6 rounded-3xl border transition-all",
-              uiTheme === 'light' ? "bg-white border-slate-100 shadow-sm" : "bg-slate-900/50 border-slate-800 shadow-xl shadow-black/20"
+              "standard-card p-8",
+              uiTheme === 'golden' ? "bg-amber-950/20 border-amber-900/30" : "bg-white"
             )}>
-              <h3 className={cn("text-lg font-bold mb-4 flex items-center gap-2", uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'dark' ? "text-white" : "text-slate-900"))}>
+              <h3 className={cn("text-lg font-bold mb-6 flex items-center gap-2", uiTheme === 'golden' ? "text-amber-500" : "text-slate-900 dark:text-white")}>
                 <Wallet size={20} className="text-emerald-500" />
                 {t.assets}
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">{t.cash}</label>
-                  <input
-                    type="number"
-                    value={assets.cash || ''}
-                    onChange={(e) => setAssets({ ...assets, cash: Number(e.target.value) })}
-                    className={cn(
-                      "w-full px-4 py-3 rounded-xl font-bold bg-transparent border-2 outline-none transition-all",
-                      uiTheme === 'light' ? "border-slate-100 focus:border-indigo-600 text-slate-900" : "border-slate-800 focus:border-amber-600 text-white"
-                    )}
-                  />
+                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.cash}</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={assets.cash || ''}
+                      onChange={(e) => setAssets({ ...assets, cash: Number(e.target.value) })}
+                      className={cn(
+                        "w-full px-6 py-4 rounded-2xl font-bold text-xl outline-none transition-all",
+                        uiTheme === 'light' ? "bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-600" : "bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-amber-600 text-white"
+                      )}
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold uppercase text-xs italic">BDT</div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">{t.gold}</label>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.gold}</label>
                     <input
                       type="number"
                       value={assets.gold || ''}
                       onChange={(e) => setAssets({ ...assets, gold: Number(e.target.value) })}
                       className={cn(
-                        "w-full px-4 py-3 rounded-xl font-bold bg-transparent border-2 outline-none transition-all",
-                        uiTheme === 'light' ? "border-slate-100 focus:border-indigo-600 text-slate-900" : "border-slate-800 focus:border-amber-600 text-white"
+                        "w-full px-6 py-4 rounded-2xl font-bold text-xl outline-none transition-all",
+                        uiTheme === 'light' ? "bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-600" : "bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-amber-600 text-white"
                       )}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">{t.land}</label>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t.land}</label>
                     <input
                       type="number"
                       value={assets.land || ''}
                       onChange={(e) => setAssets({ ...assets, land: Number(e.target.value) })}
                       className={cn(
-                        "w-full px-4 py-3 rounded-xl font-bold bg-transparent border-2 outline-none transition-all",
-                        uiTheme === 'light' ? "border-slate-100 focus:border-indigo-600 text-slate-900" : "border-slate-800 focus:border-amber-600 text-white"
+                        "w-full px-6 py-4 rounded-2xl font-bold text-xl outline-none transition-all",
+                        uiTheme === 'light' ? "bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-600" : "bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-amber-600 text-white"
                       )}
                     />
                   </div>
@@ -285,123 +297,92 @@ export const InheritanceCalculator: React.FC<InheritanceCalculatorProps> = ({ on
 
             {/* Heirs */}
             <div className={cn(
-              "p-6 rounded-3xl border transition-all",
-              uiTheme === 'light' ? "bg-white border-slate-100 shadow-sm" : "bg-slate-900/50 border-slate-800 shadow-xl shadow-black/20"
+              "standard-card p-8",
+              uiTheme === 'golden' ? "bg-amber-950/20 border-amber-900/30" : "bg-white"
             )}>
-              <h3 className={cn("text-lg font-bold mb-4 flex items-center gap-2", uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'dark' ? "text-white" : "text-slate-900"))}>
-                <Layers size={20} className="text-purple-500" />
+              <h3 className={cn("text-lg font-bold mb-6 flex items-center gap-2", uiTheme === 'golden' ? "text-amber-500" : "text-slate-900 dark:text-white")}>
+                <Layers size={20} className="text-violet-500" />
                 {t.heirs}
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {deceasedGender === 'female' && (
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-bold text-slate-500">{t.husband}</label>
+                  <div className={cn("flex items-center justify-between p-4 rounded-2xl border transition-colors", uiTheme === 'light' ? "bg-slate-50 border-slate-100" : "bg-slate-800/50 border-slate-700")}>
+                    <label className="text-sm font-bold opacity-70">{t.husband}</label>
                     <input
                       type="checkbox"
                       checked={heirs.husband}
                       onChange={(e) => setHeirs({ ...heirs, husband: e.target.checked })}
-                      className="w-5 h-5 accent-indigo-600"
+                      className="w-6 h-6 rounded-lg appearance-none border-2 border-slate-300 checked:bg-indigo-600 checked:border-indigo-600 cursor-pointer transition-all"
                     />
                   </div>
                 )}
                 {deceasedGender === 'male' && (
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-bold text-slate-500">{t.wife}</label>
+                  <div className={cn("flex items-center justify-between p-4 rounded-2xl border transition-colors", uiTheme === 'light' ? "bg-slate-50 border-slate-100" : "bg-slate-800/50 border-slate-700")}>
+                    <label className="text-sm font-bold opacity-70">{t.wife}</label>
                     <input
                       type="checkbox"
                       checked={heirs.wife}
                       onChange={(e) => setHeirs({ ...heirs, wife: e.target.checked })}
-                      className="w-5 h-5 accent-indigo-600"
+                      className="w-6 h-6 rounded-lg appearance-none border-2 border-slate-300 checked:bg-indigo-600 checked:border-indigo-600 cursor-pointer transition-all"
                     />
                   </div>
                 )}
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-500">{t.father}</label>
+                <div className={cn("flex items-center justify-between p-4 rounded-2xl border transition-colors", uiTheme === 'light' ? "bg-slate-50 border-slate-100" : "bg-slate-800/50 border-slate-700")}>
+                  <label className="text-sm font-bold opacity-70">{t.father}</label>
                   <input
                     type="checkbox"
                     checked={heirs.father}
                     onChange={(e) => setHeirs({ ...heirs, father: e.target.checked })}
-                    className="w-5 h-5 accent-indigo-600"
+                    className="w-6 h-6 rounded-lg appearance-none border-2 border-slate-300 checked:bg-indigo-600 checked:border-indigo-600 cursor-pointer transition-all"
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-500">{t.mother}</label>
+                <div className={cn("flex items-center justify-between p-4 rounded-2xl border transition-colors", uiTheme === 'light' ? "bg-slate-50 border-slate-100" : "bg-slate-800/50 border-slate-700")}>
+                  <label className="text-sm font-bold opacity-70">{t.mother}</label>
                   <input
                     type="checkbox"
                     checked={heirs.mother}
                     onChange={(e) => setHeirs({ ...heirs, mother: e.target.checked })}
-                    className="w-5 h-5 accent-indigo-600"
+                    className="w-6 h-6 rounded-lg appearance-none border-2 border-slate-300 checked:bg-indigo-600 checked:border-indigo-600 cursor-pointer transition-all"
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-500">{t.sons}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={heirs.sons || 0}
-                    onChange={(e) => setHeirs({ ...heirs, sons: Number(e.target.value) })}
-                    className={cn(
-                      "w-16 px-2 py-1 rounded-lg text-center font-bold bg-transparent border-2 outline-none",
-                      uiTheme === 'light' ? "border-slate-100" : "border-slate-800"
-                    )}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-500">{t.daughters}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={heirs.daughters || 0}
-                    onChange={(e) => setHeirs({ ...heirs, daughters: Number(e.target.value) })}
-                    className={cn(
-                      "w-16 px-2 py-1 rounded-lg text-center font-bold bg-transparent border-2 outline-none",
-                      uiTheme === 'light' ? "border-slate-100" : "border-slate-800"
-                    )}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-500">{t.fullBrothers}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={heirs.fullBrothers || 0}
-                    onChange={(e) => setHeirs({ ...heirs, fullBrothers: Number(e.target.value) })}
-                    className={cn(
-                      "w-16 px-2 py-1 rounded-lg text-center font-bold bg-transparent border-2 outline-none",
-                      uiTheme === 'light' ? "border-slate-100" : "border-slate-800"
-                    )}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-500">{t.fullSisters}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={heirs.fullSisters || 0}
-                    onChange={(e) => setHeirs({ ...heirs, fullSisters: Number(e.target.value) })}
-                    className={cn(
-                      "w-16 px-2 py-1 rounded-lg text-center font-bold bg-transparent border-2 outline-none",
-                      uiTheme === 'light' ? "border-slate-100" : "border-slate-800"
-                    )}
-                  />
-                </div>
+                {[
+                  { key: 'sons', label: t.sons },
+                  { key: 'daughters', label: t.daughters },
+                  { key: 'fullBrothers', label: t.fullBrothers },
+                  { key: 'fullSisters', label: t.fullSisters }
+                ].map((item) => (
+                  <div key={item.key} className={cn("flex items-center justify-between p-4 rounded-2xl border transition-colors", uiTheme === 'light' ? "bg-slate-50 border-slate-100" : "bg-slate-800/50 border-slate-700")}>
+                    <label className="text-sm font-bold opacity-70">{item.label}</label>
+                    <div className="flex items-center gap-3">
+                       <button 
+                        onClick={() => setHeirs({ ...heirs, [item.key]: Math.max(0, heirs[item.key as keyof Heirs] as number - 1) })}
+                        className={cn("w-8 h-8 rounded-lg font-bold flex items-center justify-center transition-all", uiTheme === 'light' ? "bg-white text-slate-900 border border-slate-200 hover:bg-slate-100" : "bg-slate-800 text-white border border-slate-700 hover:bg-slate-700")}
+                      >-</button>
+                      <span className="w-8 text-center font-bold text-lg">{heirs[item.key as keyof Heirs] as number}</span>
+                      <button 
+                        onClick={() => setHeirs({ ...heirs, [item.key]: (heirs[item.key as keyof Heirs] as number) + 1 })}
+                        className={cn("w-8 h-8 rounded-lg font-bold flex items-center justify-center transition-all", uiTheme === 'light' ? "bg-white text-slate-900 border border-slate-200 hover:bg-slate-100" : "bg-slate-800 text-white border border-slate-700 hover:bg-slate-700")}
+                      >+</button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
           {/* Results Section */}
-          <div className="space-y-6">
+          <div className="lg:col-span-5">
             <div className={cn(
-              "p-6 rounded-3xl border transition-all sticky top-24",
-              uiTheme === 'light' ? "bg-white border-slate-100 shadow-sm" : "bg-slate-900/50 border-slate-800 shadow-xl shadow-black/20"
+              "standard-card p-8 sticky top-24",
+              uiTheme === 'golden' ? "bg-amber-950/20 border-amber-900/30" : "bg-white"
             )}>
-              <h3 className={cn("text-lg font-bold mb-6 flex items-center gap-2", uiTheme === 'golden' ? "text-amber-500" : (uiTheme === 'dark' ? "text-white" : "text-slate-900"))}>
-                <Calculator size={20} className="text-indigo-500" />
+              <h3 className={cn("text-lg font-bold mb-8 pb-4 border-b flex items-center gap-2", uiTheme === 'golden' ? "text-amber-500 border-amber-900/30" : "text-slate-900 dark:text-white border-slate-100 dark:border-slate-800")}>
+                <Calculator size={20} className="text-pink-500" />
                 {t.results}
               </h3>
               
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 text-xs font-black uppercase tracking-widest text-slate-400 mb-2 pb-2 border-b border-slate-100/10">
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4 px-2">
                   <div>{t.relation}</div>
                   <div className="text-center">{t.percentage}</div>
                   <div className="text-right">{t.amount}</div>
@@ -412,40 +393,40 @@ export const InheritanceCalculator: React.FC<InheritanceCalculatorProps> = ({ on
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     key={idx} 
-                    className="grid grid-cols-3 items-center"
+                    className="grid grid-cols-3 items-center group"
                   >
-                    <div className={cn("text-sm font-bold", uiTheme === 'light' ? "text-slate-700" : "text-slate-300")}>{res.relation}</div>
+                    <div className="text-sm font-bold text-slate-700 dark:text-slate-300 pr-2">{res.relation}</div>
                     <div className="text-center">
                       <span className={cn(
-                        "text-xs px-2 py-1 rounded-full font-black",
-                        uiTheme === 'golden' ? "bg-amber-600/20 text-amber-500" : "bg-indigo-600/10 text-indigo-600"
+                        "text-[10px] px-2 py-1 rounded-lg font-bold transition-all",
+                        uiTheme === 'golden' ? "bg-amber-500/10 text-amber-500" : "bg-indigo-50 text-indigo-600"
                       )}>
                         {res.percentage.toFixed(2)}%
                       </span>
                     </div>
-                    <div className="text-right space-y-1">
-                      <div className={cn("text-sm font-black", uiTheme === 'light' ? "text-slate-900" : "text-white")}>
+                    <div className="text-right">
+                      <div className={cn("text-base font-bold", uiTheme === 'light' ? "text-slate-900" : "text-white")}>
                         {res.assets.cash.toLocaleString()} ৳
                       </div>
-                      <div className="text-[10px] font-bold text-slate-500">
-                        {res.assets.gold.toFixed(2)} ভরি / {res.assets.land.toFixed(2)} শ শতাংশ
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                        {res.assets.gold.toFixed(2)}G / {res.assets.land.toFixed(2)}L
                       </div>
                     </div>
                   </motion.div>
                 ))}
 
                 {calculateResults.length === 0 && (
-                  <div className="text-center py-12 text-slate-500 font-bold italic">
-                    {language === 'en' ? 'No heirs selected' : 'কোন অংশীদার নির্বাচন করা হয়নি'}
+                  <div className="text-center py-16 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 font-bold uppercase text-xs tracking-widest">
+                    {language === 'en' ? 'Waiting for input...' : 'অংশীদার নির্বাচন করুন'}
                   </div>
                 )}
               </div>
 
-              <div className="mt-8 pt-6 border-t border-slate-100/10">
+              <div className={cn("mt-10 pt-6 border-t", uiTheme === 'golden' ? "border-amber-900/30" : "border-slate-100 dark:border-slate-800")}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-black uppercase tracking-widest text-slate-500">{t.total}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t.total}</span>
                   <div className="text-right">
-                    <div className={cn("text-lg font-black", uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600")}>
+                    <div className={cn("text-3xl font-black", uiTheme === 'golden' ? "text-amber-500" : "text-slate-900 dark:text-white")}>
                       {assets.cash.toLocaleString()} ৳
                     </div>
                   </div>

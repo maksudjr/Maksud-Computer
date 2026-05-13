@@ -262,38 +262,42 @@ export const IntelligentAI: React.FC<IntelligentAIProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#0b0b0b] flex font-sans text-white overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-slate-50 flex font-sans text-slate-900 overflow-hidden">
       {/* Sidebar */}
       <AnimatePresence mode="wait">
         {sidebarOpen && (
           <motion.aside
-            initial={{ x: -300, opacity: 0 }}
+            initial={{ x: -400, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -300, opacity: 0 }}
+            exit={{ x: -400, opacity: 0 }}
             className={cn(
-              "w-72 border-r border-white/10 bg-[#0f0f0f] flex flex-col z-50",
+              "w-80 bg-white border-r border-slate-200 flex flex-col z-50 transition-all",
               isMobile && "fixed inset-y-0 left-0 shadow-2xl"
             )}
           >
-            <div className="p-4 flex flex-col gap-4 h-full">
-              <div className="flex items-center justify-between">
+            <div className="p-6 flex flex-col gap-6 h-full">
+              <div className="flex items-center gap-4">
                 <button 
                   onClick={onBack}
-                  className="p-2 hover:bg-white/5 rounded-lg text-white/60 hover:text-white transition-colors"
+                  className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors"
                 >
-                  <ArrowLeft size={20} />
+                  <ArrowLeft size={20} className="text-slate-600" />
                 </button>
-                <button 
-                  onClick={startNewChat}
-                  className="flex-1 ml-2 flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold transition-all"
-                >
-                  <Plus size={18} />
-                  New Chat
-                </button>
+                <div className="font-black text-lg tracking-tight">
+                  Chat History
+                </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2 mt-4 mb-2">Recent Chats</h3>
+              <button 
+                onClick={startNewChat}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl font-bold transition-all hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-95"
+              >
+                <Plus size={20} />
+                New Chat
+              </button>
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-6 mb-2 px-2">Recent Chats</h3>
                 {chats.map(chat => (
                   <button
                     key={chat.id}
@@ -302,32 +306,37 @@ export const IntelligentAI: React.FC<IntelligentAIProps> = ({ onBack }) => {
                       if (isMobile) setSidebarOpen(false);
                     }}
                     className={cn(
-                      "w-full group flex items-center gap-3 p-3 rounded-xl text-left transition-all",
-                      currentChatId === chat.id ? "bg-white/10 text-white" : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                      "w-full group flex items-center gap-3 p-3 rounded-xl transition-all",
+                      currentChatId === chat.id ? "bg-indigo-50 text-indigo-700" : "bg-transparent text-slate-600 hover:bg-slate-50"
                     )}
                   >
-                    <MessageSquare size={16} className="shrink-0" />
-                    <span className="flex-1 text-xs font-bold truncate">{chat.title}</span>
+                    <MessageSquare size={18} className={cn("shrink-0", currentChatId === chat.id ? "text-indigo-600" : "text-slate-400")} />
+                    <span className="flex-1 text-sm font-medium truncate text-left">{chat.title}</span>
                     <button 
                       onClick={(e) => deleteChat(chat.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 text-red-500 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     </button>
                   </button>
                 ))}
               </div>
 
-              <div className="pt-4 border-t border-white/10">
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-black text-xs">
+              <div className="pt-6 border-t border-slate-100">
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-lg">
                     M
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold truncate">Maksud User</p>
-                    <p className="text-[10px] text-white/40">Free Plan</p>
+                    <p className="text-sm font-bold truncate">Operator_01</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active</p>
+                    </div>
                   </div>
-                  <Settings size={16} className="text-white/40" />
+                  <button className="p-2 text-slate-400 hover:text-slate-600">
+                    <Settings size={18} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -336,87 +345,91 @@ export const IntelligentAI: React.FC<IntelligentAIProps> = ({ onBack }) => {
       </AnimatePresence>
 
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col relative bg-[#0b0b0b]">
+      <main className="flex-1 flex flex-col relative bg-slate-50/50">
         {/* Header */}
-        <header className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-[#0b0b0b]/80 backdrop-blur-md sticky top-0 z-40">
+        <header className="h-20 border-b border-slate-200 flex items-center justify-between px-6 bg-white/80 backdrop-blur-md sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-white/5 rounded-lg text-white/60 transition-colors"
+              className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors lg:hidden"
             >
-              {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+              <ChevronRight size={20} className={sidebarOpen ? "rotate-180" : ""} />
             </button>
             <div>
-              <h2 className="text-sm font-black uppercase tracking-tighter">Maksud Intelligent AI</h2>
-              <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Powered by Gemini 1.5 Flash</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-black tracking-tight text-slate-900">Maksud AI</h2>
+                <div className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-widest">v1.5</div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="px-3 py-1 bg-indigo-600/10 border border-indigo-500/20 rounded-full text-[10px] font-black text-indigo-400 uppercase tracking-widest">
-              0.01 Coin / Msg
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              0.01 Coins Per Session
             </div>
           </div>
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-12 space-y-8">
           {!currentChat || currentChat.messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto space-y-6">
-              <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/20">
-                <Bot size={40} className="text-white" />
+            <div className="h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto space-y-12">
+              <div className="w-24 h-24 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-indigo-200">
+                <Bot size={48} />
               </div>
-              <div className="space-y-2">
-                <h1 className="text-3xl font-black tracking-tighter">How can I help you today?</h1>
-                <p className="text-white/40 text-sm font-medium">Maksud Intelligent AI is ready to assist with coding, writing, analysis, and more.</p>
+              <div className="space-y-4">
+                <h1 className="text-5xl font-black tracking-tight text-slate-900">How can I help you?</h1>
+                <p className="text-slate-500 text-lg font-medium">I'm Maksud AI, your professional assistant. Ask me anything.</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                 {[
-                  "Explain quantum computing in simple terms",
-                  "Write a Python script to scrape a website",
-                  "How do I make a chocolate cake?",
-                  "Write a professional email for a job application"
-                ].map(suggestion => (
+                  "Explain quantum computing",
+                  "Write a Python script",
+                  "How to bake a cake?",
+                  "Write a professional email"
+                ].map((suggestion, i) => (
                   <button 
-                    key={suggestion}
+                    key={`ai-suggestion-${i}`}
                     onClick={() => setInput(suggestion)}
-                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-bold text-left transition-all"
+                    className="p-5 bg-white rounded-2xl border border-slate-100 shadow-sm text-left transition-all hover:bg-emerald-50 hover:border-emerald-100 hover:shadow-md group active:scale-[0.98]"
                   >
-                    {suggestion}
+                    <p className="text-sm font-bold text-slate-900 mb-1">{suggestion}</p>
+                    <p className="text-xs text-slate-400 group-hover:text-emerald-500">Click to use this prompt</p>
                   </button>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto w-full space-y-8">
-              {currentChat.messages.map((msg) => (
+            <div className="max-w-4xl mx-auto w-full space-y-10">
+              {currentChat.messages.map((msg, mIdx) => (
                 <div 
-                  key={msg.id} 
+                  key={`msg-${msg.id}-${mIdx}`} 
                   className={cn(
-                    "flex gap-4 group",
+                    "flex gap-4 md:gap-6",
                     msg.role === 'user' ? "flex-row-reverse" : "flex-row"
                   )}
                 >
                   <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                    msg.role === 'user' ? "bg-indigo-600" : "bg-white/10"
+                    "w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
+                    msg.role === 'user' ? "bg-slate-900 text-white" : "bg-white text-indigo-600 border border-slate-100"
                   )}>
-                    {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+                    {msg.role === 'user' ? <User size={20} /> : <Bot size={24} />}
                   </div>
                   <div className={cn(
                     "flex flex-col gap-2 max-w-[85%]",
-                    msg.role === 'user' ? "items-end" : "items-start"
+                    msg.role === 'user' ? "items-end text-right" : "items-start text-left"
                   )}>
                     {msg.attachments && msg.attachments.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-1">
+                      <div className="flex flex-wrap gap-3 mb-2">
                         {msg.attachments.map((att, idx) => (
-                          <div key={idx} className="relative group/att">
+                          <div key={idx} className="relative rounded-2xl overflow-hidden border border-slate-200">
                             {att.type.startsWith('image/') ? (
-                              <img src={att.url} alt={att.name} className="w-32 h-32 object-cover rounded-xl border border-white/10" />
+                              <img src={att.url} alt={att.name} className="w-48 h-48 object-cover" />
                             ) : (
-                              <div className="flex items-center gap-2 p-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold">
-                                <FileText size={14} className="text-indigo-400" />
-                                {att.name}
+                              <div className="flex items-center gap-3 p-4 bg-white">
+                                <FileText size={20} className="text-indigo-600" />
+                                <span className="text-xs font-bold truncate max-w-[120px]">{att.name}</span>
                               </div>
                             )}
                           </div>
@@ -424,20 +437,19 @@ export const IntelligentAI: React.FC<IntelligentAIProps> = ({ onBack }) => {
                       </div>
                     )}
                     <div className={cn(
-                      "p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap",
-                      msg.role === 'user' ? "bg-indigo-600 text-white" : "bg-white/5 text-white/90"
+                      "p-5 rounded-2xl text-sm md:text-base font-medium shadow-sm leading-relaxed",
+                      msg.role === 'user' ? "bg-indigo-600 text-white" : "bg-white text-slate-800 border border-slate-100"
                     )}>
                       {msg.content}
                     </div>
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => copyToClipboard(msg.content)}
-                        className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-all"
-                        title="Copy message"
+                        className="p-2 bg-white rounded-lg border border-slate-100 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
                       >
                         <Copy size={14} />
                       </button>
-                      <span className="text-[10px] text-white/20 font-mono">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -445,15 +457,17 @@ export const IntelligentAI: React.FC<IntelligentAIProps> = ({ onBack }) => {
                 </div>
               ))}
               {isTyping && (
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                    <Bot size={16} />
+                <div className="flex gap-4 md:gap-6">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+                    <Bot size={24} className="text-indigo-600" />
                   </div>
-                  <div className="bg-white/5 p-4 rounded-2xl flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">AI is typing...</span>
+                  <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm flex items-center gap-3">
+                    <div className="flex gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-bounce" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-bounce [animation-delay:0.2s]" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-bounce [animation-delay:0.4s]" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Processing...</span>
                   </div>
                 </div>
               )}
@@ -463,23 +477,23 @@ export const IntelligentAI: React.FC<IntelligentAIProps> = ({ onBack }) => {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 md:p-8 bg-gradient-to-t from-[#0b0b0b] via-[#0b0b0b] to-transparent">
-          <div className="max-w-3xl mx-auto relative">
+        <div className="p-6 md:p-8 bg-white border-t border-slate-200">
+          <div className="max-w-4xl mx-auto relative">
             {attachments.length > 0 && (
-              <div className="absolute bottom-full mb-4 flex flex-wrap gap-2">
+              <div className="absolute bottom-full mb-6 flex flex-wrap gap-3">
                 {attachments.map((att, idx) => (
                   <div key={idx} className="relative group/att">
                     {att.type.startsWith('image/') ? (
-                      <img src={att.url} alt={att.name} className="w-16 h-16 object-cover rounded-lg border border-white/20" />
+                      <img src={att.url} alt={att.name} className="w-16 h-16 object-cover rounded-xl border-2 border-white shadow-lg" />
                     ) : (
-                      <div className="flex items-center gap-2 p-2 bg-white/10 border border-white/20 rounded-lg text-[10px] font-bold">
-                        <FileText size={14} />
-                        {att.name}
+                      <div className="flex items-center gap-2 p-3 bg-white rounded-xl border border-slate-200 shadow-lg">
+                        <FileText size={16} className="text-indigo-600" />
+                        <span className="text-[10px] font-bold max-w-[80px] truncate">{att.name}</span>
                       </div>
                     )}
                     <button 
                       onClick={() => setAttachments(prev => prev.filter((_, i) => i !== idx))}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-lg"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:scale-110 transition-all"
                     >
                       <X size={10} />
                     </button>
@@ -488,12 +502,11 @@ export const IntelligentAI: React.FC<IntelligentAIProps> = ({ onBack }) => {
               </div>
             )}
 
-            <div className="relative group">
-              <div className="absolute inset-0 bg-indigo-600/20 blur-2xl rounded-3xl opacity-0 group-focus-within:opacity-100 transition-opacity" />
-              <div className="relative bg-[#1a1a1a] border border-white/10 focus-within:border-indigo-500/50 rounded-3xl p-2 flex items-end gap-2 transition-all shadow-2xl">
+            <div className="relative">
+              <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-3 flex items-end gap-2 focus-within:ring-2 focus-within:ring-indigo-600/10 focus-within:border-indigo-600 transition-all">
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-3 hover:bg-white/5 text-white/40 hover:text-white rounded-2xl transition-all"
+                  className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm"
                 >
                   <Paperclip size={20} />
                 </button>
@@ -514,26 +527,26 @@ export const IntelligentAI: React.FC<IntelligentAIProps> = ({ onBack }) => {
                       handleSend();
                     }
                   }}
-                  placeholder="Message Maksud Intelligent AI..."
-                  className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-3 px-2 resize-none max-h-48 custom-scrollbar"
+                  placeholder="Ask Maksud AI anything..."
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-base font-medium py-3 px-2 resize-none max-h-48 custom-scrollbar placeholder:text-slate-400"
                   rows={1}
                 />
                 <button 
                   onClick={handleSend}
                   disabled={(!input.trim() && attachments.length === 0) || isTyping}
                   className={cn(
-                    "p-3 rounded-2xl transition-all",
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95",
                     input.trim() || attachments.length > 0 
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                      : "bg-white/5 text-white/20"
+                      ? "bg-indigo-600 text-white shadow-indigo-200" 
+                      : "bg-slate-100 text-slate-300 shadow-none"
                   )}
                 >
                   {isTyping ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
                 </button>
               </div>
             </div>
-            <p className="text-[10px] text-center text-white/20 mt-4 font-bold uppercase tracking-widest">
-              Maksud Intelligent AI can make mistakes. Check important info.
+            <p className="text-[10px] text-center text-slate-400 mt-4 font-bold uppercase tracking-widest">
+              Powered by Google Gemini 1.5 Flash
             </p>
           </div>
         </div>

@@ -389,6 +389,7 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
                   { id: 'modern', label: 'Modern' },
                   { id: 'smart-classic', label: 'Smart' },
                   { id: 'smart-modern', label: 'Elite' },
+                  { id: 'vibrant', label: 'Vibrant' },
                 ].map((t) => (
                   <button
                     key={t.id}

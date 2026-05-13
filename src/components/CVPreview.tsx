@@ -4,6 +4,7 @@ import { ClassicTemplate } from './ClassicTemplate';
 import { ModernTemplate } from './ModernTemplate';
 import { SmartClassicTemplate, SmartModernTemplate } from './SmartTemplates';
 import { ClassicElegantTemplate } from './ExtraTemplates';
+import { VibrantTemplate } from './VibrantTemplate';
 
 interface CVPreviewProps {
   data: CVData;
@@ -29,6 +30,8 @@ export const CVPreview = React.forwardRef<HTMLDivElement, CVPreviewProps>(({ dat
         return <SmartModernTemplate ref={ref} data={data} />;
       case 'classic-elegant':
         return <ClassicElegantTemplate ref={ref} data={data} />;
+      case 'vibrant':
+        return <VibrantTemplate ref={ref} data={data} />;
       default:
         return <ClassicTemplate ref={ref} data={data} />;
     }

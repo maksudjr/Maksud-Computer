@@ -47,7 +47,7 @@ export interface ComputerSkill {
 
 export type TemplateId = 
   | 'classic' | 'modern' | 'smart-classic' | 'smart-modern'
-  | 'classic-elegant';
+  | 'classic-elegant' | 'vibrant';
 
 export interface Reference {
   id: string;

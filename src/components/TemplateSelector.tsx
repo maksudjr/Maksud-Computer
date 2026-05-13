@@ -11,6 +11,7 @@ const ModernTemplate = lazy(() => import('./ModernTemplate').then(m => ({ defaul
 const SmartClassicTemplate = lazy(() => import('./SmartTemplates').then(m => ({ default: m.SmartClassicTemplate })));
 const SmartModernTemplate = lazy(() => import('./SmartTemplates').then(m => ({ default: m.SmartModernTemplate })));
 const ClassicElegantTemplate = lazy(() => import('./ExtraTemplates').then(m => ({ default: m.ClassicElegantTemplate })));
+const VibrantTemplate = lazy(() => import('./VibrantTemplate').then(m => ({ default: m.VibrantTemplate })));
 
 const PreviewLoading = () => (
   <div className="w-full h-full bg-white flex items-center justify-center">
@@ -79,6 +80,11 @@ const TEMPLATES: { id: TemplateId; name: string; description: string }[] = [
     id: 'classic-elegant',
     name: 'Classic Elegant',
     description: 'A sophisticated serif-based layout for a distinguished professional look.',
+  },
+  {
+    id: 'vibrant',
+    name: 'Vibrant Professional',
+    description: 'A colorful, modern layout based on traditional Bangladeshi resume styles.',
   }
 ];
 
@@ -135,6 +141,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   {template.id === 'smart-classic' && <SmartClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-classic' } }} />}
                   {template.id === 'smart-modern' && <SmartModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-modern' } }} />}
                   {template.id === 'classic-elegant' && <ClassicElegantTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'classic-elegant' } }} />}
+                  {template.id === 'vibrant' && <VibrantTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'vibrant' } }} />}
                 </Suspense>
               </div>
               
