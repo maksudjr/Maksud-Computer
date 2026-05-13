@@ -220,8 +220,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className={cn(
-      "min-h-screen transition-colors duration-300",
-      uiTheme === 'light' ? "bg-slate-50" : (uiTheme === 'dark' ? "bg-slate-950 text-slate-100" : "bg-[#004d35] text-white")
+      "min-h-screen transition-all duration-500",
+      uiTheme === 'light' ? "bg-slate-50 text-slate-900" : 
+      (uiTheme === 'chameleon' ? "bg-slate-950 text-white" : 
+      (uiTheme === 'golden' ? "bg-[#004d35] text-white" : "bg-slate-950 text-slate-100"))
     )}>
       {/* Premium Banner */}
       <div className={cn(
@@ -482,7 +484,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </nav>
 
                 <div className="flex items-center justify-between p-2 border-t border-white/5 pt-4">
-                  <span className={cn("text-xs font-bold uppercase tracking-widest", uiTheme === 'golden' ? "text-emerald-100/40" : "text-slate-500")}>{language === 'en' ? 'Language' : 'ভাষা'}</span>
+                  <span className={cn("text-xs font-bold uppercase tracking-widest", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-100/40" : "text-emerald-500/60"))}>{language === 'en' ? 'Language' : 'ভাষা'}</span>
                   <div className={cn("flex items-center p-1 rounded-full border", 
                     uiTheme === 'light' ? "bg-slate-100 border-slate-200" : 
                     uiTheme === 'dark' ? "bg-slate-800 border-slate-700" : 
@@ -503,7 +505,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
             <div className="flex items-center justify-between p-2 mt-2">
-                  <span className={cn("text-xs font-bold uppercase tracking-widest", uiTheme === 'golden' ? "text-emerald-100/40" : "text-slate-500")}>{language === 'en' ? 'Theme' : 'থিম'}</span>
+                  <span className={cn("text-xs font-bold uppercase tracking-widest", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-100/40" : "text-emerald-500/60"))}>{language === 'en' ? 'Theme' : 'থিম'}</span>
                   <div className={cn("flex items-center p-1 rounded-full border", 
                     uiTheme === 'light' ? "bg-slate-100 border-slate-200" : 
                     uiTheme === 'dark' ? "bg-slate-800 border-slate-700" : 
@@ -560,9 +562,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 {welcomeMessage}
               </h1>
               <div className="flex items-center gap-3">
-                <div className={cn("h-1 w-12 rounded-full", uiTheme === 'golden' ? "bg-bd-red" : (uiTheme === 'chameleon' ? "" : "bg-indigo-600"))} 
+                <div className={cn("h-1 w-12 rounded-full", (uiTheme === 'golden' || uiTheme === 'chameleon') ? "bg-bd-red" : "bg-indigo-600")} 
                      style={uiTheme === 'chameleon' ? { backgroundColor: chameleonColor } : {}} />
-                <p className={cn("text-lg font-bold text-slate-500", uiTheme === 'golden' ? "text-emerald-300" : (uiTheme === 'chameleon' ? "" : ""))}
+                <p className={cn("text-lg font-bold", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-white"))}
                    style={uiTheme === 'chameleon' ? { color: chameleonColor, opacity: 0.8 } : {}}>
                   {t.dashboard.workspaceTitle}
                 </p>
@@ -578,8 +580,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <ShieldCheck size={20} className={uiTheme === 'golden' ? "text-bd-red" : "text-indigo-500"} />
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <span className={cn("text-[10px] font-bold uppercase tracking-widest", uiTheme === 'golden' ? "text-emerald-100" : "text-slate-400")}>Your Key:</span>
-                      <span className={cn("text-xs font-bold uppercase tracking-widest", uiTheme === 'golden' ? "text-emerald-300" : "text-slate-500")}>{activeKey}</span>
+                      <span className={cn("text-[10px] font-bold uppercase tracking-widest", uiTheme === 'light' ? "text-slate-400" : (uiTheme === 'golden' ? "text-emerald-100" : "text-slate-400"))}>Your Key:</span>
+                      <span className={cn("text-xs font-bold uppercase tracking-widest", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-slate-300"))}>{activeKey}</span>
                     </div>
                     <p className={cn("text-[10px] font-black mt-0.5 uppercase tracking-tighter animate-bounce", uiTheme === 'golden' ? "text-bd-red" : "text-[#f42a41]")}>
                       keep it secret and note it for next use
@@ -591,21 +593,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="flex gap-4">
                 <div className={cn(
                   "p-4 rounded-2xl border flex flex-col min-w-[120px] shadow-sm transition-all hover:scale-105",
-                  uiTheme === 'light' ? "bg-white border-slate-200" : (uiTheme === 'golden' ? "bg-emerald-950/40 border-emerald-500/20 shadow-[0_0_15px_rgba(0,103,71,0.2)]" : "bg-slate-900/50 border-slate-800")
+                  uiTheme === 'light' ? "bg-white border-slate-200" : (uiTheme === 'golden' ? "bg-emerald-950/40 border-emerald-500/20 shadow-[0_0_15px_rgba(0,103,71,0.2)]" : "bg-slate-900 border-slate-800")
                 )}>
-                  <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-emerald-100/40"))}>{t.dashboard.activeTools}</p>
-                  <p className={cn("text-3xl font-black", uiTheme === 'golden' ? "text-emerald-100 animate-pulse" : "text-slate-900 dark:text-white")}>
+                  <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-emerald-400"))}>{t.dashboard.activeTools}</p>
+                  <p className={cn("text-3xl font-black", uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'golden' ? "text-emerald-100 animate-pulse" : "text-white"))}>
                     {tools.length + pdfSubTools.length - 1}
                   </p>
                 </div>
                 <div className={cn(
                   "p-4 rounded-2xl border flex flex-col min-w-[120px] shadow-sm transition-all hover:scale-105",
-                  uiTheme === 'light' ? "bg-white border-slate-200" : (uiTheme === 'golden' ? "bg-emerald-950/40 border-emerald-500/20 shadow-[0_0_15px_rgba(0,103,71,0.2)]" : "bg-slate-900/50 border-slate-800")
+                  uiTheme === 'light' ? "bg-white border-slate-200" : (uiTheme === 'golden' ? "bg-emerald-950/40 border-emerald-500/20 shadow-[0_0_15px_rgba(0,103,71,0.2)]" : "bg-slate-900 border-slate-800")
                 )}>
-                  <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-emerald-100/40"))}>{t.dashboard.status}</p>
+                  <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-emerald-400"))}>{t.dashboard.status}</p>
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-                    <p className={cn("text-3xl font-black", uiTheme === 'golden' ? "text-emerald-100" : "text-slate-900 dark:text-white")}>{t.dashboard.online}</p>
+                    <p className={cn("text-3xl font-black", uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'golden' ? "text-emerald-100" : "text-white"))}>{t.dashboard.online}</p>
                   </div>
                 </div>
               </div>
@@ -792,10 +794,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                   )}
                   <div className="mb-8">
-                    <p className={cn("text-xs font-bold uppercase tracking-widest mb-2 opacity-60", uiTheme === 'golden' ? "text-emerald-300" : "text-slate-500")}>{plan.label}</p>
+                    <p className={cn("text-xs font-bold uppercase tracking-widest mb-2 opacity-60", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-white"))}>{plan.label}</p>
                     <div className="flex items-baseline gap-1">
                       <span className={cn("text-4xl font-black", uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'golden' ? "text-emerald-100" : "text-white"))}>{plan.price}</span>
-                      <span className={cn("text-sm font-bold uppercase", uiTheme === 'golden' ? "text-emerald-400" : "text-slate-400")}>TK</span>
+                      <span className={cn("text-sm font-bold uppercase", uiTheme === 'light' ? "text-slate-400" : (uiTheme === 'golden' ? "text-emerald-400" : "text-slate-400"))}>TK</span>
                     </div>
                   </div>
                   <div className="space-y-4 mb-8 flex-1">

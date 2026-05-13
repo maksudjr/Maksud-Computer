@@ -85,11 +85,11 @@
     @apply text-emerald-200/80;
   }
 
-  .dark .bg-gray-50, .dark .bg-gray-100 {
+  .dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-slate-50, .dark .bg-slate-100 {
     @apply bg-[#0a1a12];
   }
-  .golden .bg-gray-50, .golden .bg-gray-100,
-  .flag .bg-gray-50, .flag .bg-gray-100 {
+  .golden .bg-gray-50, .golden .bg-gray-100, .golden .bg-slate-50, .golden .bg-slate-100,
+  .flag .bg-gray-50, .flag .bg-gray-100, .flag .bg-slate-50, .flag .bg-slate-100 {
     @apply bg-[#004d35];
   }
 

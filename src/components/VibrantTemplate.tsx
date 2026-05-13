@@ -37,7 +37,7 @@ const InfoRow = ({ label, value, fontSize, color }: { label: string; value: stri
 };
 
 export const VibrantTemplate = React.memo(React.forwardRef<HTMLDivElement, VibrantTemplateProps>(({ data }, ref) => {
-  const { theme, personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, references, selectedSections } = data;
+  const { theme, personalInfo, careerObjective, education, computerSkills, skills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, references, selectedSections, customSection } = data;
   const primaryColor = theme.primaryColor || '#006747'; // Default to a nice green if not provided
   
   const formatDate = (dateStr: string) => {
@@ -72,30 +72,49 @@ export const VibrantTemplate = React.memo(React.forwardRef<HTMLDivElement, Vibra
       <div className="absolute bottom-0 left-0 w-48 h-48 opacity-5 pointer-events-none" style={{ background: `radial-gradient(circle at bottom left, ${primaryColor}, transparent)` }} />
 
       {/* Header section based on screenshot */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-black uppercase tracking-[0.2em] mb-2" style={{ color: primaryColor }}>
-          RESUME
-        </h1>
-        <div className="w-16 h-1 mx-auto mb-2 rounded-full" style={{ backgroundColor: '#f42a41' }} /> {/* Bangladesh Red accent */}
-        <h2 className="text-xl font-bold text-gray-500 uppercase tracking-widest mb-4 italic">OF</h2>
-        <h3 className="text-2xl font-black uppercase tracking-tight mb-3" style={{ color: adjustColor(primaryColor, -20) }}>
-          {personalInfo.name || 'YOUR FULL NAME'}
-        </h3>
-        
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm font-medium text-gray-600">
-          {personalInfo.phone && (
-            <div className="flex items-center gap-1.5">
-              <span style={{ color: primaryColor }}>Mobile:</span>
-              <span className="text-gray-900">{personalInfo.phone}</span>
-            </div>
-          )}
-          {personalInfo.email && (
-            <div className="flex items-center gap-1.5">
-              <span style={{ color: primaryColor }}>Email:</span>
-              <span className="text-gray-900 italic font-semibold">{personalInfo.email}</span>
-            </div>
-          )}
+      <div className="flex justify-between items-start mb-8 gap-8">
+        <div className="flex-1 text-left">
+          <h1 className="text-4xl font-black uppercase tracking-[0.2em] mb-2" style={{ color: primaryColor }}>
+            RESUME
+          </h1>
+          <div className="w-16 h-1 mb-2 rounded-full" style={{ backgroundColor: '#f42a41' }} />
+          <h2 className="text-xl font-bold text-gray-500 uppercase tracking-widest mb-4 italic">OF</h2>
+          <h3 className="text-2xl font-black uppercase tracking-tight mb-3" style={{ color: adjustColor(primaryColor, -20) }}>
+            {personalInfo.name || 'YOUR FULL NAME'}
+          </h3>
+          
+          <div className="flex flex-col gap-y-1 text-sm font-medium text-gray-600">
+            {personalInfo.phone && (
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold" style={{ color: primaryColor }}>Mobile:</span>
+                <span className="text-gray-900">{personalInfo.phone}</span>
+              </div>
+            )}
+            {personalInfo.email && (
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold" style={{ color: primaryColor }}>Email:</span>
+                <span className="text-gray-900 italic font-semibold">{personalInfo.email}</span>
+              </div>
+            )}
+          </div>
         </div>
+
+        {personalInfo.photo && (
+          <div className="relative group">
+            <div 
+              className="absolute -inset-1 rounded-2xl blur opacity-25 group-hover:opacity-50 transition-all duration-300"
+              style={{ background: `linear-gradient(45deg, ${primaryColor}, #f42a41)` }}
+            />
+            <div className="relative w-32 h-36 rounded-xl border-4 border-white shadow-xl overflow-hidden bg-gray-100">
+              <img 
+                src={personalInfo.photo} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -126,7 +145,7 @@ export const VibrantTemplate = React.memo(React.forwardRef<HTMLDivElement, Vibra
                     <InfoRow label="Board/University" value={edu.board} fontSize={theme.fontSize} color={primaryColor} />
                     <InfoRow label="Group/Major" value={edu.subject} fontSize={theme.fontSize} color={primaryColor} />
                     <InfoRow label="Passing Year" value={edu.passingYear} fontSize={theme.fontSize} color={primaryColor} />
-                    <InfoRow label="Result" value={edu.gpa ? `GPA ${edu.gpa} (${edu.gpaType})` : ''} fontSize={theme.fontSize} color={primaryColor} />
+                    <InfoRow label="Result" value={edu.gpa ? `${edu.gpaType === 'GPA' ? 'GPA' : 'Class'} ${edu.gpa} ${edu.gpaType === 'GPA' ? '(Out of 5.00)' : ''}` : ''} fontSize={theme.fontSize} color={primaryColor} />
                   </div>
                 </div>
               ))}
@@ -189,20 +208,65 @@ export const VibrantTemplate = React.memo(React.forwardRef<HTMLDivElement, Vibra
           </section>
         )}
 
+        {/* Hobbies */}
+        {selectedSections.includes('hobbies') && hobbies.length > 0 && (
+          <section>
+            <SectionHeader title="Hobbies & Interests" primaryColor={primaryColor} />
+            <div className="flex flex-wrap gap-2 ml-4">
+              {hobbies.map((hobby, idx) => (
+                <span 
+                  key={idx} 
+                  className="px-4 py-1.5 rounded-full text-sm font-bold shadow-sm"
+                  style={{ backgroundColor: primaryColor + '15', color: primaryColor, border: `1px solid ${primaryColor}30` }}
+                >
+                  {hobby}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Custom Section */}
+        {selectedSections.includes('custom') && customSection.title && customSection.fields.length > 0 && (
+          <section>
+            <SectionHeader title={customSection.title} primaryColor={primaryColor} />
+            <div className="space-y-2 ml-4">
+              {customSection.fields.map((field) => (
+                <InfoRow 
+                  key={field.id} 
+                  label={field.label} 
+                  value={field.value} 
+                  fontSize={theme.fontSize} 
+                  color={primaryColor} 
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Other Skills / Computer Skills */}
         {(selectedSections.includes('skills') || (selectedSections.includes('computerSkills') && computerSkills.length > 0)) && (
           <section>
             <SectionHeader title="Technical & Other Skills" primaryColor={primaryColor} />
-            <div className="grid grid-cols-1 gap-2 ml-4">
-              {computerSkills.map((skill, idx) => (
-                <div key={idx} className="flex items-start gap-3">
+            <div className="grid grid-cols-1 gap-4 ml-4">
+              {computerSkills.length > 0 && computerSkills.map((skill, idx) => (
+                <div key={`comp-${idx}`} className="flex items-start gap-3">
                   <span className="text-xl mt-[-2px]" style={{ color: '#f42a41' }}>➢</span>
                   <div>
-                    {skill.hasTraining && <span className="font-bold">Completed {skill.duration} training from {skill.instituteName}: </span>}
+                    {skill.hasTraining && <span className="font-bold text-gray-900 leading-none">Completed {skill.duration} training from {skill.instituteName}: </span>}
                     <span className="italic text-gray-700">{skill.skills.join(', ')}</span>
                   </div>
                 </div>
               ))}
+              {selectedSections.includes('skills') && skills && skills.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((skill, idx) => (
+                    <div key={`skill-${idx}`} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-lg text-sm font-semibold text-gray-700 border-l-2" style={{ borderLeftColor: primaryColor }}>
+                      <span style={{ color: '#f42a41' }}>✓</span> {skill}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -215,11 +279,19 @@ export const VibrantTemplate = React.memo(React.forwardRef<HTMLDivElement, Vibra
               <InfoRow label="Father's Name" value={personalInfo.fathersName} fontSize={theme.fontSize} color={primaryColor} />
               <InfoRow label="Mother's Name" value={personalInfo.mothersName} fontSize={theme.fontSize} color={primaryColor} />
               <InfoRow label="Date of Birth" value={formatDate(personalInfo.dob)} fontSize={theme.fontSize} color={primaryColor} />
-              <InfoRow label="Gender" value={personalInfo.gender} fontSize={theme.fontSize} color={primaryColor} />
-              <InfoRow label="Marital Status" value={personalInfo.maritalStatus} fontSize={theme.fontSize} color={primaryColor} />
+              <InfoRow label="Blood Group" value={personalInfo.bloodGroup} fontSize={theme.fontSize} color={primaryColor} />
               <InfoRow label="Nationality" value={personalInfo.nationality} fontSize={theme.fontSize} color={primaryColor} />
-              <InfoRow label="Religion" value={personalInfo.religion} fontSize={theme.fontSize} color={primaryColor} />
               <InfoRow label="National ID No" value={personalInfo.nid} fontSize={theme.fontSize} color={primaryColor} />
+              <InfoRow label="Birth Reg. No" value={personalInfo.birthRegNo} fontSize={theme.fontSize} color={primaryColor} />
+              <InfoRow label="Religion" value={personalInfo.religion} fontSize={theme.fontSize} color={primaryColor} />
+              <InfoRow label="Marital Status" value={personalInfo.maritalStatus} fontSize={theme.fontSize} color={primaryColor} />
+              <InfoRow label="Gender" value={personalInfo.gender} fontSize={theme.fontSize} color={primaryColor} />
+              <InfoRow label="Height" value={personalInfo.heightFeet ? `${personalInfo.heightFeet}' ${personalInfo.heightInches || 0}"` : ''} fontSize={theme.fontSize} color={primaryColor} />
+              <InfoRow label="Weight" value={personalInfo.weight ? `${personalInfo.weight} KG` : ''} fontSize={theme.fontSize} color={primaryColor} />
+              
+              <div className="col-span-full mt-2">
+                <InfoRow label="Present Address" value={getAddress(personalInfo.presentVillage, personalInfo.presentPostOffice, personalInfo.presentUpazila, personalInfo.presentDistrict)} fontSize={theme.fontSize} color={primaryColor} />
+              </div>
               <div className="col-span-full">
                 <InfoRow label="Permanent Address" value={getAddress(personalInfo.permanentVillage, personalInfo.permanentPostOffice, personalInfo.permanentUpazila, personalInfo.permanentDistrict)} fontSize={theme.fontSize} color={primaryColor} />
               </div>
