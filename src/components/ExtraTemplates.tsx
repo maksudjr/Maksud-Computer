@@ -263,3 +263,255 @@ export const ClassicElegantTemplate = React.forwardRef<HTMLDivElement, TemplateP
     </div>
   );
 });
+
+// 2. Modern Minimalist
+export const ModernMinimalistTemplate = React.forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
+  const { theme, personalInfo, careerObjective, education, computerSkills, trainings, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections, references } = data;
+  
+  const presentAddressLine = formatAddress(personalInfo.presentVillage, personalInfo.presentPostOffice, personalInfo.presentUpazila, personalInfo.presentDistrict);
+
+  return (
+    <div 
+      ref={ref} 
+      className={cn("bg-white w-[210mm] mx-auto shadow-lg print:shadow-none font-sans relative cv-paper overflow-hidden", theme.fontStyle)} 
+      style={{ 
+        minHeight: `${297 * theme.pageCount}mm`,
+        padding: `${theme.pageMargin}mm`
+      }}
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full -mr-16 -mt-16 z-0" style={{ backgroundColor: `${theme.primaryColor}11` }} />
+      
+      <header className="relative z-10 mb-12 flex justify-between items-end">
+        <div>
+          <h1 
+            contentEditable={theme.editableMode} 
+            suppressContentEditableWarning 
+            className="text-5xl font-black uppercase tracking-tighter outline-none mb-2" 
+            style={{ color: theme.primaryColor }}
+          >
+            {personalInfo.name || 'YOUR NAME'}
+          </h1>
+          <div className="flex flex-col gap-1 text-gray-500 font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+            <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none flex items-center gap-2 tracking-tight"><Mail size={12} /> {personalInfo.email}</span>
+            <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none flex items-center gap-2"><Phone size={12} /> {personalInfo.phone}</span>
+            <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none flex items-center gap-2"><MapPin size={12} /> {presentAddressLine}</span>
+          </div>
+        </div>
+        {personalInfo.photo && (
+          <div className="w-28 h-28 rounded-2xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500 shadow-xl ring-4 ring-offset-4 ring-gray-100" style={{ ringColor: `${theme.primaryColor}22` }}>
+            <img src={personalInfo.photo} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          </div>
+        )}
+      </header>
+
+      <div className="grid grid-cols-12 gap-10 relative z-10">
+        <div className="col-span-8 space-y-10">
+          {selectedSections.map((sectionId) => {
+            if (sectionId === 'careerObjective' && careerObjective) {
+              return (
+                <section key={sectionId} className="break-inside-avoid">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Brief</h2>
+                  <p contentEditable={theme.editableMode} suppressContentEditableWarning className="text-gray-700 leading-relaxed outline-none" style={{ fontSize: `${theme.fontSize}pt` }}>{careerObjective}</p>
+                </section>
+              );
+            }
+            if (sectionId === 'workExperience' && workExperience.length > 0) {
+              return (
+                <section key={sectionId} className="break-inside-avoid">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-6">Experience</h2>
+                  <div className="space-y-8">
+                    {workExperience.map((work) => (
+                      <div key={work.id} className="relative pl-6 border-l-2" style={{ borderColor: `${theme.primaryColor}22` }}>
+                        <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2" style={{ borderColor: theme.primaryColor }} />
+                        <div className="flex justify-between items-baseline mb-1">
+                          <h3 contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold text-gray-900 outline-none" style={{ fontSize: `${theme.fontSize + 1}pt` }}>{work.position}</h3>
+                          <span contentEditable={theme.editableMode} suppressContentEditableWarning className="text-xs font-bold text-gray-400 outline-none">{work.duration}</span>
+                        </div>
+                        <p contentEditable={theme.editableMode} suppressContentEditableWarning className="text-gray-500 font-medium mb-2 outline-none" style={{ fontSize: `${theme.fontSize}pt` }}>{work.companyName}</p>
+                        <p contentEditable={theme.editableMode} suppressContentEditableWarning className="text-gray-600 outline-none whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize - 1}pt` }}>{work.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+            if (sectionId === 'education' && education.length > 0) {
+              return (
+                <section key={sectionId} className="break-inside-avoid">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-6">Education</h2>
+                  <div className="space-y-6">
+                    {education.map((edu) => (
+                      <div key={edu.id}>
+                        <div className="flex justify-between items-baseline mb-1">
+                          <h3 contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold text-gray-900 outline-none" style={{ fontSize: `${theme.fontSize}pt` }}>{edu.examName}</h3>
+                          <span contentEditable={theme.editableMode} suppressContentEditableWarning className="text-xs font-bold text-gray-400 outline-none">{edu.passingYear}</span>
+                        </div>
+                        <p className="text-gray-500 font-medium" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                          <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none">{edu.instituteName}</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+            return null;
+          })}
+        </div>
+
+        <div className="col-span-4 space-y-10">
+          {selectedSections.map((sectionId) => {
+            if (sectionId === 'computerSkills' && computerSkills.length > 0) {
+              return (
+                <section key={sectionId} className="break-inside-avoid">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Expertise</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {computerSkills.flatMap(s => s.skills).map((skill, i) => (
+                      <span key={i} className="px-3 py-1 bg-gray-100 rounded-lg text-[10px] font-bold text-gray-600 uppercase tracking-wider">{skill}</span>
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+            if (sectionId === 'personalInfo') {
+              return (
+                <section key={sectionId} className="break-inside-avoid">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Details</h2>
+                  <div className="space-y-3" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-300">Father</p>
+                      <p className="font-medium text-gray-700">{personalInfo.fathersName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-300">Mother</p>
+                      <p className="font-medium text-gray-700">{personalInfo.mothersName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-300">Birth</p>
+                      <p className="font-medium text-gray-700">{formatDate(personalInfo.dob)}</p>
+                    </div>
+                  </div>
+                </section>
+              );
+            }
+            return null;
+          })}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// 3. Executive Elite
+export const ExecutiveEliteTemplate = React.forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
+  const { theme, personalInfo, careerObjective, education, computerSkills, trainings, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections, references } = data;
+  
+  const addressLine = formatAddress(personalInfo.presentVillage, personalInfo.presentPostOffice, personalInfo.presentUpazila, personalInfo.presentDistrict);
+
+  return (
+    <div 
+      ref={ref} 
+      className={cn("bg-white w-[210mm] mx-auto shadow-lg print:shadow-none font-serif relative cv-paper flex", theme.fontStyle)} 
+      style={{ 
+        minHeight: `${297 * theme.pageCount}mm`
+      }}
+    >
+      <div className="w-1/3 bg-slate-900 text-white p-8 flex flex-col pt-12" style={{ backgroundColor: theme.primaryColor }}>
+        {personalInfo.photo && (
+          <div className="w-full aspect-square bg-white/10 rounded-full mb-10 overflow-hidden border-4 border-white/20 p-2">
+            <img src={personalInfo.photo} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+          </div>
+        )}
+        
+        <div className="space-y-8 flex-1">
+          <section>
+            <h2 className="text-xs font-black uppercase tracking-widest text-white/50 mb-4 border-l-4 border-white/30 pl-3">Contact</h2>
+            <div className="space-y-4 text-xs font-medium">
+              <div className="flex items-start gap-3">
+                <Mail size={14} className="shrink-0" />
+                <span className="break-all">{personalInfo.email}</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <Phone size={14} className="shrink-0" />
+                <span>{personalInfo.phone}</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPin size={14} className="shrink-0" />
+                <span>{addressLine}</span>
+              </div>
+            </div>
+          </section>
+
+          {selectedSections.map((sectionId) => {
+            if (sectionId === 'computerSkills' && computerSkills.length > 0) {
+              return (
+                <section key={sectionId}>
+                  <h2 className="text-xs font-black uppercase tracking-widest text-white/50 mb-4 border-l-4 border-white/30 pl-3">Skills</h2>
+                  <div className="space-y-2">
+                    {computerSkills.flatMap(s => s.skills).map((skill, i) => (
+                      <div key={i} className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold uppercase">{skill}</span>
+                        <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div className="h-full bg-white/60 w-4/5" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+            return null;
+          })}
+        </div>
+      </div>
+
+      <div className="flex-1 p-10 pt-12 bg-white text-slate-800">
+        <header className="mb-12">
+          <h1 className="text-4xl font-black uppercase tracking-tight mb-1 outline-none" style={{ color: theme.primaryColor }}>{personalInfo.name}</h1>
+          <p className="text-lg font-bold text-slate-400 capitalize">Executive Professional</p>
+        </header>
+
+        <div className="space-y-10">
+          {selectedSections.map((sectionId) => {
+            if (sectionId === 'careerObjective' && careerObjective) {
+              return (
+                <section key={sectionId}>
+                  <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-3">
+                    <span className="w-6 h-1 bg-slate-200 rounded-full" />
+                    Profile
+                  </h2>
+                  <p className="text-slate-600 leading-relaxed text-justify outline-none" style={{ fontSize: `${theme.fontSize}pt` }}>{careerObjective}</p>
+                </section>
+              );
+            }
+            if (sectionId === 'workExperience' && workExperience.length > 0) {
+              return (
+                <section key={sectionId}>
+                  <h2 className="text-lg font-black uppercase tracking-tight mb-6 flex items-center gap-3">
+                    <span className="w-6 h-1 bg-slate-200 rounded-full" />
+                    Experience
+                  </h2>
+                  <div className="space-y-8">
+                    {workExperience.map((work) => (
+                      <div key={work.id}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-black text-slate-900 outline-none" style={{ fontSize: `${theme.fontSize + 1}pt` }}>{work.position}</h3>
+                            <p className="text-slate-500 font-black text-xs uppercase outline-none" style={{ color: theme.primaryColor }}>{work.companyName}</p>
+                          </div>
+                          <span className="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-black text-slate-400 uppercase outline-none">{work.duration}</span>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed outline-none" style={{ fontSize: `${theme.fontSize - 1}pt` }}>{work.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+            return null;
+          })}
+        </div>
+      </div>
+    </div>
+  );
+});

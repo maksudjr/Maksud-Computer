@@ -3,7 +3,7 @@ import { CVData } from '../types';
 import { ClassicTemplate } from './ClassicTemplate';
 import { ModernTemplate } from './ModernTemplate';
 import { SmartClassicTemplate, SmartModernTemplate } from './SmartTemplates';
-import { ClassicElegantTemplate } from './ExtraTemplates';
+import { ClassicElegantTemplate, ModernMinimalistTemplate, ExecutiveEliteTemplate } from './ExtraTemplates';
 import { VibrantTemplate } from './VibrantTemplate';
 
 interface CVPreviewProps {
@@ -28,6 +28,10 @@ export const CVPreview = React.memo(React.forwardRef<HTMLDivElement, CVPreviewPr
         return <SmartClassicTemplate ref={ref} data={data} />;
       case 'smart-modern':
         return <SmartModernTemplate ref={ref} data={data} />;
+      case 'modern-minimalist':
+        return <ModernMinimalistTemplate ref={ref} data={data} />;
+      case 'executive-elite':
+        return <ExecutiveEliteTemplate ref={ref} data={data} />;
       case 'vibrant':
         return <VibrantTemplate ref={ref} data={data} />;
       default:

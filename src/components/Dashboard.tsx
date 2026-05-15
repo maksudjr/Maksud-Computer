@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, 
@@ -82,6 +82,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [notice, setNotice] = useState<string>('');
+
+  useEffect(() => {
+    const fetchNotice = async () => {
+      try {
+        const { doc, onSnapshot } = await import('firebase/firestore');
+        const noticeRef = doc(db, 'settings', 'global');
+        return onSnapshot(noticeRef, (doc) => {
+          if (doc.exists()) {
+            setNotice(doc.data().notice || '');
+          }
+        });
+      } catch (err) {
+        console.error("Error fetching notice:", err);
+      }
+    };
+    fetchNotice();
+  }, []);
   
   const handleClearCache = () => {
     if (window.confirm(language === 'en' ? 'Are you sure you want to clear all data and last 5 CVs?' : 'আপনি কি নিশ্চিত যে আপনি সমস্ত ডেটা এবং শেষ ৫টি জীবনবৃত্তান্ত মুছে ফেলতে চান?')) {
@@ -275,6 +293,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Notice Marquee */}
+      <AnimatePresence>
+        {notice && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className={cn(
+              "py-2 overflow-hidden border-b",
+              uiTheme === 'golden' ? "bg-[#004d35] border-emerald-500/10 text-emerald-100" : 
+              (uiTheme === 'chameleon' ? "bg-slate-900 border-white/5 text-white" : "bg-indigo-600 text-white")
+            )}
+          >
+            <div className="whitespace-nowrap flex">
+              <div className="animate-marquee inline-block pr-12 font-black text-xs uppercase tracking-widest">
+                {notice} &nbsp; • &nbsp; {notice} &nbsp; • &nbsp; {notice} &nbsp; • &nbsp; {notice} &nbsp; • &nbsp; {notice}
+              </div>
+              <div className="animate-marquee inline-block pr-12 font-black text-xs uppercase tracking-widest" aria-hidden="true">
+                {notice} &nbsp; • &nbsp; {notice} &nbsp; • &nbsp; {notice} &nbsp; • &nbsp; {notice} &nbsp; • &nbsp; {notice}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Free Access Section */}
       {!isAuthorized && (
@@ -645,16 +688,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     {tools.length + pdfSubTools.length - 1}
                   </p>
                 </div>
-                <div className={cn(
-                  "p-4 rounded-2xl border flex flex-col min-w-[120px] shadow-sm transition-all hover:scale-105",
-                  uiTheme === 'light' ? "bg-white border-slate-200" : (uiTheme === 'golden' ? "bg-emerald-950/40 border-emerald-500/20 shadow-[0_0_15px_rgba(0,103,71,0.2)]" : "bg-slate-900 border-slate-800")
-                )}>
-                  <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-emerald-400"))}>{t.dashboard.status}</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-                    <p className={cn("text-3xl font-black", uiTheme === 'light' ? "text-slate-900" : (uiTheme === 'golden' ? "text-emerald-100" : "text-white"))}>{t.dashboard.online}</p>
-                  </div>
-                </div>
               </div>
             </div>
           </motion.div>
@@ -701,20 +734,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               ) : (
                 <>
-                  <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <motion.div 
                        initial={{ width: 0 }}
                        animate={{ width: `${Math.min((coins / 50) * 100, 100)}%` }}
                        className={cn(
-                         "h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.1)]",
+                         "h-full rounded-full transition-all duration-1000 shadow-[0_0_4px_rgba(0,0,0,0.1)]",
                          coins < 5 ? "bg-[#f42a41]" : coins < 15 ? "bg-amber-500" : "bg-[#006747]"
                        )}
                     />
                   </div>
                   {!freeTrialUsed && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-[#f42a41] rounded-full animate-pulse" />
-                      <p className={cn("text-[10px] font-bold uppercase tracking-widest", uiTheme === 'golden' ? "text-white" : "text-red-600")}>
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="w-1 h-1 bg-[#f42a41] rounded-full animate-pulse" />
+                      <p className={cn("text-[8px] font-bold uppercase tracking-widest", uiTheme === 'golden' ? "text-white" : "text-red-600")}>
                         {t.dashboard.freeUseAvailable}
                       </p>
                     </div>

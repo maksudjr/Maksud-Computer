@@ -262,7 +262,7 @@ export const generateDocx = async (data: CVData) => {
     const headerBg = theme.headerStyle === 'black' ? '000000' : (theme.headerStyle === 'primary' ? theme.primaryColor.replace('#', '') : null);
     const headerTextColor = headerBg ? (theme.primaryColor === '#ffd700' && theme.headerStyle === 'primary' ? '000000' : 'FFFFFF') : theme.primaryColor.replace('#', '');
 
-    const isElegant = theme.templateId === 'classic-elegant';
+    const isElegant = theme.templateId === 'modern-minimalist';
     const isSmartClassic = theme.templateId === 'smart-classic';
 
     const classicHeaderContent = [

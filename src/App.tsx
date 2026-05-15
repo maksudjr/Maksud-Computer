@@ -71,12 +71,14 @@ const SECTIONS: { id: SectionId; label: string }[] = [
 ];
 
 const COLORS = [
-  { name: 'Professional Blue', value: '#2563eb' },
-  { name: 'Elite Gold', value: '#d4af37' },
-  { name: 'Classic Black', value: '#1a1a1a' },
-  { name: 'Emerald Green', value: '#10b981' },
-  { name: 'Royal Red', value: '#dc2626' },
-  { name: 'Midnight Blue', value: '#1e293b' },
+  { name: 'Midnight Sapphire', value: '#0f172a' },
+  { name: 'Deep Indigo', value: '#3730a3' },
+  { name: 'Vibrant Violet', value: '#6d28d9' },
+  { name: 'Forest Emerald', value: '#065f46' },
+  { name: 'Imperial Red', value: '#991b1b' },
+  { name: 'Golden Harvest', value: '#92400e' },
+  { name: 'Rosewood', value: '#881337' },
+  { name: 'Slate Gray', value: '#475569' },
 ];
 
 const FONTS = [

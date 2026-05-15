@@ -56,6 +56,7 @@ export interface Training {
 
 export type TemplateId = 
   | 'classic' | 'modern' | 'smart-classic' | 'smart-modern'
+  | 'modern-minimalist' | 'executive-elite'
   | 'vibrant';
 
 export interface Reference {

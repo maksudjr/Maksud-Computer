@@ -53,18 +53,42 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [newKeyCoins, setNewKeyCoins] = useState(10);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    // Auth is handled via local ID/Password for the UI
-    // Firestore rules are updated to allow operations
-  }, []);
+  const [globalNotice, setGlobalNotice] = useState('');
+  const [isUpdatingNotice, setIsUpdatingNotice] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) {
       fetchKeys();
       fetchPaymentRequests();
+      fetchGlobalNotice();
     }
   }, [isLoggedIn]);
+
+  const fetchGlobalNotice = async () => {
+    try {
+      const noticeRef = doc(db, 'settings', 'global');
+      const docSnap = await getDoc(noticeRef);
+      if (docSnap.exists()) {
+        setGlobalNotice(docSnap.data().notice || '');
+      }
+    } catch (err) {
+      console.error("Error fetching notice:", err);
+    }
+  };
+
+  const handleUpdateNotice = async () => {
+    setIsUpdatingNotice(true);
+    try {
+      const noticeRef = doc(db, 'settings', 'global');
+      await setDoc(noticeRef, { notice: globalNotice }, { merge: true });
+      alert('Notice updated successfully!');
+    } catch (err) {
+      console.error("Error updating notice:", err);
+      setError('Failed to update notice');
+    } finally {
+      setIsUpdatingNotice(false);
+    }
+  };
 
   const fetchPaymentRequests = async () => {
     try {
@@ -363,6 +387,33 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <p className="text-indigo-100 text-sm font-medium leading-relaxed">
               Keywords are custom codes you create. Once a user redeems a keyword, it becomes inactive and the coins are added to their account.
             </p>
+          </div>
+
+          {/* Global Notice Box */}
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm">
+            <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+              <Plus className="text-indigo-600" />
+              Global Notice
+            </h2>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">Notice Message</label>
+                <textarea 
+                  value={globalNotice}
+                  onChange={(e) => setGlobalNotice(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold h-32 resize-none"
+                  placeholder="Enter notice message for dashboard marquee..."
+                />
+              </div>
+              <button 
+                onClick={handleUpdateNotice}
+                disabled={isUpdatingNotice}
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isUpdatingNotice ? <Loader2 className="animate-spin" /> : <Settings size={20} />}
+                Update Global Notice
+              </button>
+            </div>
           </div>
         </div>
 

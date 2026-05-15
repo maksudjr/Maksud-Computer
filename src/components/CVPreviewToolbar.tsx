@@ -30,6 +30,8 @@ const TEMPLATES: { id: TemplateId; name: string }[] = [
   { id: 'modern', name: 'Modern' },
   { id: 'smart-classic', name: 'Smart Classic' },
   { id: 'smart-modern', name: 'Elite Modern' },
+  { id: 'modern-minimalist', name: 'Modern Minimalist' },
+  { id: 'executive-elite', name: 'Executive Elite' },
 ];
 
 const THEME_PRESETS = [
