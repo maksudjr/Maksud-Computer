@@ -203,7 +203,7 @@ const DISTRICT_UPAZILA_MAP: Record<string, string[]> = {
   'Narayanganj': ['Narayanganj Sadar', 'Araihazar', 'Bandar', 'Rupganj', 'Sonargaon'],
 };
 
-export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
+export const CVForm: React.FC<CVFormProps> = React.memo(({ data, onChange }) => {
   const [editingPhoto, setEditingPhoto] = useState<string | null>(null);
   const [editingSignature, setEditingSignature] = useState<string | null>(null);
 
@@ -1464,4 +1464,4 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
       )}
     </div>
   );
-};
+});

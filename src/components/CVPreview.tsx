@@ -19,7 +19,7 @@ const TemplateLoading = () => (
   </div>
 );
 
-export const CVPreview = React.forwardRef<HTMLDivElement, CVPreviewProps>(({ data }, ref) => {
+export const CVPreview = React.memo(React.forwardRef<HTMLDivElement, CVPreviewProps>(({ data }, ref) => {
   const renderTemplate = () => {
     switch (data.theme.templateId) {
       case 'modern':
@@ -28,8 +28,6 @@ export const CVPreview = React.forwardRef<HTMLDivElement, CVPreviewProps>(({ dat
         return <SmartClassicTemplate ref={ref} data={data} />;
       case 'smart-modern':
         return <SmartModernTemplate ref={ref} data={data} />;
-      case 'classic-elegant':
-        return <ClassicElegantTemplate ref={ref} data={data} />;
       case 'vibrant':
         return <VibrantTemplate ref={ref} data={data} />;
       default:
@@ -38,6 +36,6 @@ export const CVPreview = React.forwardRef<HTMLDivElement, CVPreviewProps>(({ dat
   };
 
   return renderTemplate();
-});
+}));
 
 CVPreview.displayName = 'CVPreview';

@@ -36,7 +36,8 @@ import {
   Bot,
   Globe,
   ArrowRightLeft,
-  Languages
+  Languages,
+  RefreshCw
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { cn } from '../lib/utils';
@@ -80,7 +81,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   
+  const handleClearCache = () => {
+    if (window.confirm(language === 'en' ? 'Are you sure you want to clear all data and last 5 CVs?' : 'আপনি কি নিশ্চিত যে আপনি সমস্ত ডেটা এবং শেষ ৫টি জীবনবৃত্তান্ত মুছে ফেলতে চান?')) {
+      localStorage.removeItem('cv_history');
+      localStorage.removeItem('maksud_ui_theme');
+      localStorage.removeItem('language');
+      // Clear other related caches if any
+      window.location.reload();
+    }
+  };
+
   const welcomeMessage = useMemo(() => {
     const hour = new Date().getHours();
     const name = userName ? `, ${userName}` : '';
@@ -385,64 +397,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </nav>
 
             <div className="flex items-center gap-3">
-              <div className={cn(
-                "p-1 rounded-2xl flex items-center transition-colors",
-                uiTheme === 'light' ? "bg-slate-100" : "bg-slate-800"
-              )}>
-                {['en', 'bn'].map((lang) => (
-                  <button 
-                    key={lang}
-                    onClick={() => onLanguageChange(lang as any)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl font-bold text-[10px] transition-all",
-                      language === lang 
-                        ? (uiTheme === 'golden' ? "bg-amber-600 text-white" : "bg-white text-indigo-600 shadow-sm shadow-indigo-600/10") 
-                        : (uiTheme === 'golden' ? "text-emerald-100/40 hover:text-white" : "text-slate-500 hover:text-slate-700")
-                    )}
-                  >
-                    {lang.toUpperCase()}
-                  </button>
-                ))}
-              </div>
+              <button 
+                onClick={() => setShowSettings(true)}
+                className={cn(
+                  "p-3 rounded-full transition-all hover:scale-110",
+                  uiTheme === 'light' ? "bg-slate-100 text-slate-600 hover:bg-slate-200" : 
+                  (uiTheme === 'golden' ? "bg-emerald-900 text-emerald-400 hover:bg-emerald-800" : "bg-slate-800 text-slate-400 hover:bg-slate-700")
+                )}
+                title="Settings"
+              >
+                <Settings size={20} />
+              </button>
 
-              <div className={cn(
-                "p-1 rounded-2xl flex items-center transition-colors",
-                uiTheme === 'light' ? "bg-slate-100" : "bg-slate-800"
-              )}>
-                {[
-                  { theme: 'light', icon: <Monitor size={14} /> },
-                  { theme: 'dark', icon: <Zap size={14} /> },
-                  { theme: 'golden', icon: <Crown size={14} />, label: 'Flag Style' },
-                  { theme: 'chameleon', icon: <Palette size={14} /> }
-                ].map((t) => (
-                  <button 
-                    key={`theme-btn-${t.theme}`}
-                    onClick={() => onThemeChange(t.theme as any)}
-                    className={cn(
-                      "p-1.5 rounded-xl transition-all",
-                      uiTheme === t.theme 
-                        ? (uiTheme === 'golden' ? "bg-[#f42a41] text-white" : 
-                           uiTheme === 'chameleon' ? "text-white" : "bg-white text-[#006747] shadow-sm shadow-emerald-600/10") 
-                        : (uiTheme === 'golden' ? "text-emerald-100/40 hover:text-white" : "text-slate-500 hover:text-slate-700")
-                    )}
-                    style={uiTheme === 'chameleon' && uiTheme === t.theme ? { backgroundColor: chameleonColor } : {}}
-                  >
-                    {t.theme === 'chameleon' ? <Palette size={14} className={cn(uiTheme === 'chameleon' ? "text-white" : "text-indigo-500")} /> : t.icon}
-                  </button>
-                ))}
-              </div>
+              <button 
+                onClick={() => onSelectTool('about', 0)}
+                className={cn(
+                  "px-6 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 active:scale-95",
+                  uiTheme === 'golden' ? "bg-[#f42a41] text-white shadow-lg shadow-red-900/20" : (uiTheme === 'chameleon' ? "" : "bg-[#006747] text-white shadow-lg shadow-emerald-600/20")
+                )}
+                style={uiTheme === 'chameleon' ? { backgroundColor: chameleonColor, color: 'white' } : {}}
+              >
+                {t.dashboard.contactUs}
+              </button>
             </div>
-
-            <button 
-              onClick={() => onSelectTool('about', 0)}
-              className={cn(
-                "px-6 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 active:scale-95",
-                uiTheme === 'golden' ? "bg-[#f42a41] text-white shadow-lg shadow-red-900/20" : (uiTheme === 'chameleon' ? "" : "bg-[#006747] text-white shadow-lg shadow-emerald-600/20")
-              )}
-              style={uiTheme === 'chameleon' ? { backgroundColor: chameleonColor, color: 'white' } : {}}
-            >
-              {t.dashboard.contactUs}
-            </button>
           </div>
         </div>
       </header>
@@ -481,55 +458,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   >
                     {t.dashboard.pricing}
                   </button>
+                  <button 
+                    onClick={() => { setShowSettings(true); setIsMenuOpen(false); }}
+                    className={cn("text-left text-sm font-bold p-2 rounded-xl transition-all flex items-center gap-2", 
+                      uiTheme === 'light' ? "text-slate-600 hover:bg-slate-100" : "text-slate-400 hover:bg-slate-800")}
+                  >
+                    <Settings size={18} />
+                    {language === 'en' ? 'Settings' : 'সেটিংস'}
+                  </button>
                 </nav>
-
-                <div className="flex items-center justify-between p-2 border-t border-white/5 pt-4">
-                  <span className={cn("text-xs font-bold uppercase tracking-widest", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-100/40" : "text-emerald-500/60"))}>{language === 'en' ? 'Language' : 'ভাষা'}</span>
-                  <div className={cn("flex items-center p-1 rounded-full border", 
-                    uiTheme === 'light' ? "bg-slate-100 border-slate-200" : 
-                    uiTheme === 'dark' ? "bg-slate-800 border-slate-700" : 
-                    "bg-emerald-950/80 border-emerald-900")}>
-                    <button 
-                      onClick={() => onLanguageChange('en')}
-                      className={cn("px-3 py-1.5 rounded-full text-[10px] font-black transition-all", language === 'en' ? (uiTheme === 'golden' ? "bg-[#f42a41] text-white" : "bg-white text-indigo-600 shadow-sm") : (uiTheme === 'golden' ? "text-emerald-100/40" : "text-slate-500"))}
-                    >
-                      EN
-                    </button>
-                    <button 
-                      onClick={() => onLanguageChange('bn')}
-                      className={cn("px-3 py-1.5 rounded-full text-[10px] font-black transition-all", language === 'bn' ? (uiTheme === 'golden' ? "bg-[#f42a41] text-white" : "bg-white text-indigo-600 shadow-sm") : (uiTheme === 'golden' ? "text-emerald-100/40" : "text-slate-500"))}
-                    >
-                      BN
-                    </button>
-                  </div>
-                </div>
-
-            <div className="flex items-center justify-between p-2 mt-2">
-                  <span className={cn("text-xs font-bold uppercase tracking-widest", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-100/40" : "text-emerald-500/60"))}>{language === 'en' ? 'Theme' : 'থিম'}</span>
-                  <div className={cn("flex items-center p-1 rounded-full border", 
-                    uiTheme === 'light' ? "bg-slate-100 border-slate-200" : 
-                    uiTheme === 'dark' ? "bg-slate-800 border-slate-700" : 
-                    "bg-emerald-950/80 border-emerald-900")}>
-                    <button 
-                      onClick={() => onThemeChange('light')}
-                      className={cn("p-2 rounded-full transition-all", uiTheme === 'light' ? "bg-white text-[#006747] shadow-sm" : "text-slate-500")}
-                    >
-                      <Monitor size={16} />
-                    </button>
-                    <button 
-                      onClick={() => onThemeChange('dark')}
-                      className={cn("p-2 rounded-full transition-all", uiTheme === 'dark' ? "bg-[#006747] text-white shadow-sm" : "text-slate-500")}
-                    >
-                      <Zap size={16} />
-                    </button>
-                    <button 
-                      onClick={() => onThemeChange('golden')}
-                      className={cn("p-2 rounded-full transition-all", uiTheme === 'golden' ? "bg-[#f42a41] text-white shadow-sm" : "text-slate-500")}
-                    >
-                      <Crown size={16} />
-                    </button>
-                  </div>
-                </div>
 
                 <button 
                   onClick={() => { onSelectTool('about', 0); setIsMenuOpen(false); }}
@@ -545,6 +482,114 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <div className="fixed inset-0 z-[120] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className={cn(
+                "max-w-md w-full rounded-[2.5rem] shadow-2xl border p-8 relative",
+                uiTheme === 'light' ? "bg-white border-slate-100" : (uiTheme === 'dark' ? "bg-slate-900 border-slate-800" : "bg-[#1a1a1a] border-amber-900/30")
+              )}
+            >
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="flex items-center gap-3 mb-8">
+                <div className={cn("p-2 rounded-xl", uiTheme === 'golden' ? "bg-amber-600 text-white" : "bg-indigo-600 text-white")}>
+                  <Settings size={20} />
+                </div>
+                <h2 className={cn("text-xl font-black", uiTheme === 'light' ? "text-slate-900" : "text-white")}>
+                  {language === 'en' ? 'App Settings' : 'অ্যাপ সেটিংস'}
+                </h2>
+              </div>
+
+              <div className="space-y-8">
+                {/* Language Selection */}
+                <div className="space-y-4">
+                  <label className={cn("text-xs font-black uppercase tracking-widest", uiTheme === 'light' ? "text-slate-400" : "text-slate-500")}>
+                    {language === 'en' ? 'Language Preferences' : 'ভাষা পছন্দসমূহ'}
+                  </label>
+                  <div className={cn("flex p-1 rounded-2xl", uiTheme === 'light' ? "bg-slate-100" : "bg-slate-800")}>
+                    {['en', 'bn'].map((lang) => (
+                      <button 
+                        key={`settings-lang-${lang}`}
+                        onClick={() => onLanguageChange(lang as any)}
+                        className={cn(
+                          "flex-1 py-3 rounded-xl font-bold text-sm transition-all",
+                          language === lang 
+                            ? (uiTheme === 'golden' ? "bg-amber-600 text-white shadow-sm" : "bg-white text-indigo-600 shadow-sm") 
+                            : (uiTheme === 'light' ? "text-slate-500 hover:text-slate-700" : "text-slate-400 hover:text-slate-200")
+                        )}
+                      >
+                        {lang === 'en' ? 'English' : 'বাংলা'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Theme Selection */}
+                <div className="space-y-4">
+                  <label className={cn("text-xs font-black uppercase tracking-widest", uiTheme === 'light' ? "text-slate-400" : "text-slate-500")}>
+                    {language === 'en' ? 'Interface Theme' : 'ইন্টারফেস থিম'}
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { id: 'light', label: language === 'en' ? 'Light' : 'লাইট', icon: <Monitor size={18} /> },
+                      { id: 'dark', label: language === 'en' ? 'Dark' : 'ডার্ক', icon: <Zap size={18} /> },
+                      { id: 'golden', label: language === 'en' ? 'Flag Style' : 'ফ্ল্যাগ স্টাইল', icon: <Crown size={18} /> },
+                      { id: 'chameleon', label: language === 'en' ? 'Chameleon' : 'ক্যামেলিয়ন', icon: <Palette size={18} /> }
+                    ].map((t) => (
+                      <button 
+                        key={`settings-theme-${t.id}`}
+                        onClick={() => onThemeChange(t.id as any)}
+                        className={cn(
+                          "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                          uiTheme === t.id 
+                            ? (uiTheme === 'golden' ? "border-amber-500 bg-amber-950 text-amber-500" : "border-indigo-600 bg-indigo-50 text-indigo-600") 
+                            : (uiTheme === 'light' ? "border-slate-100 bg-white" : "border-slate-800 bg-slate-800 hover:border-slate-700")
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={uiTheme === t.id ? (uiTheme === 'golden' ? "text-amber-500" : "text-indigo-600") : "text-slate-400"}>
+                            {t.icon}
+                          </span>
+                          <span className="text-xs font-bold">{t.label}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* System Actions */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <label className={cn("text-xs font-black uppercase tracking-widest", uiTheme === 'light' ? "text-slate-400" : "text-slate-500")}>
+                    {language === 'en' ? 'Maintenance' : 'রক্ষণাবেক্ষণ'}
+                  </label>
+                  <button 
+                    onClick={handleClearCache}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 transition-all font-bold group"
+                  >
+                    <div className="text-left">
+                      <p className="text-sm">{language === 'en' ? 'Clear Cache & Germs' : 'ক্যাশে এবং ডেটা মুছুন'}</p>
+                      <p className="text-[10px] opacity-70">{language === 'en' ? 'Deletes last 5 history and app data' : 'শেষ ৫টি ইতিহাস এবং অ্যাপ ডেটা মুছে ফেলে'}</p>
+                    </div>
+                    <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Welcome Section */}
         <div className="mb-16">

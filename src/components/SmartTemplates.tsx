@@ -16,7 +16,7 @@ const formatDate = (dateStr: string) => {
   return dateStr;
 };
 
-export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
+export const SmartClassicTemplate = React.memo(React.forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
   const { theme, personalInfo, careerObjective, education, computerSkills, trainings, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections, references } = data;
 
   const formatAddress = (village: string, po: string, upazila: string, district: string) => {
@@ -386,42 +386,41 @@ export const SmartClassicTemplate = React.forwardRef<HTMLDivElement, TemplatePro
             );
           }
 
-          if (sectionId === 'declaration' && declaration) {
-            return (
-              <section key={sectionId} className="mt-8 break-inside-avoid">
-                <h2 className="text-lg font-bold uppercase border-b-2 mb-3 pb-1" style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}33` }}>
-                  Declaration
-                </h2>
-                <p contentEditable={theme.editableMode} suppressContentEditableWarning className="text-justify italic text-gray-600 outline-none whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
-                  "{declaration}"
-                </p>
-                <div className="mt-12 flex flex-col items-end">
-                  {personalInfo.signature && (
-                    <img src={personalInfo.signature} alt="Signature" className="h-10 object-contain mb-2" />
-                  )}
-                  <div className="w-48 border-t border-gray-900 pt-1 text-center">
-                    <p contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold outline-none" style={{ fontSize: `${theme.fontSize}pt` }}>{personalInfo.name}</p>
-                  </div>
-                </div>
-              </section>
-            );
-          }
-
           return null;
         })}
+
+        {/* Declaration and Signature always at the end */}
+        {selectedSections.includes('declaration') && declaration && (
+          <section className="mt-8 break-inside-avoid">
+            <h2 className="text-lg font-bold uppercase border-b-2 mb-3 pb-1" style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}33` }}>
+              Declaration
+            </h2>
+            <p contentEditable={theme.editableMode} suppressContentEditableWarning className="text-justify italic text-gray-600 outline-none whitespace-pre-wrap" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
+              "{declaration}"
+            </p>
+            <div className="mt-12 flex flex-col items-end">
+              {personalInfo.signature && (
+                <img src={personalInfo.signature} alt="Signature" className="h-10 object-contain mb-2" />
+              )}
+              <div className="w-48 border-t border-gray-900 pt-1 text-center">
+                <p contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold outline-none" style={{ fontSize: `${theme.fontSize}pt` }}>{personalInfo.name}</p>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Watermark/Footer */}
-      <footer className="mt-auto pt-8 text-center">
+      <footer className="mt-auto pt-8 text-center print:hidden">
         <p className="text-[9pt] font-bold italic transition-colors hover:text-emerald-600" style={{ color: theme.primaryColor + '60' }}>
           Professionally Crafted by Maksud Computer Digital Hub
         </p>
       </footer>
     </div>
   );
-});
+}));
 
-export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
+export const SmartModernTemplate = React.memo(React.forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
   const { theme, personalInfo, careerObjective, education, computerSkills, trainings, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections, references } = data;
 
   const formatAddress = (village: string, po: string, upazila: string, district: string) => {
@@ -537,7 +536,7 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
           )}
         </div>
 
-        <div className="mt-auto pt-8 text-center">
+        <div className="mt-auto pt-8 text-center print:hidden">
           <p className="text-[9pt] font-bold italic transition-colors" style={{ color: '#ffffff' + '80' }}>
             Professionally Crafted by Maksud Computer Digital Hub
           </p>
@@ -739,31 +738,30 @@ export const SmartModernTemplate = React.forwardRef<HTMLDivElement, TemplateProp
               );
             }
 
-            if (sectionId === 'declaration' && declaration) {
-              return (
-                <section key={sectionId} className="mt-auto break-inside-avoid">
-                  <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                    <h2 className="text-sm font-black uppercase tracking-widest mb-3 text-gray-400">Declaration</h2>
-                    <p contentEditable={theme.editableMode} suppressContentEditableWarning className="text-gray-600 italic outline-none" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
-                      {declaration}
-                    </p>
-                  </div>
-                  <div className="mt-10 flex flex-col items-end">
-                    {personalInfo.signature && (
-                      <img src={personalInfo.signature} alt="Signature" className="h-10 object-contain mb-2" />
-                    )}
-                    <div className="w-48 border-t-2 border-gray-900 pt-2 text-center">
-                      <p contentEditable={theme.editableMode} suppressContentEditableWarning className="font-black uppercase tracking-tighter outline-none" style={{ fontSize: `${theme.fontSize}pt` }}>{personalInfo.name}</p>
-                    </div>
-                  </div>
-                </section>
-              );
-            }
-
             return null;
           })}
+
+          {/* Declaration and Signature always at the end */}
+          {selectedSections.includes('declaration') && declaration && (
+            <section className="mt-auto break-inside-avoid">
+              <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                <h2 className="text-sm font-black uppercase tracking-widest mb-3 text-gray-400">Declaration</h2>
+                <p contentEditable={theme.editableMode} suppressContentEditableWarning className="text-gray-600 italic outline-none" style={{ fontSize: `${theme.fontSize - 1}pt` }}>
+                  {declaration}
+                </p>
+              </div>
+              <div className="mt-10 flex flex-col items-end">
+                {personalInfo.signature && (
+                  <img src={personalInfo.signature} alt="Signature" className="h-10 object-contain mb-2" />
+                )}
+                <div className="w-48 border-t-2 border-gray-900 pt-2 text-center">
+                  <p contentEditable={theme.editableMode} suppressContentEditableWarning className="font-black uppercase tracking-tighter outline-none" style={{ fontSize: `${theme.fontSize}pt` }}>{personalInfo.name}</p>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       </main>
     </div>
   );
-});
+}));

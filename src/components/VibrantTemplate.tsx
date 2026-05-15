@@ -385,41 +385,39 @@ export const VibrantTemplate = React.memo(React.forwardRef<HTMLDivElement, Vibra
             );
           }
 
-          if (sectionId === 'declaration' && declaration) {
-            return (
-              <section key={sectionId} className="break-inside-avoid">
-                <SectionHeader title="Declaration" primaryColor={primaryColor} />
-                <div 
-                  contentEditable={theme.editableMode} 
-                  suppressContentEditableWarning 
-                  className="p-4 rounded-xl bg-gray-50/30 text-justify text-sm italic leading-relaxed text-gray-700 border border-dashed border-gray-200 outline-none focus:ring-1 focus:ring-indigo-300 whitespace-pre-wrap"
-                >
-                  {declaration}
-                </div>
-                
-                <div className="mt-12 flex flex-col items-end mr-8">
-                  <div className="text-center w-48">
-                    {personalInfo.signature ? (
-                      <img src={personalInfo.signature} alt="Signature" className="h-10 mx-auto object-contain mb-2" />
-                    ) : (
-                      <div className="h-10 mb-2" />
-                    )}
-                    <div className="h-px w-full mb-2" style={{ backgroundColor: primaryColor }} />
-                    <p className="font-black text-sm uppercase" style={{ color: primaryColor }}>Signature</p>
-                    <p contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold text-xs outline-none" style={{ color: '#f42a41' }}>{personalInfo.name}</p>
-                    <p className="text-[10px] text-gray-400 mt-1">Date: {new Date().toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </section>
-            );
-          }
-
           return null;
         })}
+
+        {selectedSections.includes('declaration') && declaration && (
+          <section className="break-inside-avoid">
+            <SectionHeader title="Declaration" primaryColor={primaryColor} />
+            <div 
+              contentEditable={theme.editableMode} 
+              suppressContentEditableWarning 
+              className="p-4 rounded-xl bg-gray-50/30 text-justify text-sm italic leading-relaxed text-gray-700 border border-dashed border-gray-200 outline-none focus:ring-1 focus:ring-indigo-300 whitespace-pre-wrap"
+            >
+              {declaration}
+            </div>
+            
+            <div className="mt-12 flex flex-col items-end mr-8">
+              <div className="text-center w-48">
+                {personalInfo.signature ? (
+                  <img src={personalInfo.signature} alt="Signature" className="h-10 mx-auto object-contain mb-2" />
+                ) : (
+                  <div className="h-10 mb-2" />
+                )}
+                <div className="h-px w-full mb-2" style={{ backgroundColor: primaryColor }} />
+                <p className="font-black text-sm uppercase" style={{ color: primaryColor }}>Signature</p>
+                <p contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold text-xs outline-none" style={{ color: '#f42a41' }}>{personalInfo.name}</p>
+                <p className="text-[10px] text-gray-400 mt-1">Date: {new Date().toLocaleDateString()}</p>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Watermark/Footer */}
-      <div className="mt-auto pt-10 text-center">
+      <div className="mt-auto pt-10 text-center print:hidden">
         <p className="text-[9pt] font-bold italic transition-colors hover:text-emerald-600" style={{ color: primaryColor + '60' }}>
           Professionally Crafted by Maksud Computer Digital Hub
         </p>

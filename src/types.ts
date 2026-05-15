@@ -56,7 +56,7 @@ export interface Training {
 
 export type TemplateId = 
   | 'classic' | 'modern' | 'smart-classic' | 'smart-modern'
-  | 'classic-elegant' | 'vibrant';
+  | 'vibrant';
 
 export interface Reference {
   id: string;
@@ -139,7 +139,7 @@ export const DEFAULT_CV_DATA: CVData = {
     templateId: 'classic',
     fontSize: 11,
     lineSpacing: 1.5,
-    pageMargin: 25.4,
+    pageMargin: 19.05,
     editableMode: false,
     showBorder: true,
     headerStyle: 'default',

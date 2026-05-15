@@ -370,53 +370,52 @@ export const ClassicTemplate = React.memo(React.forwardRef<HTMLDivElement, Class
             );
           }
 
-          if (sectionId === 'declaration' && declaration) {
-            return (
-              <section key={sectionId} className="mt-4 break-inside-avoid">
-                <SectionHeader title="Declaration" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-                <p 
-                  contentEditable={theme.editableMode}
-                  suppressContentEditableWarning
-                  style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} 
-                  className="text-justify whitespace-pre-wrap outline-none focus:ring-1 focus:ring-indigo-300"
-                >
-                  {declaration}
-                </p>
-                
-                <div className="mt-12 flex flex-col items-start">
-                  {personalInfo.signature ? (
-                    <div className="mb-1">
-                      <img 
-                        src={personalInfo.signature} 
-                        alt="Signature" 
-                        className="h-8 object-contain" 
-                        style={{ maxWidth: '120px' }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-8" /> // Gap if no signature
-                  )}
-                  <div style={{ backgroundColor: theme.primaryColor }} className="h-[1px] w-32 mb-1" />
-                  <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="font-bold">Signature</p>
-                  <p 
-                    contentEditable={theme.editableMode}
-                    suppressContentEditableWarning
-                    style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}
-                    className="outline-none focus:ring-1 focus:ring-indigo-300"
-                  >
-                    ({personalInfo.name || 'Your Name'})
-                  </p>
-                </div>
-              </section>
-            );
-          }
-
           return null;
         })}
+
+        {/* Declaration and Signature always at the end */}
+        {selectedSections.includes('declaration') && declaration && (
+          <section className="mt-4 break-inside-avoid">
+            <SectionHeader title="Declaration" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+            <p 
+              contentEditable={theme.editableMode}
+              suppressContentEditableWarning
+              style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} 
+              className="text-justify whitespace-pre-wrap outline-none focus:ring-1 focus:ring-indigo-300"
+            >
+              {declaration}
+            </p>
+            
+            <div className="mt-12 flex flex-col items-start">
+              {personalInfo.signature ? (
+                <div className="mb-1">
+                  <img 
+                    src={personalInfo.signature} 
+                    alt="Signature" 
+                    className="h-8 object-contain" 
+                    style={{ maxWidth: '120px' }}
+                  />
+                </div>
+              ) : (
+                <div className="h-8" /> // Gap if no signature
+              )}
+              <div style={{ backgroundColor: theme.primaryColor }} className="h-[1px] w-32 mb-1" />
+              <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="font-bold">Signature</p>
+              <p 
+                contentEditable={theme.editableMode}
+                suppressContentEditableWarning
+                style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}
+                className="outline-none focus:ring-1 focus:ring-indigo-300"
+              >
+                ({personalInfo.name || 'Your Name'})
+              </p>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Watermark/Footer */}
-      <div className="mt-auto pt-10 text-center">
+      <div className="mt-auto pt-10 text-center print:hidden">
         <p className="text-[9pt] font-bold italic transition-colors hover:text-emerald-600" style={{ color: theme.primaryColor + '60' }}>
           Professionally Crafted by Maksud Computer Digital Hub
         </p>

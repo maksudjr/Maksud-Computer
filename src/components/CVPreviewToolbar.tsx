@@ -30,7 +30,6 @@ const TEMPLATES: { id: TemplateId; name: string }[] = [
   { id: 'modern', name: 'Modern' },
   { id: 'smart-classic', name: 'Smart Classic' },
   { id: 'smart-modern', name: 'Elite Modern' },
-  { id: 'classic-elegant', name: 'Elegant' },
 ];
 
 const THEME_PRESETS = [
@@ -62,16 +61,34 @@ export const CVPreviewToolbar: React.FC<CVPreviewToolbarProps> = ({ data, onChan
   };
 
   return (
-    <div className="fixed right-4 top-4 z-[9999] print:hidden hidden xl:block pr-4">
+    <div className={cn("fixed right-4 top-4 z-[9999] print:hidden", isOpen ? "w-72" : "w-12 h-12 md:w-72 md:h-auto")}>
+      {/* Mobile Toggle for Quick Adjust */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "xl:hidden absolute right-0 top-0 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all z-[10000]",
+          uiTheme === 'golden' ? "bg-amber-600 text-white" : "bg-indigo-600 text-white",
+          isOpen && "rotate-45"
+        )}
+      >
+        <Plus size={24} />
+      </button>
+
       <motion.div 
         initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        animate={{ 
+          y: 0, 
+          opacity: (isOpen || window.innerWidth >= 1280) ? 1 : 0,
+          scale: (isOpen || window.innerWidth >= 1280) ? 1 : 0.95,
+          pointerEvents: (isOpen || window.innerWidth >= 1280) ? 'auto' : 'none'
+        }}
         layout
         className={cn(
           "rounded-3xl shadow-2xl border overflow-hidden w-72 transition-all duration-300 flex flex-col max-h-[90vh]",
           uiTheme === 'light' ? "bg-white/95 backdrop-blur-sm border-gray-200" : 
           uiTheme === 'dark' ? "bg-slate-900/95 backdrop-blur-sm border-slate-800" :
-          "bg-[#1a1a1a]/95 backdrop-blur-sm border-amber-900/30 shadow-amber-950/20"
+          "bg-[#1a1a1a]/95 backdrop-blur-sm border-amber-900/30 shadow-amber-950/20",
+          !isOpen && "hidden xl:flex"
         )}
       >
         <div className={cn(
@@ -82,7 +99,7 @@ export const CVPreviewToolbar: React.FC<CVPreviewToolbarProps> = ({ data, onChan
             <Layout size={18} />
             <h3 className="font-bold text-xs uppercase tracking-wider">Design Studio</h3>
           </div>
-          <button onClick={() => setIsOpen(!isOpen)} className="hover:bg-white/20 p-1 rounded-lg transition-colors">
+          <button onClick={() => setIsOpen(!isOpen)} className="p-1 rounded-lg transition-colors hover:bg-white/20">
             <ChevronDown className={cn("transition-transform", !isOpen && "rotate-180")} size={18} />
           </button>
         </div>

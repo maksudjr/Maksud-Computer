@@ -293,21 +293,6 @@ export const ModernTemplate = React.memo(React.forwardRef<HTMLDivElement, Modern
                 );
               }
 
-              if (sectionId === 'declaration' && declaration) {
-                return (
-                  <div key={sectionId} className="mb-8 relative pl-8 break-inside-avoid">
-                    {theme.showBorder && <div className="absolute left-0 top-0 bottom-0 w-[1px]" style={{ backgroundColor: `${theme.primaryColor}33` }} />}
-                    <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
-                      <Check size={12} style={{ color: theme.primaryColor }} />
-                    </div>
-                    <h3 className="font-bold uppercase mb-3 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Declaration</h3>
-                    <p contentEditable={theme.editableMode} suppressContentEditableWarning className="leading-relaxed text-justify text-gray-700 whitespace-pre-wrap outline-none focus:ring-1 focus:ring-indigo-300" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
-                      {declaration}
-                    </p>
-                  </div>
-                );
-              }
-
               if (sectionId === 'references' && data.references && data.references.length > 0) {
                 return (
                   <div key={sectionId} className="mb-8 relative pl-8 break-inside-avoid">
@@ -354,29 +339,44 @@ export const ModernTemplate = React.memo(React.forwardRef<HTMLDivElement, Modern
               return null;
             })}
 
-            {/* Signature fixed at bottom of main content if not explicit section */}
-            <div className="mt-auto pt-10 flex flex-col items-end">
-              <div className="w-48 flex flex-col items-center">
-                {personalInfo.signature ? (
-                  <div className="mb-1">
-                    <img 
-                      src={personalInfo.signature} 
-                      alt="Signature" 
-                      className="h-8 object-contain" 
-                      style={{ maxWidth: '150px' }}
-                    />
+            {/* Declaration and Signature always at the end */}
+            <div className="mt-auto">
+              {selectedSections.includes('declaration') && declaration && (
+                <div className="mb-8 relative pl-8 break-inside-avoid">
+                  {theme.showBorder && <div className="absolute left-0 top-0 bottom-0 w-[1px]" style={{ backgroundColor: `${theme.primaryColor}33` }} />}
+                  <div className="absolute left-[-12px] top-0 w-6 h-6 rounded-full bg-white border-2 flex items-center justify-center" style={{ borderColor: theme.primaryColor }}>
+                    <Check size={12} style={{ color: theme.primaryColor }} />
                   </div>
-                ) : (
-                  <div className="h-8" />
-                )}
-                <div className="w-full border-t border-dotted border-black pt-1 text-center">
-                  <p className="font-medium outline-none focus:ring-1 focus:ring-indigo-300" contentEditable={theme.editableMode} suppressContentEditableWarning style={{ fontSize: `${theme.fontSize - 1}pt` }}>Applicant Signature and Date</p>
+                  <h3 className="font-bold uppercase mb-3 tracking-wide" style={{ color: theme.primaryColor, fontSize: `${theme.fontSize + 3}pt` }}>Declaration</h3>
+                  <p contentEditable={theme.editableMode} suppressContentEditableWarning className="leading-relaxed text-justify text-gray-700 whitespace-pre-wrap outline-none focus:ring-1 focus:ring-indigo-300" style={{ fontSize: `${theme.fontSize - 0.5}pt` }}>
+                    {declaration}
+                  </p>
+                </div>
+              )}
+
+              <div className="pt-10 flex flex-col items-end">
+                <div className="w-48 flex flex-col items-center">
+                  {personalInfo.signature ? (
+                    <div className="mb-1">
+                      <img 
+                        src={personalInfo.signature} 
+                        alt="Signature" 
+                        className="h-8 object-contain" 
+                        style={{ maxWidth: '150px' }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-8" />
+                  )}
+                  <div className="w-full border-t border-dotted border-black pt-1 text-center">
+                    <p className="font-medium outline-none focus:ring-1 focus:ring-indigo-300" contentEditable={theme.editableMode} suppressContentEditableWarning style={{ fontSize: `${theme.fontSize - 1}pt` }}>Applicant Signature and Date</p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Watermark/Footer */}
-            <div className="pt-10 text-center">
+            <div className="pt-10 text-center print:hidden">
               <p className="text-[9pt] font-bold italic transition-colors hover:text-indigo-600" style={{ color: theme.primaryColor + '60' }}>
                 Professionally Crafted by Maksud Computer Digital Hub
               </p>

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useRef, useMemo, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, 
@@ -59,6 +59,7 @@ const SECTIONS: { id: SectionId; label: string }[] = [
   { id: 'careerObjective', label: 'Career Objective' },
   { id: 'personalInfo', label: 'Personal Information' },
   { id: 'education', label: 'Educational Qualification' },
+  { id: 'trainings', label: 'Training' },
   { id: 'computerSkills', label: 'Computer Skills' },
   { id: 'workExperience', label: 'Work Experience' },
   { id: 'languageProficiency', label: 'Language Proficiency' },
@@ -115,6 +116,10 @@ function MainContent() {
     return (localStorage.getItem('maksud_ui_theme') as any) || 'light';
   });
   const [chameleonColor, setChameleonColor] = useState('#6366f1'); // Default indigo
+
+  // Performance Optimization: Defer the preview data to avoid blocking the editor
+  const deferredCvData = useMemo(() => cvData, [cvData]);
+  const deferredCvDataForPreview = React.useDeferredValue(deferredCvData);
 
   // Update chameleon color periodically or on selection
   useEffect(() => {
@@ -798,7 +803,7 @@ function MainContent() {
                   uiTheme === 'light' ? "ring-1 ring-gray-100" : "ring-1 ring-slate-800"
                 )}>
                   <div ref={previewRef}>
-                    <CVPreview data={cvData} />
+                    <CVPreview data={deferredCvDataForPreview} />
                   </div>
                 </div>
               </motion.div>
