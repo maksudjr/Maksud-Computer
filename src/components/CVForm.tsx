@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CVData, SectionId, Education, WorkExperience, CustomField, ComputerSkill, Reference } from '../types';
+import { CVData, SectionId, Education, WorkExperience, CustomField, ComputerSkill, Reference, Training } from '../types';
 import { 
   Plus, 
   Trash2, 
@@ -18,7 +18,9 @@ import {
   FileCheck,
   Users,
   PlusSquare,
-  Sparkles
+  Sparkles,
+  Award,
+  Check
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { PhotoEditor } from './PhotoEditor';
@@ -316,6 +318,28 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
     onChange({ ...data, computerSkills: [...data.computerSkills, newSkill] });
   };
 
+  const addTraining = () => {
+    const newTraining: Training = {
+      id: generateId(),
+      instituteName: '',
+      subject: '',
+      duration: '',
+      description: ''
+    };
+    onChange({ ...data, trainings: [...data.trainings, newTraining] });
+  };
+
+  const updateTraining = (id: string, field: keyof Training, value: string) => {
+    onChange({
+      ...data,
+      trainings: data.trainings.map(t => t.id === id ? { ...t, [field]: value } : t)
+    });
+  };
+
+  const removeTraining = (id: string) => {
+    onChange({ ...data, trainings: data.trainings.filter(t => t.id !== id) });
+  };
+
   const updateComputerSkill = (id: string, field: keyof ComputerSkill, value: string | boolean | string[]) => {
     onChange({
       ...data,
@@ -432,6 +456,63 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Section Toggle Selector */}
+      <section className="bg-white p-6 rounded-xl shadow-sm border border-indigo-100">
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-indigo-700">
+          <PlusSquare size={20} />
+          CV Sections Manager
+        </h3>
+        <p className="text-xs text-gray-500 mb-4 italic">Toggle the switches to show or hide sections in your CV.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {[
+            { id: 'careerObjective', label: 'Objective', icon: <Target size={14} /> },
+            { id: 'education', label: 'Education', icon: <GraduationCap size={14} /> },
+            { id: 'workExperience', label: 'Experience', icon: <Briefcase size={14} /> },
+            { id: 'trainings', label: 'Trainings', icon: <Award size={14} /> },
+            { id: 'computerSkills', label: 'IT Skills', icon: <Monitor size={14} /> },
+            { id: 'languageProficiency', label: 'Languages', icon: <Languages size={14} /> },
+            { id: 'selfAssessment', label: 'Self Assessment', icon: <ClipboardCheck size={14} /> },
+            { id: 'hobbies', label: 'Hobbies', icon: <Heart size={14} /> },
+            { id: 'references', label: 'References', icon: <Users size={14} /> },
+            { id: 'custom', label: 'Custom', icon: <PlusSquare size={14} /> },
+            { id: 'declaration', label: 'Declaration', icon: <FileCheck size={14} /> },
+          ].map((section) => (
+            <button
+              key={section.id}
+              onClick={() => {
+                const isSelected = data.selectedSections.includes(section.id as SectionId);
+                if (isSelected) {
+                  onChange({ ...data, selectedSections: data.selectedSections.filter(s => s !== section.id) });
+                } else {
+                  // Maintain logical order
+                  const order = ['careerObjective', 'personalInfo', 'education', 'trainings', 'computerSkills', 'workExperience', 'languageProficiency', 'selfAssessment', 'hobbies', 'references', 'custom', 'declaration'];
+                  const newSections = [...data.selectedSections, section.id as SectionId];
+                  newSections.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+                  onChange({ ...data, selectedSections: newSections });
+                }
+              }}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all border",
+                data.selectedSections.includes(section.id as SectionId)
+                  ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                  : "bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100"
+              )}
+            >
+              <span className={cn(
+                "p-1 rounded-md",
+                data.selectedSections.includes(section.id as SectionId) ? "bg-white/20" : "bg-gray-200 text-gray-500"
+              )}>
+                {section.icon}
+              </span>
+              {section.label}
+              {data.selectedSections.includes(section.id as SectionId) && (
+                <Check className="ml-auto" size={12} strokeWidth={4} />
+              )}
+            </button>
+          ))}
         </div>
       </section>
 
@@ -1044,6 +1125,77 @@ export const CVForm: React.FC<CVFormProps> = ({ data, onChange }) => {
                         'Graphic Design'
                       ]} 
                       onChange={(vals) => updateComputerSkill(skill.id, 'skills', vals)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Trainings Section */}
+      {data.selectedSections.includes('trainings') && (
+        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <Award size={18} />
+              </div>
+              Professional Trainings
+            </h3>
+            <button 
+              onClick={addTraining}
+              className="flex items-center gap-2 px-3 py-1 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700"
+            >
+              <Plus size={16} /> Add
+            </button>
+          </div>
+          <div className="space-y-6">
+            {data.trainings.map((training) => (
+              <div key={training.id} className="p-4 border rounded-lg relative group">
+                <button 
+                  onClick={() => removeTraining(training.id)}
+                  className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Institute Name</label>
+                    <input 
+                      type="text" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={training.instituteName}
+                      onChange={(e) => updateTraining(training.id, 'instituteName', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Subject / Course Name</label>
+                    <input 
+                      type="text" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={training.subject}
+                      onChange={(e) => updateTraining(training.id, 'subject', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Duration</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. 3 Months"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={training.duration}
+                      onChange={(e) => updateTraining(training.id, 'duration', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                    <textarea 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={2}
+                      value={training.description}
+                      onChange={(e) => updateTraining(training.id, 'description', e.target.value)}
                     />
                   </div>
                 </div>

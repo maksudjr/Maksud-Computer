@@ -8,9 +8,15 @@ import {
   Square, 
   Check,
   ChevronDown,
-  Palette
+  Palette,
+  Maximize,
+  RefreshCw,
+  ArrowUp,
+  ArrowDown,
+  Edit3,
+  GripVertical
 } from 'lucide-react';
-import { TemplateId, CVData } from '../types';
+import { TemplateId, CVData, SectionId } from '../types';
 import { cn } from '../lib/utils';
 
 interface CVPreviewToolbarProps {
@@ -46,35 +52,212 @@ export const CVPreviewToolbar: React.FC<CVPreviewToolbarProps> = ({ data, onChan
     });
   };
 
+  const randomizeColors = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    updateTheme({ primaryColor: color });
+  };
+
   return (
-    <div className="fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden xl:block">
+    <div className="fixed right-4 top-4 z-[9999] print:hidden hidden xl:block pr-4">
       <motion.div 
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
         layout
         className={cn(
-          "rounded-3xl shadow-2xl border overflow-hidden w-64 transition-all duration-300",
-          uiTheme === 'light' ? "bg-white border-gray-100" : 
-          uiTheme === 'dark' ? "bg-slate-900 border-slate-800" :
-          "bg-[#1a1a1a] border-amber-900/30 shadow-amber-950/20"
+          "rounded-3xl shadow-2xl border overflow-hidden w-72 transition-all duration-300 flex flex-col max-h-[90vh]",
+          uiTheme === 'light' ? "bg-white/95 backdrop-blur-sm border-gray-200" : 
+          uiTheme === 'dark' ? "bg-slate-900/95 backdrop-blur-sm border-slate-800" :
+          "bg-[#1a1a1a]/95 backdrop-blur-sm border-amber-900/30 shadow-amber-950/20"
         )}
       >
         <div className={cn(
-          "p-4 text-white flex items-center justify-between",
+          "p-4 text-white flex items-center justify-between shrink-0",
           uiTheme === 'golden' ? "bg-amber-600" : "bg-indigo-600"
         )}>
-          <h3 className="font-bold text-sm uppercase tracking-wider">Quick Adjust</h3>
+          <div className="flex items-center gap-2">
+            <Layout size={18} />
+            <h3 className="font-bold text-xs uppercase tracking-wider">Design Studio</h3>
+          </div>
           <button onClick={() => setIsOpen(!isOpen)} className="hover:bg-white/20 p-1 rounded-lg transition-colors">
             <ChevronDown className={cn("transition-transform", !isOpen && "rotate-180")} size={18} />
           </button>
         </div>
 
         {isOpen && (
-          <div className="p-5 space-y-6">
-            {/* Themes Selection */}
+          <div className="p-5 space-y-6 overflow-y-auto thin-scrollbar">
+            {/* Edit Mode Toggle */}
+            <div className={cn("flex items-center justify-between p-3 rounded-2xl border", uiTheme === 'light' ? "bg-indigo-50 border-indigo-100" : "bg-indigo-900/20 border-indigo-800")}>
+              <div className="flex items-center gap-2">
+                <Edit3 size={16} className="text-indigo-600" />
+                <span className={cn("text-xs font-bold", uiTheme === 'light' ? "text-indigo-900" : "text-indigo-300")}>Edit on Preview</span>
+              </div>
+              <button
+                onClick={() => updateTheme({ editableMode: !data.theme.editableMode })}
+                className={cn(
+                  "w-10 h-5 rounded-full transition-colors relative",
+                  data.theme.editableMode ? "bg-indigo-600" : "bg-gray-400"
+                )}
+              >
+                <div className={cn(
+                  "absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all",
+                  data.theme.editableMode ? "left-5.5" : "left-0.5"
+                )} />
+              </button>
+            </div>
+
+            {/* Section Visibility toggles */}
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                <Palette size={14} />
-                Theme Presets
+                <Square size={14} className="text-gray-400" />
+                Section Visibility
               </label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'careerObjective', label: 'Objective' },
+                  { id: 'education', label: 'Education' },
+                  { id: 'trainings', label: 'Trainings' },
+                  { id: 'workExperience', label: 'Experience' },
+                  { id: 'computerSkills', label: 'IT Skills' },
+                  { id: 'languageProficiency', label: 'Languages' },
+                  { id: 'selfAssessment', label: 'Assessment' },
+                  { id: 'hobbies', label: 'Hobbies' },
+                  { id: 'references', label: 'References' },
+                  { id: 'declaration', label: 'Sign' }
+                ].map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => {
+                      const isSelected = data.selectedSections.includes(section.id as SectionId);
+                      if (isSelected) {
+                        onChange({ ...data, selectedSections: data.selectedSections.filter(s => s !== section.id) });
+                      } else {
+                        // Maintain logical order
+                        const order = ['careerObjective', 'personalInfo', 'education', 'trainings', 'computerSkills', 'workExperience', 'languageProficiency', 'selfAssessment', 'hobbies', 'references', 'custom', 'declaration'];
+                        const newSections = [...data.selectedSections, section.id as SectionId];
+                        newSections.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+                        onChange({ ...data, selectedSections: newSections });
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[9px] font-bold transition-all border",
+                      data.selectedSections.includes(section.id as SectionId)
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                        : uiTheme === 'light' ? "bg-gray-50 text-gray-400 border-gray-100" : "bg-slate-800 text-slate-500 border-slate-700"
+                    )}
+                  >
+                    {data.selectedSections.includes(section.id as SectionId) ? <Check size={10} strokeWidth={4} /> : <Minus size={10} />}
+                    {section.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Section Reordering */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <GripVertical size={14} />
+                Section Order
+              </label>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 thin-scrollbar">
+                {data.selectedSections.map((sectionId, index) => (
+                  <div 
+                    key={sectionId} 
+                    className={cn(
+                      "flex items-center justify-between p-2 rounded-lg border text-[10px] font-bold group",
+                      uiTheme === 'light' ? "bg-white border-gray-100 hover:border-indigo-200" : "bg-slate-800 border-slate-700 hover:border-indigo-800"
+                    )}
+                  >
+                    <span className="capitalize">{sectionId.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        disabled={index === 0}
+                        onClick={() => {
+                          const newSections = [...data.selectedSections];
+                          [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+                          onChange({ ...data, selectedSections: newSections });
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
+                      >
+                        <ArrowUp size={12} />
+                      </button>
+                      <button 
+                        disabled={index === data.selectedSections.length - 1}
+                        onClick={() => {
+                          const newSections = [...data.selectedSections];
+                          [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+                          onChange({ ...data, selectedSections: newSections });
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
+                      >
+                        <ArrowDown size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Page Margin in MM */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <Maximize size={14} />
+                Page Margin (mm)
+              </label>
+              <div className={cn("flex items-center justify-between rounded-xl p-1", uiTheme === 'light' ? "bg-gray-50" : "bg-slate-800")}>
+                <button 
+                  onClick={() => updateTheme({ pageMargin: Math.max(0, data.theme.pageMargin - 1) })}
+                  className={cn("p-2 rounded-lg transition-colors shadow-sm", uiTheme === 'light' ? "hover:bg-white" : "hover:bg-slate-700")}
+                >
+                  <Minus size={14} />
+                </button>
+                <span className={cn("font-bold text-sm text-center min-w-[60px]", uiTheme === 'light' ? "text-slate-900" : "text-slate-200")}>
+                  {data.theme.pageMargin}mm
+                </span>
+                <button 
+                  onClick={() => updateTheme({ pageMargin: Math.min(50, data.theme.pageMargin + 1) })}
+                  className={cn("p-2 rounded-lg transition-colors shadow-sm", uiTheme === 'light' ? "hover:bg-white" : "hover:bg-slate-700")}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Border Toggle */}
+            <div className={cn("flex items-center justify-between pt-2 border-t", uiTheme === 'light' ? "border-gray-100" : "border-slate-800")}>
+              <label className="text-xs font-bold text-gray-500 uppercase">Section Divider</label>
+              <button
+                onClick={() => updateTheme({ showBorder: !data.theme.showBorder })}
+                className={cn(
+                  "w-10 h-5 rounded-full transition-colors relative",
+                  data.theme.showBorder ? (uiTheme === 'golden' ? "bg-amber-600" : "bg-indigo-600") : "bg-gray-400"
+                )}
+              >
+                <div className={cn(
+                  "absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all",
+                  data.theme.showBorder ? "left-5.5" : "left-0.5"
+                )} />
+              </button>
+            </div>
+
+            {/* Themes Selection */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  <Palette size={14} />
+                  Theme Presets
+                </label>
+                <button 
+                  onClick={randomizeColors}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 text-indigo-600 transition-colors"
+                  title="Randomize Color"
+                >
+                  <RefreshCw size={14} />
+                </button>
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 {THEME_PRESETS.map((p) => (
                   <button
@@ -178,41 +361,47 @@ export const CVPreviewToolbar: React.FC<CVPreviewToolbarProps> = ({ data, onChan
               <div className="space-y-3">
                 <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                   <Plus size={14} className="rotate-45" />
-                  Spacing
+                  Line Spacing
                 </label>
                 <div className={cn("flex items-center justify-between rounded-xl p-1", uiTheme === 'light' ? "bg-gray-50" : "bg-slate-800")}>
                   <button 
-                    onClick={() => updateTheme({ lineSpacing: Math.max(1, data.theme.lineSpacing - 0.1) })}
+                    onClick={() => updateTheme({ lineSpacing: parseFloat((data.theme.lineSpacing - 0.1).toFixed(2)) })}
                     className={cn("p-2 rounded-lg transition-colors shadow-sm", uiTheme === 'light' ? "hover:bg-white" : "hover:bg-slate-700")}
                   >
                     <Minus size={14} />
                   </button>
-                  <span className={cn("font-bold text-sm", uiTheme === 'light' ? "text-slate-900" : "text-slate-200")}>{data.theme.lineSpacing.toFixed(1)}</span>
+                  <span className={cn("font-bold text-sm", uiTheme === 'light' ? "text-slate-900" : "text-slate-200")}>{data.theme.lineSpacing.toFixed(2)}</span>
                   <button 
-                    onClick={() => updateTheme({ lineSpacing: Math.min(3, data.theme.lineSpacing + 0.1) })}
+                    onClick={() => updateTheme({ lineSpacing: parseFloat((data.theme.lineSpacing + 0.1).toFixed(2)) })}
                     className={cn("p-2 rounded-lg transition-colors shadow-sm", uiTheme === 'light' ? "hover:bg-white" : "hover:bg-slate-700")}
                   >
                     <Plus size={14} />
                   </button>
                 </div>
+                <div className="flex gap-1 overflow-x-auto pb-1 invisible-scrollbar">
+                  {[-0.5, 0, 0.5, 1, 1.2, 1.5, 2].map(val => (
+                    <button
+                      key={val}
+                      onClick={() => updateTheme({ lineSpacing: val })}
+                      className={cn(
+                        "px-2 py-1 rounded text-[8px] font-bold border shrink-0",
+                        data.theme.lineSpacing === val ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-500 border-gray-100"
+                      )}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => updateTheme({ lineSpacing: -50 })}
+                    className={cn(
+                      "px-2 py-1 rounded text-[8px] font-bold border bg-red-50 text-red-600 border-red-100 shrink-0",
+                      data.theme.lineSpacing === -50 && "bg-red-600 text-white border-red-600"
+                    )}
+                  >
+                    -50
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {/* Border Toggle */}
-            <div className={cn("flex items-center justify-between pt-2 border-t", uiTheme === 'light' ? "border-gray-100" : "border-slate-800")}>
-              <label className="text-xs font-bold text-gray-500 uppercase">Section Divider</label>
-              <button
-                onClick={() => updateTheme({ showBorder: !data.theme.showBorder })}
-                className={cn(
-                  "w-10 h-5 rounded-full transition-colors relative",
-                  data.theme.showBorder ? (uiTheme === 'golden' ? "bg-amber-600" : "bg-indigo-600") : "bg-gray-400"
-                )}
-              >
-                <div className={cn(
-                  "absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all",
-                  data.theme.showBorder ? "left-5.5" : "left-0.5"
-                )} />
-              </button>
             </div>
           </div>
         )}

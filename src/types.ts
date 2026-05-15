@@ -10,7 +10,8 @@ export type SectionId =
   | 'custom'
   | 'computerSkills'
   | 'languageProficiency'
-  | 'selfAssessment';
+  | 'selfAssessment'
+  | 'trainings';
 
 export interface Education {
   id: string;
@@ -45,6 +46,14 @@ export interface ComputerSkill {
   skills: string[];
 }
 
+export interface Training {
+  id: string;
+  instituteName: string;
+  subject: string;
+  duration: string;
+  description: string;
+}
+
 export type TemplateId = 
   | 'classic' | 'modern' | 'smart-classic' | 'smart-modern'
   | 'classic-elegant' | 'vibrant';
@@ -68,6 +77,8 @@ export interface CVData {
     templateId: TemplateId;
     fontSize: number;
     lineSpacing: number;
+    pageMargin: number;
+    editableMode: boolean;
     showBorder: boolean;
     headerStyle?: 'default' | 'black' | 'primary';
   };
@@ -108,6 +119,7 @@ export interface CVData {
   hobbies: string[];
   languageProficiency: string[];
   selfAssessment: string[];
+  trainings: Training[];
   declaration: string;
   references: Reference[];
   customSection: {
@@ -127,6 +139,8 @@ export const DEFAULT_CV_DATA: CVData = {
     templateId: 'classic',
     fontSize: 11,
     lineSpacing: 1.5,
+    pageMargin: 25.4,
+    editableMode: false,
     showBorder: true,
     headerStyle: 'default',
   },
@@ -134,6 +148,7 @@ export const DEFAULT_CV_DATA: CVData = {
     'careerObjective',
     'personalInfo',
     'education',
+    'trainings',
     'computerSkills',
     'workExperience',
     'languageProficiency',
@@ -179,6 +194,7 @@ export const DEFAULT_CV_DATA: CVData = {
   hobbies: [],
   languageProficiency: [],
   selfAssessment: [],
+  trainings: [],
   declaration: 'I the undersigned, hereby declare that I will the responsible for any wrong Information Provided here and any misstatement described herein may lead to my Disqualification for dismissal, if employed.',
   references: [],
   customSection: {

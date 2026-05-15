@@ -24,12 +24,12 @@ interface BulletItemProps {
   children: React.ReactNode;
   primaryColor: string;
   fontSize: number;
-  lineSpacing: number;
+  displayLineSpacing: number;
   key?: string | number;
 }
 
-const BulletItem = ({ children, primaryColor, fontSize, lineSpacing }: BulletItemProps) => (
-  <div className="flex items-start gap-1.5 mb-0.5" style={{ lineHeight: lineSpacing }}>
+const BulletItem = ({ children, primaryColor, fontSize, displayLineSpacing }: BulletItemProps) => (
+  <div className="flex items-start gap-1.5 mb-0.5" style={{ lineHeight: displayLineSpacing }}>
     <span style={{ color: primaryColor, fontSize: `${fontSize - 2}pt` }} className="mt-1">❖</span>
     <div style={{ fontSize: `${fontSize}pt` }}>{children}</div>
   </div>
@@ -39,11 +39,11 @@ interface InfoRowProps {
   label: string;
   value: string;
   fontSize: number;
-  lineSpacing: number;
+  displayLineSpacing: number;
   key?: string | number;
 }
 
-const InfoRow = ({ label, value, fontSize, lineSpacing }: InfoRowProps) => {
+const InfoRow = ({ label, value, fontSize, displayLineSpacing }: InfoRowProps) => {
   if (!value) return null;
   
   const formatDate = (dateStr: string) => {
@@ -58,7 +58,7 @@ const InfoRow = ({ label, value, fontSize, lineSpacing }: InfoRowProps) => {
   const displayValue = label === "Date of Birth" ? formatDate(value) : value;
 
   return (
-    <div style={{ fontSize: `${fontSize}pt`, lineHeight: lineSpacing }} className="grid grid-cols-[160px_10px_1fr] mb-0.5">
+    <div style={{ fontSize: `${fontSize}pt`, lineHeight: displayLineSpacing }} className="grid grid-cols-[160px_10px_1fr] mb-0.5">
       <div className="font-bold">{label}</div>
       <div>:</div>
       <div>{displayValue}</div>
@@ -67,7 +67,7 @@ const InfoRow = ({ label, value, fontSize, lineSpacing }: InfoRowProps) => {
 };
 
 export const ClassicTemplate = React.memo(React.forwardRef<HTMLDivElement, ClassicTemplateProps>(({ data }, ref) => {
-  const { theme, personalInfo, careerObjective, education, computerSkills, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections } = data;
+  const { theme, personalInfo, careerObjective, education, computerSkills, trainings, workExperience, languageProficiency, selfAssessment, hobbies, declaration, customSection, selectedSections } = data;
 
   const formatAddress = (village: string, po: string, upazila: string, district: string) => {
     const parts = [];
@@ -81,21 +81,24 @@ export const ClassicTemplate = React.memo(React.forwardRef<HTMLDivElement, Class
   const presentAddressLine = formatAddress(personalInfo.presentVillage, personalInfo.presentPostOffice, personalInfo.presentUpazila, personalInfo.presentDistrict);
   const permanentAddressLine = formatAddress(personalInfo.permanentVillage, personalInfo.permanentPostOffice, personalInfo.permanentUpazila, personalInfo.permanentDistrict);
 
+  const displayLineSpacing = theme.lineSpacing === -50 ? 0.7 : theme.lineSpacing;
+  
   return (
     <div 
       ref={ref}
       className={cn(
-        "bg-white w-[210mm] p-[15mm] mx-auto shadow-lg print:shadow-none print:m-0 flex flex-col relative cv-paper",
+        "bg-white w-[210mm] mx-auto shadow-lg print:shadow-none print:m-0 flex flex-col relative cv-paper",
         theme.fontStyle
       )}
       style={{ 
-        minHeight: `${297 * theme.pageCount}mm`
+        minHeight: `${297 * theme.pageCount}mm`,
+        padding: `${theme.pageMargin}mm`
       }}
       id="cv-preview-content"
     >
       {/* Page Break Indicators (Preview Only) */}
       {theme.pageCount > 1 && (
-        <div className="absolute inset-0 pointer-events-none print:hidden">
+        <div className="absolute inset-0 pointer-events-none print:hidden" style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
           {Array.from({ length: theme.pageCount - 1 }).map((_, i) => (
             <div 
               key={i}
@@ -115,18 +118,34 @@ export const ClassicTemplate = React.memo(React.forwardRef<HTMLDivElement, Class
         color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? (theme.primaryColor === '#ffd700' && theme.headerStyle === 'primary' ? '#000000' : '#ffffff') : 'inherit'
       }}>
         <div className="flex-1">
-          <h1 style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor, fontSize: `${theme.fontSize + 7}pt` }} className="font-bold leading-tight uppercase">
+          <h1 
+            contentEditable={theme.editableMode}
+            suppressContentEditableWarning
+            style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor, fontSize: `${theme.fontSize + 7}pt` }} 
+            className="font-bold leading-tight uppercase outline-none focus:ring-1 focus:ring-indigo-300"
+          >
             CURRICULUM VITAE
           </h1>
-          <h1 style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor, fontSize: `${theme.fontSize + 7}pt` }} className="font-bold leading-tight uppercase">
+          <h1 
+            contentEditable={theme.editableMode}
+            suppressContentEditableWarning
+            style={{ color: (theme.headerStyle === 'black' || theme.headerStyle === 'primary') ? 'inherit' : theme.primaryColor, fontSize: `${theme.fontSize + 7}pt` }} 
+            className="font-bold leading-tight uppercase outline-none focus:ring-1 focus:ring-indigo-300"
+          >
             OF {personalInfo.name || 'YOUR NAME'}
           </h1>
           
           <div style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="mt-2 text-justify">
             <p className="font-bold">Present Address:</p>
-            <p className="whitespace-pre-wrap">{presentAddressLine}</p>
-            {personalInfo.phone && <p>Cell: {personalInfo.phone}</p>}
-            {personalInfo.email && <p>E-mail: <span className="italic">{personalInfo.email}</span></p>}
+            <p 
+              contentEditable={theme.editableMode}
+              suppressContentEditableWarning
+              className="whitespace-pre-wrap outline-none focus:ring-1 focus:ring-indigo-300"
+            >
+              {presentAddressLine}
+            </p>
+            {personalInfo.phone && <p>Cell: <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">{personalInfo.phone}</span></p>}
+            {personalInfo.email && <p>E-mail: <span contentEditable={theme.editableMode} suppressContentEditableWarning className="italic outline-none focus:ring-1 focus:ring-indigo-300">{personalInfo.email}</span></p>}
           </div>
         </div>
         {personalInfo.photo && (
@@ -136,186 +155,270 @@ export const ClassicTemplate = React.memo(React.forwardRef<HTMLDivElement, Class
         )}
       </div>
 
-      {/* Career Objective */}
-      {selectedSections.includes('careerObjective') && careerObjective && (
-        <section>
-          <SectionHeader title="Career Objective" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="text-justify whitespace-pre-wrap">
-            {careerObjective}
-          </p>
-        </section>
-      )}
-
-      {/* Academic Qualification */}
-      {selectedSections.includes('education') && education.length > 0 && (
-        <section>
-          <SectionHeader title="Academic Qualification" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          {education.map((edu) => (
-            <div key={edu.id} className="mb-3">
-              <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>
-                <span className="font-bold">{edu.examName}</span>
-              </BulletItem>
-              <div className="ml-6">
-                <InfoRow label="Board" value={edu.board} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-                <InfoRow label="Subject" value={edu.subject} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-                <InfoRow label="Institute" value={edu.instituteName} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-                <InfoRow label="Result" value={edu.gpa ? `${edu.gpa} (${edu.gpaType})` : ''} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-                <InfoRow label="Passing Year" value={edu.passingYear} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
-
-      {/* Computer Skills */}
-      {selectedSections.includes('computerSkills') && computerSkills.length > 0 && (
-        <section>
-          <SectionHeader title="Computer Skills" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          {computerSkills.map((skill) => (
-            <div key={skill.id} className="mb-2">
-              <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>
-                <div className="flex flex-col">
-                  {skill.hasTraining && (
-                    <span>Completed a {skill.duration} computer training program from {skill.instituteName}.</span>
-                  )}
-                  {skill.skills.length > 0 && (
-                    <span>Proficient in {skill.skills.join(', ')}, etc,</span>
-                  )}
+      <div className="flex flex-col">
+        {selectedSections.map((sectionId) => {
+          if (sectionId === 'personalInfo') {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Personal Information" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <InfoRow label="Name" value={personalInfo.name} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Father’s Name" value={personalInfo.fathersName} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Mother’s Name" value={personalInfo.mothersName} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Date of Birth" value={personalInfo.dob} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Nationality" value={personalInfo.nationality} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Religion" value={personalInfo.religion} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Marital Status" value={personalInfo.maritalStatus} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Sex" value={personalInfo.gender} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="NID" value={personalInfo.nid} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Birth Registration No" value={personalInfo.birthRegNo} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Blood Group" value={personalInfo.bloodGroup} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Height" value={personalInfo.heightFeet || personalInfo.heightInches ? `${personalInfo.heightFeet || '0'}' ${personalInfo.heightInches || '0'}"` : ''} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Weight" value={personalInfo.weight ? `${personalInfo.weight} Kg` : ''} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Permanent Address" value={permanentAddressLine} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    <InfoRow label="Present Address" value={presentAddressLine} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                  </div>
                 </div>
-              </BulletItem>
-            </div>
-          ))}
-        </section>
-      )}
+              </section>
+            );
+          }
 
-      {/* Job Experience */}
-      {selectedSections.includes('workExperience') && workExperience.length > 0 && (
-        <section>
-          <SectionHeader title="Job Experience" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          {workExperience.map((work) => (
-            <BulletItem key={work.id} primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>
-              Worked as a <span className="font-bold">{work.position}</span> at <span className="font-bold">{work.companyName}</span> for {work.duration}
-              {work.description && <p style={{ fontSize: `${theme.fontSize - 1}pt`, lineHeight: theme.lineSpacing }} className="mt-1 italic">{work.description}</p>}
-            </BulletItem>
-          ))}
-        </section>
-      )}
+          if (sectionId === 'careerObjective' && careerObjective) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Career Objective" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                <p 
+                  contentEditable={theme.editableMode}
+                  suppressContentEditableWarning
+                  style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} 
+                  className="text-justify whitespace-pre-wrap outline-none focus:ring-1 focus:ring-indigo-300"
+                >
+                  {careerObjective}
+                </p>
+              </section>
+            );
+          }
 
-      {/* Language Proficiency */}
-      {selectedSections.includes('languageProficiency') && languageProficiency.length > 0 && (
-        <section>
-          <SectionHeader title="Language Proficiency" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          {languageProficiency.map((lang, idx) => (
-            <BulletItem key={`lang-${idx}-${lang}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>{lang}</BulletItem>
-          ))}
-        </section>
-      )}
+          if (sectionId === 'education' && education.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Academic Qualification" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                {education.map((edu) => (
+                  <div key={edu.id} className="mb-3">
+                    <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing}>
+                      <span contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold outline-none focus:ring-1 focus:ring-indigo-300">{edu.examName}</span>
+                    </BulletItem>
+                    <div className="ml-6">
+                      <InfoRow label="Board" value={edu.board} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                      <InfoRow label="Subject" value={edu.subject} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                      <InfoRow label="Institute" value={edu.instituteName} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                      <InfoRow label="Result" value={edu.gpa ? `${edu.gpa} (${edu.gpaType})` : ''} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                      <InfoRow label="Passing Year" value={edu.passingYear} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                    </div>
+                  </div>
+                ))}
+              </section>
+            );
+          }
 
-      {/* Self Assessment */}
-      {selectedSections.includes('selfAssessment') && selfAssessment.length > 0 && (
-        <section>
-          <SectionHeader title="Self-Assessment" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          {selfAssessment.map((item, idx) => (
-            <BulletItem key={`self-${idx}-${item}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>{item}</BulletItem>
-          ))}
-        </section>
-      )}
+          if (sectionId === 'computerSkills' && computerSkills.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Computer Skills" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                {computerSkills.map((skill) => (
+                  <div key={skill.id} className="mb-2">
+                    <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing}>
+                      <div className="flex flex-col">
+                        {skill.hasTraining && (
+                          <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">
+                            Completed a {skill.duration} computer training program from {skill.instituteName}.
+                          </span>
+                        )}
+                        {skill.skills.length > 0 && (
+                          <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">
+                            Proficient in {skill.skills.join(', ')}, etc,
+                          </span>
+                        )}
+                      </div>
+                    </BulletItem>
+                  </div>
+                ))}
+              </section>
+            );
+          }
 
-      {/* Hobby and Interest */}
-      {selectedSections.includes('hobbies') && hobbies.length > 0 && (
-        <section>
-          <SectionHeader title="Hobby and Interest" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          {hobbies.map((hobby, idx) => (
-            <BulletItem key={`hobby-${idx}-${hobby}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing}>{hobby}</BulletItem>
-          ))}
-        </section>
-      )}
+          if (sectionId === 'trainings' && trainings && trainings.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Professional Trainings" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                {trainings.map((training) => (
+                  <div key={training.id} className="mb-3">
+                    <BulletItem primaryColor={theme.primaryColor} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing}>
+                      <span contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold outline-none focus:ring-1 focus:ring-indigo-300">{training.subject}</span>
+                    </BulletItem>
+                    <div className="ml-6">
+                      <InfoRow label="Institute" value={training.instituteName} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                      <InfoRow label="Duration" value={training.duration} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                      {training.description && (
+                        <p 
+                          contentEditable={theme.editableMode}
+                          suppressContentEditableWarning
+                          style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} 
+                          className="outline-none focus:ring-1 focus:ring-indigo-300"
+                        >
+                          {training.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </section>
+            );
+          }
 
-      {/* Personal Information */}
-      {selectedSections.includes('personalInfo') && (
-        <section className="break-before-auto">
-          <SectionHeader title="Personal Information" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <InfoRow label="Name" value={personalInfo.name} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Father’s Name" value={personalInfo.fathersName} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Mother’s Name" value={personalInfo.mothersName} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Date of Birth" value={personalInfo.dob} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Nationality" value={personalInfo.nationality} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Religion" value={personalInfo.religion} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Marital Status" value={personalInfo.maritalStatus} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Sex" value={personalInfo.gender} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="NID" value={personalInfo.nid} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Birth Registration No" value={personalInfo.birthRegNo} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Blood Group" value={personalInfo.bloodGroup} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Height" value={personalInfo.heightFeet || personalInfo.heightInches ? `${personalInfo.heightFeet || '0'}' ${personalInfo.heightInches || '0'}"` : ''} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Weight" value={personalInfo.weight ? `${personalInfo.weight} Kg` : ''} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Permanent Address" value={permanentAddressLine} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-              <InfoRow label="Present Address" value={presentAddressLine} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-            </div>
-          </div>
-        </section>
-      )}
+          if (sectionId === 'workExperience' && workExperience.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Job Experience" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                {workExperience.map((work) => (
+                  <BulletItem key={work.id} primaryColor={theme.primaryColor} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing}>
+                    <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">
+                      Worked as a <span className="font-bold">{work.position}</span> at <span className="font-bold">{work.companyName}</span> for {work.duration}
+                    </span>
+                    {work.description && (
+                      <p 
+                        contentEditable={theme.editableMode}
+                        suppressContentEditableWarning
+                        style={{ fontSize: `${theme.fontSize - 1}pt`, lineHeight: theme.lineSpacing }} 
+                        className="mt-1 italic outline-none focus:ring-1 focus:ring-indigo-300"
+                      >
+                        {work.description}
+                      </p>
+                    )}
+                  </BulletItem>
+                ))}
+              </section>
+            );
+          }
 
-      {/* Custom Section */}
-      {selectedSections.includes('custom') && customSection.fields.length > 0 && (
-        <section>
-          <SectionHeader title={customSection.title} primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          {customSection.fields.map((field) => (
-            <InfoRow key={field.id} label={field.label} value={field.value} fontSize={theme.fontSize} lineSpacing={theme.lineSpacing} />
-          ))}
-        </section>
-      )}
+          if (sectionId === 'languageProficiency' && languageProficiency.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Language Proficiency" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                {languageProficiency.map((lang, idx) => (
+                  <BulletItem key={`lang-${idx}-${lang}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing}>
+                    <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">{lang}</span>
+                  </BulletItem>
+                ))}
+              </section>
+            );
+          }
 
-      {/* References */}
-      {selectedSections.includes('references') && data.references && data.references.length > 0 && (
-        <section>
-          <SectionHeader title="References" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          <div className="grid grid-cols-2 gap-4">
-            {data.references.map((ref) => (
-              <div key={ref.id} style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}>
-                <p className="font-bold">{ref.name}</p>
-                <p>{ref.position}</p>
-                <p>{ref.organization}</p>
-                <p>Phone: {ref.phone}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+          if (sectionId === 'selfAssessment' && selfAssessment.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Self-Assessment" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                {selfAssessment.map((item, idx) => (
+                  <BulletItem key={`self-${idx}-${item}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing}>
+                    <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">{item}</span>
+                  </BulletItem>
+                ))}
+              </section>
+            );
+          }
 
-      {/* Certification / Declaration */}
-      {selectedSections.includes('declaration') && declaration && (
-        <section className="mt-4">
-          <SectionHeader title="Declaration" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
-          <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="text-justify whitespace-pre-wrap">
-            {declaration}
-          </p>
-          
-          <div className="mt-12 flex flex-col items-start">
-            {personalInfo.signature ? (
-              <div className="mb-1">
-                <img 
-                  src={personalInfo.signature} 
-                  alt="Signature" 
-                  className="h-8 object-contain" 
-                  style={{ maxWidth: '120px' }}
-                />
-              </div>
-            ) : (
-              <div className="h-8" /> // Gap if no signature
-            )}
-            <div style={{ backgroundColor: theme.primaryColor }} className="h-[1px] w-32 mb-1" />
-            <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="font-bold">Signature</p>
-            <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}>({personalInfo.name || 'Your Name'})</p>
-          </div>
-        </section>
-      )}
+          if (sectionId === 'hobbies' && hobbies.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="Hobby and Interest" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                {hobbies.map((hobby, idx) => (
+                  <BulletItem key={`hobby-${idx}-${hobby}`} primaryColor={theme.primaryColor} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing}>
+                    <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">{hobby}</span>
+                  </BulletItem>
+                ))}
+              </section>
+            );
+          }
 
-      {/* Watermark */}
-      <div className="mt-auto pt-4 flex justify-center">
-        <p className="text-[8pt] text-gray-300 italic font-medium">
-          This Cv Was Build from Maksud Computer
+          if (sectionId === 'custom' && customSection.fields.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title={customSection.title} primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                {customSection.fields.map((field) => (
+                  <InfoRow key={field.id} label={field.label} value={field.value} fontSize={theme.fontSize} displayLineSpacing={displayLineSpacing} />
+                ))}
+              </section>
+            );
+          }
+
+          if (sectionId === 'references' && data.references && data.references.length > 0) {
+            return (
+              <section key={sectionId} className="break-inside-avoid">
+                <SectionHeader title="References" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                <div className="grid grid-cols-2 gap-4">
+                  {data.references.map((ref) => (
+                    <div key={ref.id} style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}>
+                      <p contentEditable={theme.editableMode} suppressContentEditableWarning className="font-bold outline-none focus:ring-1 focus:ring-indigo-300">{ref.name}</p>
+                      <p contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">{ref.position}</p>
+                      <p contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">{ref.organization}</p>
+                      <p>Phone: <span contentEditable={theme.editableMode} suppressContentEditableWarning className="outline-none focus:ring-1 focus:ring-indigo-300">{ref.phone}</span></p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          }
+
+          if (sectionId === 'declaration' && declaration) {
+            return (
+              <section key={sectionId} className="mt-4 break-inside-avoid">
+                <SectionHeader title="Declaration" primaryColor={theme.primaryColor} fontSize={theme.fontSize} showBorder={theme.showBorder} />
+                <p 
+                  contentEditable={theme.editableMode}
+                  suppressContentEditableWarning
+                  style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} 
+                  className="text-justify whitespace-pre-wrap outline-none focus:ring-1 focus:ring-indigo-300"
+                >
+                  {declaration}
+                </p>
+                
+                <div className="mt-12 flex flex-col items-start">
+                  {personalInfo.signature ? (
+                    <div className="mb-1">
+                      <img 
+                        src={personalInfo.signature} 
+                        alt="Signature" 
+                        className="h-8 object-contain" 
+                        style={{ maxWidth: '120px' }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-8" /> // Gap if no signature
+                  )}
+                  <div style={{ backgroundColor: theme.primaryColor }} className="h-[1px] w-32 mb-1" />
+                  <p style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }} className="font-bold">Signature</p>
+                  <p 
+                    contentEditable={theme.editableMode}
+                    suppressContentEditableWarning
+                    style={{ fontSize: `${theme.fontSize}pt`, lineHeight: theme.lineSpacing }}
+                    className="outline-none focus:ring-1 focus:ring-indigo-300"
+                  >
+                    ({personalInfo.name || 'Your Name'})
+                  </p>
+                </div>
+              </section>
+            );
+          }
+
+          return null;
+        })}
+      </div>
+
+      {/* Watermark/Footer */}
+      <div className="mt-auto pt-10 text-center">
+        <p className="text-[9pt] font-bold italic transition-colors hover:text-emerald-600" style={{ color: theme.primaryColor + '60' }}>
+          Professionally Crafted by Maksud Computer Digital Hub
         </p>
       </div>
     </div>

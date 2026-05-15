@@ -212,6 +212,13 @@ function MainContent() {
   const handlePrint = useReactToPrint({
     contentRef: previewRef,
     documentTitle: `${cvData.personalInfo.name || 'CV'}_Curriculum_Vitae`,
+    onBeforePrint: async () => {
+      if (activeTab !== 'preview') {
+        setActiveTab('preview');
+        // Wait for rendering
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    },
     onAfterPrint: () => saveToHistory(cvData),
   });
 
