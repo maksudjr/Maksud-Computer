@@ -47,6 +47,7 @@ const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ def
 const IntelligentAI = lazy(() => import('./components/IntelligentAI').then(m => ({ default: m.IntelligentAI })));
 const InheritanceCalculator = lazy(() => import('./components/InheritanceCalculator').then(m => ({ default: m.InheritanceCalculator })));
 const Translator = lazy(() => import('./components/Translator').then(m => ({ default: m.Translator })));
+const ScannerTool = lazy(() => import('./components/ScannerTool').then(m => ({ default: m.ScannerTool })));
 
 const LoadingFallback = () => (
   <div className="min-h-screen bg-white flex flex-col items-center justify-center">
@@ -96,7 +97,7 @@ const FONTS = [
   { name: 'Lora', value: 'font-lora' },
 ];
 
-type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin' | 'intelligent-ai' | 'digital-converter' | 'inheritance' | 'translator';
+type AppStep = 'dashboard' | 'template' | 'setup' | 'builder' | 'age' | 'resizer' | 'pdf' | 'about' | 'photo-editor' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'admin' | 'intelligent-ai' | 'digital-converter' | 'inheritance' | 'translator' | 'scanner';
 
 export default function App() {
   return (
@@ -322,6 +323,7 @@ function MainContent() {
               else if (tool === 'img-to-pdf') setStep('img-to-pdf');
               else if (tool === 'intelligent-ai') setStep('intelligent-ai');
               else if (tool === 'translator') setStep('translator');
+              else if (tool === 'scanner') setStep('scanner');
               else if (tool === 'converter') setStep('digital-converter');
               else if (tool === 'inheritance') setStep('inheritance');
             }, tool);
@@ -346,6 +348,16 @@ function MainContent() {
       <div className={uiTheme}>
         <Suspense fallback={<LoadingFallback />}>
           <Translator onBack={() => setStep('dashboard')} uiTheme={uiTheme} language={language} />
+        </Suspense>
+      </div>
+    );
+  }
+
+  if (step === 'scanner') {
+    return (
+      <div className={uiTheme}>
+        <Suspense fallback={<LoadingFallback />}>
+          <ScannerTool onBack={() => setStep('dashboard')} uiTheme={uiTheme} language={language} />
         </Suspense>
       </div>
     );

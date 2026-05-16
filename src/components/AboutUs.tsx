@@ -82,8 +82,20 @@ export const AboutUs: React.FC<AboutUsProps> = ({ onBack, uiTheme, language }) =
 
             {/* Contact Section */}
             <div className={cn("rounded-3xl p-12 text-white", uiTheme === 'golden' ? "bg-amber-900/40" : "bg-gray-900")}>
+              <div className="flex flex-col md:flex-row items-center gap-8 mb-12 border-b border-white/10 pb-12">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-indigo-500/30 flex-shrink-0">
+                  <img src="https://i.ibb.co.com/DDxbymvm/Screenshot-20260516-022402.jpg" alt="Maksudur Rahman" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                </div>
+                <div className="text-center md:text-left">
+                  <h2 className="text-3xl font-black mb-2">Maksudur Rahman</h2>
+                  <p className="text-indigo-400 font-bold uppercase tracking-widest text-sm mb-4">Director, Maksud Computer</p>
+                  <p className="text-gray-400 text-sm leading-relaxed max-w-xl">
+                    Leading the digital transformation at Maksud Computer since 2020. Our mission is to provide professional digital services that empower individuals and businesses.
+                  </p>
+                </div>
+              </div>
               <div className="text-center mb-12">
-                <h2 className="text-3xl font-black mb-4">Get In Touch</h2>
+                <h3 className="text-2xl font-black mb-4">Get In Touch</h3>
                 <p className="text-gray-400 font-medium">Visit us or contact us for any professional digital services.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

@@ -136,7 +136,7 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (pendingAction) {
         const action = pendingAction;
         setPendingAction(null);
-        requestAccess(action.cost, action.onSuccess);
+        requestAccess(action.cost, action.onSuccess, undefined, true, true, data.coins || 0, data.freeTrialUsed || false);
       }
 
       // Start listening
@@ -146,20 +146,24 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const requestAccess = async (cost: number, onSuccess: () => void, toolType?: string) => {
+  const requestAccess = async (cost: number, onSuccess: () => void, toolType?: string, bypassAuthCheck: boolean = false, currentAuth?: boolean, currentCoins?: number, currentFreeTrial?: boolean) => {
+    const effectiveAuth = currentAuth !== undefined ? currentAuth : isAuthorized;
+    const effectiveCoins = currentCoins !== undefined ? currentCoins : coins;
+    const effectiveFreeTrial = currentFreeTrial !== undefined ? currentFreeTrial : freeTrialUsed;
+
     if (cost === 0) {
       onSuccess();
       return;
     }
 
-    if (!isAuthorized) {
+    if (!effectiveAuth && !bypassAuthCheck) {
       setShowGate(true);
       setPendingAction({ cost, onSuccess });
       return;
     }
 
     // Check free trial (for paid keys)
-    if (!freeTrialUsed && !isFreeAccess) {
+    if (!effectiveFreeTrial && !isFreeAccess) {
       try {
         const keysRef = collection(db, 'keys');
         const q = query(keysRef, where("code", "==", activeKey));
@@ -175,7 +179,7 @@ export const SecurityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // Check coins (handles both paid and free access keys)
-    if (coins >= cost) {
+    if (effectiveCoins >= cost) {
       try {
         const keysRef = collection(db, 'keys');
         const q = query(keysRef, where("code", "==", activeKey));

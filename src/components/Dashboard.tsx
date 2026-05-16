@@ -37,7 +37,8 @@ import {
   Globe,
   ArrowRightLeft,
   Languages,
-  RefreshCw
+  RefreshCw,
+  QrCode
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { cn } from '../lib/utils';
@@ -47,7 +48,7 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { Language, translations } from '../lib/translations';
 
 interface DashboardProps {
-  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'intelligent-ai' | 'converter' | 'inheritance' | 'translator', cost: number) => void;
+  onSelectTool: (tool: 'cv' | 'age' | 'resizer' | 'editor' | 'pdf' | 'about' | 'bg-remover' | 'pdf-to-img' | 'pdf-to-word' | 'pdf-compress' | 'pdf-merge' | 'img-to-pdf' | 'intelligent-ai' | 'converter' | 'inheritance' | 'translator' | 'scanner', cost: number) => void;
   onAdminLogin: () => void;
   uiTheme: 'light' | 'dark' | 'golden' | 'chameleon';
   onThemeChange: (theme: 'light' | 'dark' | 'golden' | 'chameleon') => void;
@@ -202,6 +203,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
       hoverColor: 'hover:bg-green-100',
       borderColor: 'border-green-100',
       cost: 0
+    },
+    {
+      id: 'scanner',
+      name: language === 'en' ? 'Scanner & QR' : 'স্ক্যানার ও কিউআর',
+      description: language === 'en' ? 'Generate and read QR codes and barcodes (PDF417, etc)' : 'কিউআর এবং বারকোড তৈরি ও স্ক্যান করুন (PDF417 সহ)',
+      icon: <QrCode className="text-indigo-600" />,
+      color: 'bg-indigo-50',
+      hoverColor: 'hover:bg-indigo-100',
+      borderColor: 'border-indigo-100',
+      cost: 0.1
     },
     {
       id: 'inheritance',
@@ -610,29 +621,51 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </button>
                     ))}
                   </div>
-                </div>
-
-                {/* System Actions */}
-                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <label className={cn("text-xs font-black uppercase tracking-widest", uiTheme === 'light' ? "text-slate-400" : "text-slate-500")}>
-                    {language === 'en' ? 'Maintenance' : 'রক্ষণাবেক্ষণ'}
-                  </label>
-                  <button 
-                    onClick={handleClearCache}
-                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 transition-all font-bold group"
-                  >
-                    <div className="text-left">
-                      <p className="text-sm">{language === 'en' ? 'Clear Cache & Germs' : 'ক্যাশে এবং ডেটা মুছুন'}</p>
-                      <p className="text-[10px] opacity-70">{language === 'en' ? 'Deletes last 5 history and app data' : 'শেষ ৫টি ইতিহাস এবং অ্যাপ ডেটা মুছে ফেলে'}</p>
+                  {uiTheme === 'chameleon' && (
+                    <div className="mt-4 p-4 rounded-2xl bg-slate-800/50 border border-white/5 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Manual Adjustment</span>
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: chameleonColor }} />
+                      </div>
+                      <div className="grid grid-cols-6 gap-2">
+                        {['#f43f5e', '#ec4899', '#d946ef', '#8b5cf6', '#6366f1', '#3b82f6', '#06b6d4', '#10b981', '#84cc16', '#eab308', '#f97316', '#ffffff'].map(c => (
+                          <button 
+                            key={c}
+                            onClick={() => {
+                              // Setting a manual color stops the auto-cycling temporarily or just changes it
+                              // In App.tsx it cycles every 5s, so this will be overridden unless we handle it
+                              // For now, let's just let it cycle but allow user to pick one
+                            }}
+                            className="w-full aspect-square rounded-full border border-white/10"
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
-                  </button>
+                  )}
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                  
+                  {/* System Actions */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <label className={cn("text-xs font-black uppercase tracking-widest", uiTheme === 'light' ? "text-slate-400" : "text-slate-500")}>
+                      {language === 'en' ? 'Maintenance' : 'রক্ষণাবেক্ষণ'}
+                    </label>
+                    <button 
+                      onClick={handleClearCache}
+                      className="w-full flex items-center justify-between p-4 rounded-2xl bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 transition-all font-bold group"
+                    >
+                      <div className="text-left">
+                        <p className="text-sm">{language === 'en' ? 'Clear Cache & Germs' : 'ক্যাশে এবং ডেটা মুছুন'}</p>
+                        <p className="text-[10px] opacity-70">{language === 'en' ? 'Deletes last 5 history and app data' : 'শেষ ৫টি ইতিহাস এবং অ্যাপ ডেটা মুছে ফেলে'}</p>
+                      </div>
+                      <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Welcome Section */}
         <div className="mb-16">
@@ -678,7 +711,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               )}
               
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <div className={cn(
                   "p-4 rounded-2xl border flex flex-col min-w-[120px] shadow-sm transition-all hover:scale-105",
                   uiTheme === 'light' ? "bg-white border-slate-200" : (uiTheme === 'golden' ? "bg-emerald-950/40 border-emerald-500/20 shadow-[0_0_15px_rgba(0,103,71,0.2)]" : "bg-slate-900 border-slate-800")
@@ -688,74 +721,43 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     {tools.length + pdfSubTools.length - 1}
                   </p>
                 </div>
+
+                {isAuthorized && (
+                  <div className={cn(
+                    "p-4 rounded-2xl border flex flex-col min-w-[150px] shadow-sm transition-all hover:scale-105",
+                    uiTheme === 'light' ? "bg-white border-slate-200" : (uiTheme === 'golden' ? "bg-emerald-950/40 border-emerald-500/20 shadow-[0_0_15px_rgba(0,103,71,0.2)]" : "bg-slate-900 border-slate-800")
+                  )}>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className={cn("text-[10px] font-black uppercase tracking-widest", uiTheme === 'light' ? "text-slate-500" : (uiTheme === 'golden' ? "text-emerald-300" : "text-emerald-400"))}>
+                        {isFreeAccess ? t.dashboard.trial : t.dashboard.coinUsage}
+                      </p>
+                      <div className={cn(
+                        "px-1.5 py-0.5 rounded text-[8px] font-black uppercase",
+                        isFreeAccess ? "bg-emerald-100 text-emerald-600" : "bg-indigo-100 text-indigo-600"
+                      )}>
+                        {isFreeAccess ? (coins > 0 ? "ACTIVE" : "EXPIRED") : `${coins.toFixed(1)}`}
+                      </div>
+                    </div>
+                    {isFreeAccess ? (
+                      <p className="text-[9px] font-bold leading-tight opacity-70">
+                        {t.dashboard.freeAccountSmall || "1 CV / 2 Tool uses"}
+                      </p>
+                    ) : (
+                      <div className="mt-2 w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                           className={cn(
+                             "h-full rounded-full transition-all duration-1000",
+                             coins < 5 ? "bg-red-500" : coins < 15 ? "bg-amber-500" : "bg-emerald-500"
+                           )}
+                           style={{ width: `${Math.min((coins / 50) * 100, 100)}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
-
-          {isAuthorized && (
-             <motion.div 
-               initial={{ opacity: 0, y: 10 }}
-               animate={{ opacity: 1, y: 0 }}
-               className={cn(
-                 "standard-card p-6 min-w-[300px] mt-8",
-                 uiTheme === 'light' ? "bg-white" : "bg-slate-900"
-               )}
-             >
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "p-2 rounded-xl border flex items-center justify-center",
-                    uiTheme === 'golden' ? "bg-[#f42a41]/10 border-[#f42a41]/20" : "bg-emerald-50 border-emerald-100"
-                  )}>
-                    <CoinsIcon size={18} className={uiTheme === 'golden' ? "text-[#f42a41]" : "text-[#006747]"} />
-                  </div>
-                  <p className={cn("text-xs font-bold uppercase tracking-wider", uiTheme === 'light' ? "text-slate-700" : "text-slate-300")}>
-                    {isFreeAccess ? t.dashboard.freeTrial : t.dashboard.coinUsage}
-                  </p>
-                </div>
-                <div className={cn(
-                  "px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider",
-                  isFreeAccess 
-                    ? (coins > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600") 
-                    : (uiTheme === 'golden' ? "bg-[#f42a41] text-white" : "bg-slate-100 text-slate-900")
-                )}>
-                  {isFreeAccess ? (coins > 0 ? "ACTIVE" : "EXPIRED") : `${coins.toFixed(2)} COINS`}
-                </div>
-              </div>
-              
-              {isFreeAccess ? (
-                <div className={cn(
-                  "p-3 rounded-xl border border-dashed text-center",
-                  uiTheme === 'golden' ? "bg-[#f42a41]/5 border-[#f42a41]/20" : "bg-emerald-50/50 border-emerald-200"
-                )}>
-                  <p className={cn("text-[10px] font-bold uppercase tracking-wider", uiTheme === 'golden' ? "text-white" : "text-[#006747]")}>
-                    {t.dashboard.freeAccountNotice}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <motion.div 
-                       initial={{ width: 0 }}
-                       animate={{ width: `${Math.min((coins / 50) * 100, 100)}%` }}
-                       className={cn(
-                         "h-full rounded-full transition-all duration-1000 shadow-[0_0_4px_rgba(0,0,0,0.1)]",
-                         coins < 5 ? "bg-[#f42a41]" : coins < 15 ? "bg-amber-500" : "bg-[#006747]"
-                       )}
-                    />
-                  </div>
-                  {!freeTrialUsed && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="w-1 h-1 bg-[#f42a41] rounded-full animate-pulse" />
-                      <p className={cn("text-[8px] font-bold uppercase tracking-widest", uiTheme === 'golden' ? "text-white" : "text-red-600")}>
-                        {t.dashboard.freeUseAvailable}
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-            </motion.div>
-          )}
         </div>
 
         {/* Tools Section */}

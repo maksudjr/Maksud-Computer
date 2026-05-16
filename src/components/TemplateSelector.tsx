@@ -10,6 +10,8 @@ const ClassicTemplate = lazy(() => import('./ClassicTemplate').then(m => ({ defa
 const ModernTemplate = lazy(() => import('./ModernTemplate').then(m => ({ default: m.ModernTemplate })));
 const SmartClassicTemplate = lazy(() => import('./SmartTemplates').then(m => ({ default: m.SmartClassicTemplate })));
 const SmartModernTemplate = lazy(() => import('./SmartTemplates').then(m => ({ default: m.SmartModernTemplate })));
+const ModernMinimalistTemplate = lazy(() => import('./ExtraTemplates').then(m => ({ default: m.ModernMinimalistTemplate })));
+const ExecutiveEliteTemplate = lazy(() => import('./ExtraTemplates').then(m => ({ default: m.ExecutiveEliteTemplate })));
 const VibrantTemplate = lazy(() => import('./VibrantTemplate').then(m => ({ default: m.VibrantTemplate })));
 
 const PreviewLoading = () => (
@@ -76,6 +78,16 @@ const TEMPLATES: { id: TemplateId; name: string; description: string }[] = [
     description: 'A premium sidebar layout with timeline indicators and modern accents.',
   },
   {
+    id: 'modern-minimalist',
+    name: 'Modern Minimalist',
+    description: 'Ultra-clean design with bold headers and ample white space.',
+  },
+  {
+    id: 'executive-elite',
+    name: 'Executive Elite',
+    description: 'A professional executive layout with a deep-toned sidebar.',
+  },
+  {
     id: 'vibrant',
     name: 'Vibrant Professional',
     description: 'A colorful, modern layout based on traditional Bangladeshi resume styles.',
@@ -134,6 +146,8 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   {template.id === 'modern' && <ModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern' } }} />}
                   {template.id === 'smart-classic' && <SmartClassicTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-classic' } }} />}
                   {template.id === 'smart-modern' && <SmartModernTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'smart-modern' } }} />}
+                  {template.id === 'modern-minimalist' && <ModernMinimalistTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'modern-minimalist' } }} />}
+                  {template.id === 'executive-elite' && <ExecutiveEliteTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'executive-elite' } }} />}
                   {template.id === 'vibrant' && <VibrantTemplate data={{ ...SAMPLE_DATA, theme: { ...SAMPLE_DATA.theme, templateId: 'vibrant' } }} />}
                 </Suspense>
               </div>
@@ -182,8 +196,8 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
-                  MR
+                <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl overflow-hidden border-2 border-indigo-100">
+                  <img src="https://i.ibb.co.com/DDxbymvm/Screenshot-20260516-022402.jpg" alt="Maksudur Rahman" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-lg">Maksudur Rahman</h3>
